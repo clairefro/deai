@@ -4,7 +4,7 @@ class MainScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.text(100, 100, "Welcome to the Library of Babel", {
+    this.add.text(100, 100, "Welcome to the Library of Babel.....", {
       font: "24px monospace",
       fill: "#ffffff",
     });
