@@ -1,0 +1,21 @@
+{
+  "name": "deai",
+  "version": "1.0.0",
+  "description": "explore the pysche",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run backend\" \"npm run start\"",
+    "backend": "node backend/server.js"
+  },
+  "author": "Claire Froelich",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^35.1.5",
+    "express": "^5.1.0",
+    "phaser": "^3.88.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
