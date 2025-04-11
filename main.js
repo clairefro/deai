@@ -1,6 +1,8 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
+const { BACKGROUND_COLOR } = require("./constants");
+
 // --- HOT RELOAD FOR DEVELOPMENT ------
 
 if (process.env.NODE_ENV === "development") {
@@ -9,15 +11,6 @@ if (process.env.NODE_ENV === "development") {
   });
 
   console.log("Hot reload listening...");
-
-  // try {
-  //   require("electron-reloader")(module, {
-  //     // Watch the renderer directory specifically
-  //     watchRenderer: true,
-  //     ignore: ["node_modules", ".git", "dist"],
-  //     debug: true,
-  //   });
-  // } catch (_) {}
 }
 
 // --------------------------------------
@@ -26,13 +19,16 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1024,
     height: 768,
+    // minHeight: 800,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
     },
+    useContentSize: true,
+    backgroundColor: BACKGROUND_COLOR,
   });
-
+  win.setAspectRatio = 1.33;
   win.loadFile("renderer/index.html");
 }
 

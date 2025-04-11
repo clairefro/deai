@@ -7,7 +7,7 @@ class MainScene extends Phaser.Scene {
       font: "24px monospace",
       fill: "#ffffff",
     });
-    this.createNotebook();
+    // this.createNotebook();
   }
 
   createNotebook() {
@@ -95,18 +95,6 @@ class MainScene extends Phaser.Scene {
     const files = await window.electronAPI.getFiles();
     this.fileList.setText(files.map((f) => `📄 ${f}`).join("\n"));
   }
-
-  //   handleResize() {
-  //     const width = this.cameras.main.width;
-  //     const height = this.cameras.main.height;
-
-  //     // Reposition tab
-  //     this.notebookTab.x = (width - 800) / 2;
-  //     this.notebookTab.y = height - 40;
-
-  //     // Reposition open notebook
-  //     this.notebookOpen.setPosition((width - 800) / 2, (height - 600) / 2);
-  //   }
 
   update() {
     // Game loop logic
