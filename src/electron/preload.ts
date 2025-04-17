@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { ConfigSettings, ConfigSettingsUpdate } from "./shared/config";
+import { ConfigSettings, ConfigSettingsUpdate } from "../shared/config";
 
 // TODO - make notes dir dynamic and updateable
 
