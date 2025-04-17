@@ -40,8 +40,7 @@ export default defineConfig({
     minify: "terser",
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "src/renderer/index.html"), // Entry point for renderer
-      },
+        main: path.resolve(__dirname, "src/renderer/index.html"), 
       // this helps with tree shaking
       output: {
         manualChunks: {
