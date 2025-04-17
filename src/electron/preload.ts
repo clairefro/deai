@@ -23,7 +23,6 @@ declare global {
 
 const electronAPI: ElectronAPI = {
   async getFiles() {
-    // Get current config to access notesDir
     const config = await ipcRenderer.invoke("get-config");
     console.log({ config });
     if (!config.notesDir) {
@@ -34,7 +33,10 @@ const electronAPI: ElectronAPI = {
     const files = await fs.readdir(config.notesDir);
     return files
       .filter((file) => file.endsWith(".md"))
-      .map((file) => path.join(config.notesDir, file));
+      .map((file) => ({
+        path: path.join(config.notesDir, file),
+        name: file,
+      }));
   },
 
   async readFile(filepath) {

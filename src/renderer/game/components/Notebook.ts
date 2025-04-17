@@ -117,10 +117,8 @@ export class Notebook {
       files.forEach((file, index) => {
         console.log({ file });
         // Display just the filename but store the full path
-        // const filename = path.basename(file);
         // TODO: FIX
-        const filename = "foo.md";
-        const fileEntry = this.scene.add.text(20, 20 + index * 25, filename, {
+        const fileEntry = this.scene.add.text(20, 20 + index * 25, file.name, {
           font: "16px monospace",
           fill: "#ffffff",
         });
@@ -129,7 +127,7 @@ export class Notebook {
 
         fileEntry.on("pointerdown", () => {
           console.log(`Clicked file: ${file}`); // Log full path
-          this.loadFileContent(file); // Pass full path to loadFileContent
+          this.loadFileContent(file.path); // Pass full path to loadFileContent
         });
 
         fileEntry.on("pointerover", () => {
