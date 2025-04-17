@@ -1,11 +1,11 @@
 import * as Phaser from "phaser";
-import { ConfigSettings } from "../../../../shared/config";
+import { ConfigSettings } from "../../../shared/config";
 
 export class SettingsMenu {
   private scene: Phaser.Scene;
   private config: ConfigSettings;
-  private settingsIcon: Phaser.GameObjects.Container;
-  private settingsMenu: Phaser.GameObjects.Container;
+  private settingsIcon!: Phaser.GameObjects.Container;
+  private settingsMenu!: Phaser.GameObjects.Container;
   private onDirectoryChange: (newDir: string) => void;
 
   constructor(
@@ -67,6 +67,7 @@ export class SettingsMenu {
     // Menu title
     const title = this.scene.add.text(20, 20, "Settings", {
       font: "20px monospace",
+      // @ts-ignore
       fill: "#ffffff",
     });
 
@@ -84,12 +85,14 @@ export class SettingsMenu {
 
       const label = this.scene.add.text(20, y, option.text, {
         font: "16px monospace",
+        // @ts-ignore
         fill: "#ffffff",
       });
 
       const value = this.scene.add
         .text(20, y + 20, option.value, {
           font: "14px monospace",
+          // @ts-ignore
           fill: "#aaaaaa",
         })
         .setInteractive({ useHandCursor: true });
