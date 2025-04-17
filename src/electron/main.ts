@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
-import { Config, ConfigSettingsUpdate } from "./shared/config";
+import { Config, ConfigSettingsUpdate } from "../shared/config";
 
 import { BACKGROUND_COLOR } from "./constants";
 

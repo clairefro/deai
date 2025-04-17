@@ -4,7 +4,7 @@
   "description": "explore the pysche",
   "main": "dist/main.js",
   "scripts": {
-    "start": "electron dist/main.js",
+    "start": "electron dist/electron/main.js",
     "clean": "rm -fr ./dist ./dist-electron",
     "build": "npm run clean && npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",

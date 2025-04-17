@@ -9,10 +9,10 @@ export default defineConfig({
   plugins: [
     electron({
       main: {
-        entry: "src/main.ts",
+        entry: "src/electron/main.ts",
         vite: {
           build: {
-            outDir: "dist",
+            outDir: "dist/electron",
           },
           server: {
             hmr: {
@@ -23,10 +23,10 @@ export default defineConfig({
         },
       },
       preload: {
-        input: "src/preload.ts",
+        input: "src/electron/preload.ts",
         vite: {
           build: {
-            outDir: "dist",
+            outDir: "dist/electron",
           },
         },
       },
@@ -40,21 +40,22 @@ export default defineConfig({
     minify: "terser",
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "src/renderer/index.html"), 
-      // this helps with tree shaking
-      output: {
-        manualChunks: {
-          phaser: ["phaser"],
+        main: path.resolve(__dirname, "src/renderer/index.html"),
+        // this helps with tree shaking
+        output: {
+          manualChunks: {
+            phaser: ["phaser"],
+          },
         },
       },
     },
-  },
-  // help with tree shaking
-  optimizeDeps: {
-    include: ["phaser"],
-  },
-  server: {
-    port: 5173,
-    strictPort: true,
+    // help with tree shaking
+    optimizeDeps: {
+      include: ["phaser"],
+    },
+    server: {
+      port: 5173,
+      strictPort: true,
+    },
   },
 });
