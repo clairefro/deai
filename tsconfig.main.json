@@ -6,11 +6,5 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": [
-    "src/main.ts",
-    "src/preload.ts",
-    "src/constants.ts",
-    "src/node/**/*",
-    "src/shared/**/*"
-  ]
+  "include": ["src/electron/**/*", "src/shared/**/*"]
 }

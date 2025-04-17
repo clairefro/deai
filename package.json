@@ -2,7 +2,7 @@
   "name": "deai",
   "version": "1.0.0",
   "description": "explore the pysche",
-  "main": "dist/main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
     "start": "electron dist/electron/main.js",
     "clean": "rm -fr ./dist ./dist-electron",
