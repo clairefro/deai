@@ -1,4 +1,6 @@
-import MainScene from "./game/scenes/MainScene.js";
+import * as Phaser from "phaser";
+
+import MainScene from "./game/scenes/MainScene";
 
 const BASE_WIDTH = 1024;
 const BASE_HEIGHT = 768;
@@ -14,7 +16,6 @@ new Phaser.Game({
     parent: "game",
     width: BASE_WIDTH,
     height: BASE_HEIGHT,
-    lockOrientation: true,
     autoRound: true,
     expandParent: false,
     // prevent canvas overflow

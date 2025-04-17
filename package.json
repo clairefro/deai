@@ -2,11 +2,16 @@
   "name": "deai",
   "version": "1.0.0",
   "description": "explore the pysche",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "NODE_ENV=development electron .",
-    "backend": "node backend/server.js"
+    "start": "electron dist/main.js",
+    "clean": "rm -fr ./dist",
+    "build": "npm run clean && npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "dev": "NODE_ENV=development npm run dev:main & npm run dev:renderer",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite --host"
   },
   "author": "Claire Froelich",
   "license": "MIT",
@@ -16,7 +21,14 @@
     "phaser": "^3.88.2"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "electron-reload": "^2.0.0-alpha.1"
+    "@types/electron": "^1.6.12",
+    "@types/node": "^22.14.1",
+    "chokidar-cli": "^3.0.0",
+    "copyfiles": "^2.4.1",
+    "electron-reload": "^2.0.0-alpha.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.1",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6"
   }
 }
