@@ -1,5 +1,4 @@
 import * as Phaser from "phaser";
-
 import MainScene from "./game/scenes/MainScene";
 
 const BASE_WIDTH = 1024;

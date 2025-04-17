@@ -14,6 +14,12 @@ export default defineConfig({
           build: {
             outDir: "dist",
           },
+          server: {
+            hmr: {
+              overlay: false,
+              protocol: "ws",
+            },
+          },
         },
       },
       preload: {
@@ -31,14 +37,25 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist/renderer"),
     emptyOutDir: true,
     target: "esnext",
+    minify: "terser",
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "src/renderer/index.html"), // Entry point for renderer
       },
+      // this helps with tree shaking
+      output: {
+        manualChunks: {
+          phaser: ["phaser"],
+        },
+      },
     },
   },
+  // help with tree shaking
+  optimizeDeps: {
+    include: ["phaser"],
+  },
   server: {
-    port: 5173, // Ensure Vite dev server runs on this port
-    strictPort: true, // Fail if the port is already in use
+    port: 5173,
+    strictPort: true,
   },
 });

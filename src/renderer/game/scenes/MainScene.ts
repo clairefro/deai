@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import { ConfigSettings } from "../../../shared/config";
 
 class MainScene extends Phaser.Scene {
@@ -19,7 +19,7 @@ class MainScene extends Phaser.Scene {
   async create() {
     this.config = await window.electronAPI.getConfig();
 
-    this.add.text(100, 100, "Welcome to the Library of Babel", {
+    this.add.text(100, 100, "Welcome to the Library of Babel...", {
       font: "24px monospace",
       // @ts-ignore
       fill: "#ffffff",
