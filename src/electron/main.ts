@@ -8,10 +8,10 @@ import { BACKGROUND_COLOR } from "./constants";
 
 if (process.env.NODE_ENV === "development") {
   const electronReload = require("electron-reload");
+  const projectRoot = path.join(__dirname, "..", "..");
+
   electronReload(__dirname, {
-    electron: require(`${__dirname}/../node_modules/electron`),
-    // forceHardReset: true,
-    // hardResetMethod: "exit",
+    electron: path.join(projectRoot, "node_modules", "electron"),
   });
   console.log("Hot reload listening...");
 }
