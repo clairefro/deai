@@ -3,12 +3,13 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { ConfigSettings, ConfigSettingsUpdate } from "../shared/config";
 
-// TODO - make notes dir dynamic and updateable
-
-const NOTES_DIR = path.join(__dirname, "test");
+interface FileObj {
+  name: string;
+  path: string;
+}
 
 interface ElectronAPI {
-  getFiles: () => Promise<string[]>;
+  getFiles: () => Promise<FileObj[]>;
   readFile: (filepath: string) => Promise<string>;
   getConfig: () => Promise<ConfigSettings>;
   selectDirectory: () => Promise<string | null>;
