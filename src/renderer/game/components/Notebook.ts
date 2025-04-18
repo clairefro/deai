@@ -2,11 +2,11 @@ import * as Phaser from "phaser";
 
 export class Notebook {
   private scene: Phaser.Scene;
-  private notebook: Phaser.GameObjects.Container;
-  private notebookOpen: Phaser.GameObjects.Container;
-  private noteContent: Phaser.GameObjects.Text;
-  private fileList: Phaser.GameObjects.Text;
-  private notebookTab: Phaser.GameObjects.Graphics;
+  private notebook!: Phaser.GameObjects.Container;
+  private notebookOpen!: Phaser.GameObjects.Container;
+  private noteContent!: Phaser.GameObjects.Text;
+  private fileList!: Phaser.GameObjects.Text;
+  private notebookTab!: Phaser.GameObjects.Graphics;
   private fileEntries: Phaser.GameObjects.Text[] = [];
 
   constructor(scene: Phaser.Scene) {
@@ -57,6 +57,7 @@ export class Notebook {
       "Select a file to view its contents",
       {
         font: "16px monospace",
+        //@ts-ignore
         fill: "#000000",
         wordWrap: { width: 550 },
         lineSpacing: 8,
@@ -69,6 +70,7 @@ export class Notebook {
     // Create file list area
     this.fileList = this.scene.add.text(20, 20, "", {
       font: "16px monospace",
+      //@ts-ignore
       fill: "#ffffff",
       wordWrap: { width: 180 },
     });
@@ -115,11 +117,11 @@ export class Notebook {
 
       // Create interactive file entries
       files.forEach((file, index) => {
-        console.log({ file });
         // Display just the filename but store the full path
         // TODO: FIX
         const fileEntry = this.scene.add.text(20, 20 + index * 25, file.name, {
           font: "16px monospace",
+          // @ts-ignore
           fill: "#ffffff",
         });
 
