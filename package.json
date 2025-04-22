@@ -18,6 +18,7 @@
   "author": "Claire Froelich",
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^4.0.3",
     "electron": "^35.1.5",
     "express": "^5.1.0",
     "phaser": "^3.88.2"

@@ -11,6 +11,7 @@ export class Notebook {
   private fileEntries: Phaser.GameObjects.Text[] = [];
   private editor!: Phaser.GameObjects.DOMElement;
   private currentFilePath: string | null = null;
+  private stopWatchingFile: (() => void) | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -204,6 +205,21 @@ export class Notebook {
       }
 
       this.currentFilePath = filepath;
+
+      // Stop watching the previous file (if any)
+      if (this.stopWatchingFile) {
+        this.stopWatchingFile();
+      }
+
+      this.stopWatchingFile = window.electronAPI.watchFile(
+        filepath,
+        (updatedContent: string) => {
+          console.log(`File updated externally: ${filepath}`);
+          if (textarea) {
+            textarea.value = updatedContent; // Update the textarea with the new content
+          }
+        }
+      );
     } catch (err) {
       console.error("Failed to load file:", err);
       this.noteContent.setText("Error loading file content");
@@ -217,6 +233,12 @@ export class Notebook {
       console.log("File saved successfully");
     } catch (err) {
       console.error("Failed to save file:", err);
+    }
+  }
+
+  destroy(): void {
+    if (this.stopWatchingFile) {
+      this.stopWatchingFile(); // Stop watching the file
     }
   }
 }

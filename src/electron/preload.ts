@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { ConfigSettings, ConfigSettingsUpdate } from "../shared/Config";
+import { ConfigSettingsUpdate } from "../shared/Config";
+import chokidar from "chokidar";
 
 interface FileObj {
   name: string;
@@ -49,6 +50,27 @@ const electronAPI = {
 
   async writeFile(filepath: string, content: string) {
     ipcRenderer.invoke("write-file", filepath, content);
+  },
+
+  watchFile: (filepath: string, callback: (content: string) => void) => {
+    const watcher = chokidar.watch(filepath, { persistent: true });
+
+    watcher.on("change", () => {
+      console.log(`File changed: ${filepath}`);
+      const fs = require("fs");
+      fs.readFile(filepath, "utf-8", (err: any, data: string) => {
+        if (err) {
+          console.error(`Failed to read file: ${filepath}`, err);
+          return;
+        }
+        callback(data); // Pass the updated content to the callback
+      });
+    });
+
+    return () => {
+      watcher.close();
+      console.log(`Stopped watching file: ${filepath}`);
+    };
   },
 };
 
