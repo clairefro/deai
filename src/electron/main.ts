@@ -39,7 +39,7 @@ function createWindow(): void {
     win.loadURL("http://localhost:5173");
   } else {
     // In production, load from built files
-    win.loadFile(path.join(__dirname, "renderer", "index.html"));
+    win.loadFile(path.join(__dirname, "../renderer", "index.html"));
   }
 }
 
