@@ -9,7 +9,7 @@ export class Notebook {
   private fileList!: Phaser.GameObjects.Text;
   private notebookTab!: Phaser.GameObjects.Graphics;
   private fileEntries: Phaser.GameObjects.Text[] = [];
-  private editInput!: Phaser.GameObjects.DOMElement;
+  private editor!: Phaser.GameObjects.DOMElement;
   private currentFilePath: string | null = null;
 
   constructor(scene: Phaser.Scene) {
@@ -62,8 +62,8 @@ export class Notebook {
       wordWrap: { width: 180 },
     });
 
-    this.editInput = this.scene.add.dom(230, 20).createFromHTML(`
-      <textarea id="editInput" style="
+    this.editor = this.scene.add.dom(230, 20).createFromHTML(`
+      <textarea id="editor" style="
         width: 550px; 
         height: 550px; 
         font-family: monospace; 
@@ -76,9 +76,7 @@ export class Notebook {
       "></textarea>
     `);
 
-    const textarea = document.getElementById(
-      "editInput"
-    ) as HTMLTextAreaElement;
+    const textarea = document.getElementById("editor") as HTMLTextAreaElement;
     if (textarea) {
       // Disable Phaser input when the textarea is focused  (ex: moving character)
       textarea.addEventListener("focus", () => {
@@ -120,7 +118,7 @@ export class Notebook {
       );
     }
 
-    this.notebookOpen.add([notebook, explorer, this.fileList, this.editInput]);
+    this.notebookOpen.add([notebook, explorer, this.fileList, this.editor]);
 
     // Position the open notebook
     this.notebookOpen.setPosition(
@@ -192,9 +190,7 @@ export class Notebook {
       const content = await window.electronAPI.readFile(filepath);
       console.log("Content loaded:", content);
 
-      const textarea = document.getElementById(
-        "editInput"
-      ) as HTMLTextAreaElement;
+      const textarea = document.getElementById("editor") as HTMLTextAreaElement;
       if (textarea) {
         textarea.value = content; // Populate the textarea with file content
         textarea.style.display = "block"; // Make the textarea visible
