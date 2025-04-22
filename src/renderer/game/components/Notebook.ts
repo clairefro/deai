@@ -22,19 +22,19 @@ export class Notebook {
     this.notebook = this.scene.add.container(0, 0);
 
     // Create the "closed" notebook tab at bottom
-    const tab = this.scene.add.graphics();
-    tab.fillStyle(0x8b6b57, 1);
-    tab.fillRoundedRect(0, 0, 800, 40, 8);
-    tab.setInteractive(
+    const notebookTab = this.scene.add.graphics();
+    notebookTab.fillStyle(0x8b6b57, 1);
+    notebookTab.fillRoundedRect(0, 0, 800, 40, 8);
+    notebookTab.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, 800, 40),
       Phaser.Geom.Rectangle.Contains
     );
 
     // Position the tab at bottom of screen
-    tab.x = (this.scene.cameras.main.width - 800) / 2;
-    tab.y = this.scene.cameras.main.height - 40;
+    notebookTab.x = (this.scene.cameras.main.width - 800) / 2;
+    notebookTab.y = this.scene.cameras.main.height - 40;
 
-    tab.setDepth(100);
+    notebookTab.setDepth(100);
 
     // Create the full notebook view (initially hidden)
     this.notebookOpen = this.scene.add.container(0, 0);
@@ -73,21 +73,27 @@ export class Notebook {
         border-radius: 4px; 
         background-color: #fff8dc; 
         display: none;
-      "></textarea>
+      "
+      autocorrect="off" 
+      autocomplete="off" 
+      autocapitalize="off" 
+      spellcheck="false"
+      ></textarea>
     `);
 
     const textarea = document.getElementById("editor") as HTMLTextAreaElement;
     if (textarea) {
+      if (!this.scene.input.keyboard) return;
       // Disable Phaser input when the textarea is focused  (ex: moving character)
       textarea.addEventListener("focus", () => {
         console.log("Textarea focused: Disabling Phaser input");
-        this.scene.input.keyboard.enabled = false; // Disable Phaser keyboard input
+        this.scene.input.keyboard!.enabled = false; // Disable Phaser keyboard input
       });
 
       // Re-enable Phaser input when the textarea loses focus
       textarea.addEventListener("blur", () => {
         console.log("Textarea blurred: Enabling Phaser input");
-        this.scene.input.keyboard.enabled = true; // Re-enable Phaser keyboard input
+        this.scene.input.keyboard!.enabled = true; // Re-enable Phaser keyboard input
       });
 
       textarea.addEventListener("keydown", (event) => {
@@ -108,6 +114,7 @@ export class Notebook {
         }
       });
 
+      // SAVE ON CHANGE
       textarea.addEventListener(
         "input",
         debounce(() => {
@@ -127,12 +134,12 @@ export class Notebook {
     );
 
     // Handle clicking the tab
-    tab.on("pointerdown", () => {
+    notebookTab.on("pointerdown", () => {
       this.notebookOpen.setVisible(!this.notebookOpen.visible);
     });
 
     // Store tab reference
-    this.notebookTab = tab;
+    this.notebookTab = notebookTab;
 
     // Load initial file list
     this.loadFiles();
