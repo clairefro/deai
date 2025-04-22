@@ -80,6 +80,36 @@ export class Notebook {
       "editInput"
     ) as HTMLTextAreaElement;
     if (textarea) {
+      // Disable Phaser input when the textarea is focused  (ex: moving character)
+      textarea.addEventListener("focus", () => {
+        console.log("Textarea focused: Disabling Phaser input");
+        this.scene.input.keyboard.enabled = false; // Disable Phaser keyboard input
+      });
+
+      // Re-enable Phaser input when the textarea loses focus
+      textarea.addEventListener("blur", () => {
+        console.log("Textarea blurred: Enabling Phaser input");
+        this.scene.input.keyboard.enabled = true; // Re-enable Phaser keyboard input
+      });
+
+      textarea.addEventListener("keydown", (event) => {
+        const navigationKeys = [
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "Backspace",
+          "Enter",
+          "Tab",
+          "Delete",
+          " ", // space
+        ];
+
+        if (navigationKeys.includes(event.key)) {
+          event.stopPropagation(); // Stop the event from propagating to Phaser
+        }
+      });
+
       textarea.addEventListener(
         "input",
         debounce(() => {
