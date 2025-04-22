@@ -9,8 +9,18 @@ new Phaser.Game({
   width: BASE_WIDTH,
   height: BASE_HEIGHT,
   scene: MainScene,
+  physics: {
+    default: "arcade", // Use Arcade Physics
+    arcade: {
+      gravity: { x: 0, y: 0 },
+      debug: false, // Set to true to enable debug mode
+    },
+  },
   dom: {
     createContainer: true, // Enable DOM elements
+  },
+  input: {
+    keyboard: true,
   },
   scale: {
     mode: Phaser.Scale.FIT,

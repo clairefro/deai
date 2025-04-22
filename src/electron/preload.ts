@@ -11,7 +11,6 @@ interface FileObj {
 const electronAPI = {
   async getFiles(): Promise<FileObj[]> {
     const config = await ipcRenderer.invoke("get-config");
-    console.log({ config });
     if (!config.notesDir) {
       console.warn("Notes directory not configured");
       return [];

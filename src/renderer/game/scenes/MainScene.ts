@@ -3,16 +3,21 @@ import { ConfigSettings } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/SettingsMenu";
 
+import playerImage from "../../assets/sprite.png";
+
 class MainScene extends Phaser.Scene {
   private config!: ConfigSettings;
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
+  private player!: Phaser.Physics.Arcade.Sprite;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
   preload() {
-    // Optional preload of assets
+    this.load.image("player", playerImage);
   }
 
   async create() {
+    console.log("Input plugin", this.input.keyboard);
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
@@ -29,10 +34,38 @@ class MainScene extends Phaser.Scene {
       // Handle directory change by reloading files
       this.notebook.loadFiles();
     });
+
+    this.player = this.physics.add.sprite(400, 300, "player");
+    this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
+
+    // Create cursor keys for movement
+    if (this.input.keyboard) {
+      console.log("MADE IT");
+      this.cursors = this.input.keyboard.createCursorKeys();
+    } else {
+      throw new Error(
+        "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
+      );
+    }
   }
 
   update() {
     // Game loop logic
+    if (this.cursors.left?.isDown) {
+      this.player.setVelocityX(-200); // Move left
+    } else if (this.cursors.right?.isDown) {
+      this.player.setVelocityX(200); // Move right
+    } else {
+      this.player.setVelocityX(0); // Stop horizontal movement
+    }
+
+    if (this.cursors.up?.isDown) {
+      this.player.setVelocityY(-200); // Move up
+    } else if (this.cursors.down?.isDown) {
+      this.player.setVelocityY(200); // Move down
+    } else {
+      this.player.setVelocityY(0); // Stop vertical movement
+    }
   }
 }
 
