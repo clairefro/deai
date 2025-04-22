@@ -9,6 +9,9 @@ new Phaser.Game({
   width: BASE_WIDTH,
   height: BASE_HEIGHT,
   scene: MainScene,
+  dom: {
+    createContainer: true, // Enable DOM elements
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

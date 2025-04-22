@@ -21,7 +21,7 @@ class Config {
     this.app = app;
     this.CONFIG_DIR = path.join(app.getPath("userData"), ".deai");
     this.CONFIG_FILE = path.join(this.CONFIG_DIR, "config.json");
-
+    console.log({ CONFIG_DIR: this.CONFIG_DIR });
     this.defaultConfig = {
       version: "1.0.0",
       lastOpenedNote: null,

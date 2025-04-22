@@ -1,29 +1,15 @@
 import { contextBridge, ipcRenderer } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { ConfigSettings, ConfigSettingsUpdate } from "../shared/config";
+import { ConfigSettings, ConfigSettingsUpdate } from "../shared/Config";
 
 interface FileObj {
   name: string;
   path: string;
 }
 
-interface ElectronAPI {
-  getFiles: () => Promise<FileObj[]>;
-  readFile: (filepath: string) => Promise<string>;
-  getConfig: () => Promise<ConfigSettings>;
-  selectDirectory: () => Promise<string | null>;
-  updateConfig: (updates: ConfigSettingsUpdate) => Promise<ConfigSettings>;
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI;
-  }
-}
-
-const electronAPI: ElectronAPI = {
-  async getFiles() {
+const electronAPI = {
+  async getFiles(): Promise<FileObj[]> {
     const config = await ipcRenderer.invoke("get-config");
     console.log({ config });
     if (!config.notesDir) {
@@ -40,7 +26,7 @@ const electronAPI: ElectronAPI = {
       }));
   },
 
-  async readFile(filepath) {
+  async readFile(filepath: string) {
     try {
       const content = await fs.readFile(filepath, "utf-8");
       return content;
@@ -58,8 +44,22 @@ const electronAPI: ElectronAPI = {
     return await ipcRenderer.invoke("select-dir");
   },
 
-  async updateConfig(updates) {
+  async updateConfig(updates: ConfigSettingsUpdate) {
     return await ipcRenderer.invoke("update-config", updates);
   },
+
+  async writeFile(filepath: string, content: string) {
+    ipcRenderer.invoke("write-file", filepath, content);
+  },
 };
+
+// infer interface from definition
+type ElectronAPI = typeof electronAPI;
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
+
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);

@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { debounce } from "../../../shared/util/debounce";
 
 export class Notebook {
   private scene: Phaser.Scene;
@@ -8,6 +9,8 @@ export class Notebook {
   private fileList!: Phaser.GameObjects.Text;
   private notebookTab!: Phaser.GameObjects.Graphics;
   private fileEntries: Phaser.GameObjects.Text[] = [];
+  private editInput!: Phaser.GameObjects.DOMElement;
+  private currentFilePath: string | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -45,44 +48,48 @@ export class Notebook {
     explorer.fillStyle(0x6b4423, 1);
     explorer.fillRect(10, 10, 200, 580);
 
-    // Note content area
-    const contentArea = this.scene.add.graphics();
-    contentArea.fillStyle(0xfff8dc, 1);
-    contentArea.fillRect(220, 10, 570, 580);
-
-    // Create note content area
-    this.noteContent = this.scene.add.text(
-      230,
-      20,
-      "Select a file to view its contents",
-      {
-        font: "16px monospace",
-        //@ts-ignore
-        fill: "#000000",
-        wordWrap: { width: 550 },
-        lineSpacing: 8,
-        backgroundColor: "#fff8dc",
-        padding: { x: 15, y: 15 },
-        maxLines: 30,
-      }
-    );
-
     // Create file list area
     this.fileList = this.scene.add.text(20, 20, "", {
       font: "16px monospace",
-      //@ts-ignore
+      // @ts-ignore
       fill: "#ffffff",
       wordWrap: { width: 180 },
     });
 
-    // Add everything to the open notebook container
-    this.notebookOpen.add([
-      notebook,
-      explorer,
-      contentArea,
-      this.fileList,
-      this.noteContent,
-    ]);
+    // Note content area
+    // const contentArea = this.scene.add.graphics();
+    // contentArea.fillStyle(0xfff8dc, 1);
+    // contentArea.fillRect(220, 10, 570, 580);
+
+    this.editInput = this.scene.add.dom(230, 20).createFromHTML(`
+      <textarea id="editInput" style="
+        width: 550px; 
+        height: 550px; 
+        font-family: monospace; 
+        font-size: 16px; 
+        padding: 15px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        background-color: #fff8dc; 
+        display: none;
+      "></textarea>
+    `);
+
+    const textarea = document.getElementById(
+      "editInput"
+    ) as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.addEventListener(
+        "input",
+        debounce(() => {
+          if (this.currentFilePath) {
+            this.saveFileContent(this.currentFilePath, textarea.value);
+          }
+        }, 300) // Save after 300ms of inactivity
+      );
+    }
+
+    this.notebookOpen.add([notebook, explorer, this.fileList, this.editInput]);
 
     // Position the open notebook
     this.notebookOpen.setPosition(
@@ -92,7 +99,6 @@ export class Notebook {
 
     // Handle clicking the tab
     tab.on("pointerdown", () => {
-      console.log("Tab clicked");
       this.notebookOpen.setVisible(!this.notebookOpen.visible);
     });
 
@@ -118,7 +124,6 @@ export class Notebook {
       // Create interactive file entries
       files.forEach((file, index) => {
         // Display just the filename but store the full path
-        // TODO: FIX
         const fileEntry = this.scene.add.text(20, 20 + index * 25, file.name, {
           font: "16px monospace",
           // @ts-ignore
@@ -128,7 +133,7 @@ export class Notebook {
         fileEntry.setInteractive({ useHandCursor: true });
 
         fileEntry.on("pointerdown", () => {
-          console.log(`Clicked file: ${file}`); // Log full path
+          console.log(`Clicked file: ${file.path}`); // Log full path
           this.loadFileContent(file.path); // Pass full path to loadFileContent
         });
 
@@ -156,19 +161,28 @@ export class Notebook {
       const content = await window.electronAPI.readFile(filepath);
       console.log("Content loaded:", content);
 
-      this.noteContent.setText(content);
-      this.noteContent.setStyle({
-        font: "16px monospace",
-        fill: "#000000",
-        wordWrap: { width: 550 },
-        lineSpacing: 8,
-        backgroundColor: "#fff8dc",
-        padding: { x: 15, y: 15 },
-        maxLines: 30,
-      });
+      const textarea = document.getElementById(
+        "editInput"
+      ) as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.value = content; // Populate the textarea with file content
+        textarea.style.display = "block"; // Make the textarea visible
+      }
+
+      this.currentFilePath = filepath;
     } catch (err) {
       console.error("Failed to load file:", err);
       this.noteContent.setText("Error loading file content");
+    }
+  }
+
+  async saveFileContent(filepath: string, content: string): Promise<void> {
+    console.log("Saving file:", filepath);
+    try {
+      await window.electronAPI.writeFile(filepath, content);
+      console.log("File saved successfully");
+    } catch (err) {
+      console.error("Failed to save file:", err);
     }
   }
 }

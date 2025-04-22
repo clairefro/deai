@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { ConfigSettings } from "../../../shared/config";
+import { ConfigSettings } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/SettingsMenu";
 

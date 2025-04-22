@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
-import { Config, ConfigSettingsUpdate } from "../shared/config";
+import * as fs from "node:fs/promises";
+
+import { Config, ConfigSettingsUpdate } from "../shared/Config";
 
 import { BACKGROUND_COLOR } from "./constants";
 
@@ -69,6 +71,19 @@ app.whenReady().then(async () => {
   ipcMain.handle("update-config", async (_, updates: ConfigSettingsUpdate) => {
     return await config.updateConfig(updates);
   });
+
+  ipcMain.handle(
+    "write-file",
+    async (_event, filepath: string, content: string) => {
+      try {
+        await fs.writeFile(filepath, content, "utf-8");
+        return { success: true };
+      } catch (error: any) {
+        console.error("Failed to write file:", error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
 
   createWindow();
 });

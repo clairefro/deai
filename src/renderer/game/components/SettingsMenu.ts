@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { ConfigSettings } from "../../../shared/config";
+import { ConfigSettings } from "../../../shared/Config";
 
 export class SettingsMenu {
   private scene: Phaser.Scene;
