@@ -34,9 +34,15 @@ export class Notebook {
     tab.x = (this.scene.cameras.main.width - 800) / 2;
     tab.y = this.scene.cameras.main.height - 40;
 
+    tab.setDepth(100);
+
     // Create the full notebook view (initially hidden)
     this.notebookOpen = this.scene.add.container(0, 0);
     this.notebookOpen.setVisible(false);
+
+    // Set depth for notebook elements
+    this.notebook.setDepth(100); // Ensure the notebook container is on top
+    this.notebookOpen.setDepth(100); // Ensure the open notebook is on top
 
     // Notebook background
     const notebook = this.scene.add.graphics();
@@ -55,11 +61,6 @@ export class Notebook {
       fill: "#ffffff",
       wordWrap: { width: 180 },
     });
-
-    // Note content area
-    // const contentArea = this.scene.add.graphics();
-    // contentArea.fillStyle(0xfff8dc, 1);
-    // contentArea.fillRect(220, 10, 570, 580);
 
     this.editInput = this.scene.add.dom(230, 20).createFromHTML(`
       <textarea id="editInput" style="

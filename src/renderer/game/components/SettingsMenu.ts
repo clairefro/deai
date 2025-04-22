@@ -25,6 +25,7 @@ export class SettingsMenu {
       this.scene.cameras.main.width - 50,
       this.scene.cameras.main.height - 50
     );
+    this.settingsIcon.setDepth(100);
 
     // Create gear icon
     const gear = this.scene.add.graphics();

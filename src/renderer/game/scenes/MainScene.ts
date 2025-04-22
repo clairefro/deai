@@ -37,10 +37,9 @@ class MainScene extends Phaser.Scene {
 
     this.player = this.physics.add.sprite(400, 300, "player");
     this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
-
+    this.player.setDepth(50);
     // Create cursor keys for movement
     if (this.input.keyboard) {
-      console.log("MADE IT");
       this.cursors = this.input.keyboard.createCursorKeys();
     } else {
       throw new Error(
