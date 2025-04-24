@@ -2,7 +2,7 @@ import * as Phaser from "phaser";
 import { ConfigSettings } from "../../../shared/Config";
 import { debounce } from "../../../shared/util/debounce";
 import { DotNotation } from "../../../shared/util/DotNotation";
-import { setNestedValue } from "../../../shared/util/setNestedValue";
+import { mask } from "../../../shared/util/mask";
 
 type SupportedInput = "text" | "directory";
 
@@ -26,7 +26,7 @@ const SETTINGS_SCHEMA: SettingDefinition[] = [
     key: "apiKeys.openai",
     label: "OpenAI API Key",
     value: (config: ConfigSettings) =>
-      config.apiKeys.openai ? "API Key Set" : "Not set",
+      config.apiKeys.openai ? mask(config.apiKeys.openai) : "Not set",
     inputType: "text",
   },
 ];
@@ -127,23 +127,48 @@ export class SettingsMenu {
     if (setting.inputType === "text") {
       const textInput = document.createElement("input");
       textInput.type = "text";
-      // Get current value using dot notation path
-      const currentValue = String(
-        setting.key
-          .split(".")
-          .reduce((obj, key) => (obj as any)?.[key], this.config) || ""
-      );
-      textInput.value = currentValue;
+
+      // Always use the formatter from schema for display
+      textInput.value = setting.value(this.config);
       textInput.className = "settings-input-text";
+
+      // Prevent all keyboard event propagation when focused
+      textInput.addEventListener("keydown", (e: KeyboardEvent) => {
+        e.stopPropagation();
+        if (this.scene.input.keyboard) {
+          this.scene.input.keyboard.enabled = false;
+        }
+      });
+
+      textInput.addEventListener("focus", () => {
+        if (this.scene.input.keyboard) {
+          this.scene.input.keyboard.enabled = false;
+        }
+        // Also disable keyboard captures
+        this.scene.input.keyboard?.clearCaptures();
+      });
+
+      textInput.addEventListener("blur", () => {
+        if (this.scene.input.keyboard) {
+          this.scene.input.keyboard.enabled = true;
+        }
+      });
 
       const debouncedChangeHandler = debounce(async (event: Event) => {
         const value = (event.target as HTMLInputElement).value;
-        const updatedConfig = await window.electronAPI.updateConfig({
+
+        // Keep the raw value for display during the update
+        const rawValue = value;
+
+        await window.electronAPI.updateConfig({
           [setting.key]: value,
         });
-        this.updateConfig(updatedConfig);
-        // Update display value using the schema's formatter
-        textInput.value = setting.value(updatedConfig);
+        // Get fresh config and update local state
+        const freshConfig = await window.electronAPI.getConfig();
+        this.config = freshConfig;
+
+        // Update display using schema formatter
+        textInput.value = setting.value(this.config);
       }, 300);
 
       textInput.addEventListener("input", debouncedChangeHandler);

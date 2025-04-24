@@ -76,13 +76,8 @@ class Config {
       const configData = await fs.readFile(this.CONFIG_FILE, "utf8");
       const config: ConfigSettings = JSON.parse(configData);
 
-      console.log("GET BEFORE");
-      console.log(config);
-
       // Decrypt sensitive properties before returning
       transformProps(config, SECRET_PROPS, decrypt);
-      console.log("GET AFTER");
-      console.log(config);
 
       return config;
     } catch (e: any) {
@@ -111,11 +106,16 @@ class Config {
       // Set the value at the final key
       current[keys[keys.length - 1]] = value;
     });
-
+    const encryptedConfig = { ...newConfig };
     // Encrypt sensitive properties before saving
-    transformProps(newConfig, SECRET_PROPS, encrypt);
+    transformProps(encryptedConfig, SECRET_PROPS, encrypt);
 
-    await fs.writeFile(this.CONFIG_FILE, JSON.stringify(newConfig, null, 2));
+    await fs.writeFile(
+      this.CONFIG_FILE,
+      JSON.stringify(encryptedConfig, null, 2)
+    );
+
+    // Return the raw unencrypted config
     return newConfig;
   }
 }
