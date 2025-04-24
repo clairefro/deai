@@ -11,7 +11,8 @@
     "build:renderer": "vite build",
     "lol-i-dont-know-why-i-need-below-command-but-tired-of-debugging": "nil",
     "rm-dist-electron": "rm -fr ./src/renderer/dist-electron",
-    "dev": "NODE_ENV=development npm run dev:main & npm run dev:renderer",
+    "dev": "NODE_ENV=development npm run dev:prepare && concurrently --kill-others-on-fail \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev:prepare": "npm run clean && npm run build:main",
     "dev:main": "tsc -p tsconfig.main.json --watch",
     "dev:renderer": "vite --host"
   },
@@ -21,17 +22,18 @@
     "chokidar": "^4.0.3",
     "electron": "^35.1.5",
     "express": "^5.1.0",
+    "node-machine-id": "^1.1.12",
     "phaser": "^3.88.2"
   },
   "devDependencies": {
-    "@types/electron": "^1.6.12",
     "@types/node": "^22.14.1",
-    "electron-reload": "^2.0.0-alpha.1",
+    "concurrently": "^9.1.2",
     "terser": "^5.39.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.1",
     "vite-plugin-clean": "^2.0.1",
     "vite-plugin-electron": "^0.29.0",
-    "vite-plugin-electron-renderer": "^0.14.6"
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "wait-on": "^8.0.3"
   }
 }

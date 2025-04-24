@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { ConfigSettingsUpdate } from "../shared/Config";
+import { ConfigSettings, ConfigSettingsUpdate } from "../shared/Config";
 import chokidar from "chokidar";
 
 interface FileObj {
@@ -36,7 +36,7 @@ const electronAPI = {
     }
   },
 
-  async getConfig() {
+  async getConfig(): Promise<ConfigSettings> {
     return await ipcRenderer.invoke("get-config");
   },
 

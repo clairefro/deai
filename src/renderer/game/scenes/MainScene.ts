@@ -49,6 +49,7 @@ class MainScene extends Phaser.Scene {
   }
 
   update() {
+    if (!this.cursors) return;
     // Game loop logic
     if (this.cursors.left?.isDown) {
       this.player.setVelocityX(-200); // Move left

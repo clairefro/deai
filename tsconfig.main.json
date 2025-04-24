@@ -4,7 +4,15 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "sourceMap": true,
+    "strict": true,
+    "noEmitOnError": true,
+    "noImplicitAny": true
   },
   "include": ["src/electron/**/*", "src/shared/**/*"]
 }

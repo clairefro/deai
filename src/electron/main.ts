@@ -6,19 +6,10 @@ import { Config, ConfigSettingsUpdate } from "../shared/Config";
 
 import { BACKGROUND_COLOR } from "./constants";
 
-// --- HOT RELOAD FOR DEVELOPMENT ------
-
-if (process.env.NODE_ENV === "development") {
-  const electronReload = require("electron-reload");
-  const projectRoot = path.join(__dirname, "..", "..");
-
-  electronReload(__dirname, {
-    electron: path.join(projectRoot, "node_modules", "electron"),
-  });
-  console.log("Hot reload listening...");
+if (!app) {
+  console.error("Electron app module not available");
+  process.exit(1);
 }
-
-// --------------------------------------
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -50,7 +41,7 @@ app.whenReady().then(async () => {
   await config.ensureConfigDirs();
 
   // Add IPC handlers
-  ipcMain.handle("get-config", async (event) => {
+  ipcMain.handle("get-config", async (event: any) => {
     return await config.getConfig();
   });
 
@@ -68,13 +59,16 @@ app.whenReady().then(async () => {
     return null;
   });
 
-  ipcMain.handle("update-config", async (_, updates: ConfigSettingsUpdate) => {
-    return await config.updateConfig(updates);
-  });
+  ipcMain.handle(
+    "update-config",
+    async (_: any, updates: ConfigSettingsUpdate) => {
+      return await config.updateConfig(updates);
+    }
+  );
 
   ipcMain.handle(
     "write-file",
-    async (_event, filepath: string, content: string) => {
+    async (_event: any, filepath: string, content: string) => {
       try {
         await fs.writeFile(filepath, content, "utf-8");
         return { success: true };
