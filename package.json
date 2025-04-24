@@ -14,7 +14,7 @@
     "dev": "NODE_ENV=development npm run dev:prepare && concurrently --kill-others-on-fail \"npm run dev:main\" \"npm run dev:renderer\"",
     "dev:prepare": "npm run clean && npm run build:main",
     "dev:main": "tsc -p tsconfig.main.json --watch",
-    "dev:renderer": "vite --host"
+    "dev:renderer": "vite --host --force"
   },
   "author": "Claire Froelich",
   "license": "MIT",

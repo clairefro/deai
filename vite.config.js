@@ -6,6 +6,15 @@ import path from "path";
 export default defineConfig({
   root: "src/renderer",
   base: "./",
+  server: {
+    hmr: {
+      overlay: false,
+      protocol: "ws",
+    },
+  },
+  css: {
+    devSourcemap: true,
+  },
   plugins: [
     electron({
       main: {
