@@ -44,7 +44,7 @@ const electronAPI = {
     return await ipcRenderer.invoke("select-dir");
   },
 
-  async updateConfig(updates: ConfigSettingsUpdate) {
+  async updateConfig(updates: ConfigSettingsUpdate): Promise<ConfigSettings> {
     return await ipcRenderer.invoke("update-config", updates);
   },
 

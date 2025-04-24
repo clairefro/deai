@@ -94,19 +94,25 @@ class Config {
     Object.entries(updates).forEach(([path, value]) => {
       const keys = path.split(".");
       let current = newConfig as any;
+      const lastKey = keys.pop();
 
-      // Navigate to the correct nesting level
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) {
-          current[keys[i]] = {};
+      // Navigate and create the nested structure
+      for (const key of keys) {
+        if (!(key in current)) {
+          current[key] = {};
         }
-        current = current[keys[i]];
+        current = current[key];
       }
 
-      // Set the value at the final key
-      current[keys[keys.length - 1]] = value;
+      // Set the final value
+      if (lastKey) {
+        current[lastKey] = value;
+      }
     });
-    const encryptedConfig = { ...newConfig };
+
+    // copy raw updated config for encrypted persistance
+    const encryptedConfig = JSON.parse(JSON.stringify(newConfig));
+
     // Encrypt sensitive properties before saving
     transformProps(encryptedConfig, SECRET_PROPS, encrypt);
 

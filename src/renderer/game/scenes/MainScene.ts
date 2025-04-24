@@ -1,8 +1,8 @@
 import * as Phaser from "phaser";
 import { ConfigSettings } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
-import { SettingsMenu } from "../components/SettingsMenu";
-
+import { SettingsMenu } from "../components/settings/SettingsMenu";
+import { StatusBar } from "../components/StatusBar";
 import playerImage from "../../assets/sprite.png";
 
 class MainScene extends Phaser.Scene {
@@ -45,6 +45,11 @@ class MainScene extends Phaser.Scene {
       throw new Error(
         "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
       );
+    }
+
+    const gameContainer = document.getElementById("game");
+    if (gameContainer) {
+      StatusBar.initialize(gameContainer);
     }
   }
 
