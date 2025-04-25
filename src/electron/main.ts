@@ -39,6 +39,7 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   const config = new Config(app);
   await config.ensureConfigDirs();
+  await config.loadConfig();
 
   // Add IPC handlers
   ipcMain.handle("get-config", async (event: any) => {

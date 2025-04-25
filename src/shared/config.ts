@@ -38,10 +38,11 @@ const SECRET_PROPS = ["apiKeys.openai"];
 type ConfigSettingsUpdate = DotNotationUpdate<Partial<ConfigSettings>>;
 
 class Config {
-  app: App;
-  CONFIG_DIR: string;
-  CONFIG_FILE: string;
-  defaultConfig: ConfigSettings;
+  private app: App;
+  private CONFIG_DIR: string;
+  private CONFIG_FILE: string;
+  private defaultConfig: ConfigSettings;
+  private currentConfig: ConfigSettings | null = null;
 
   constructor(app: App) {
     this.app = app;
@@ -71,32 +72,39 @@ class Config {
     }
   }
 
-  async getConfig(): Promise<ConfigSettings> {
+  /** Set config to instance memory */
+  async loadConfig(): Promise<void> {
     try {
       const configData = await fs.readFile(this.CONFIG_FILE, "utf8");
       const config: ConfigSettings = JSON.parse(configData);
 
-      // Decrypt sensitive properties before returning
+      // Decrypt sensitive properties
       transformProps(config, SECRET_PROPS, decrypt);
 
-      return config;
+      this.currentConfig = config;
     } catch (e: any) {
-      console.error("Error when getting config: ", e.message);
-      return this.defaultConfig;
+      console.error("Error when loading config: ", e.message);
+      this.currentConfig = this.defaultConfig;
     }
+  }
+
+  async getConfig(): Promise<ConfigSettings> {
+    if (!this.currentConfig) {
+      await this.loadConfig();
+    }
+    return this.currentConfig!;
   }
 
   async updateConfig(updates: ConfigSettingsUpdate): Promise<ConfigSettings> {
     const config = await this.getConfig();
     const newConfig = { ...config };
 
-    // Handle each update by properly setting nested properties
+    // Handle each update
     Object.entries(updates).forEach(([path, value]) => {
       const keys = path.split(".");
       let current = newConfig as any;
       const lastKey = keys.pop();
 
-      // Navigate and create the nested structure
       for (const key of keys) {
         if (!(key in current)) {
           current[key] = {};
@@ -104,24 +112,23 @@ class Config {
         current = current[key];
       }
 
-      // Set the final value
       if (lastKey) {
         current[lastKey] = value;
       }
     });
 
-    // copy raw updated config for encrypted persistance
+    // Update memory
+    this.currentConfig = newConfig;
+
+    // Persist to disk
+    // TODO : error handling
     const encryptedConfig = JSON.parse(JSON.stringify(newConfig));
-
-    // Encrypt sensitive properties before saving
     transformProps(encryptedConfig, SECRET_PROPS, encrypt);
-
     await fs.writeFile(
       this.CONFIG_FILE,
       JSON.stringify(encryptedConfig, null, 2)
     );
 
-    // Return the raw unencrypted config
     return newConfig;
   }
 }
