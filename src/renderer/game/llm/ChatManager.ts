@@ -48,6 +48,10 @@ export class ChatManager {
     this.messageHistory = [];
   }
 
+  getHistory(): Message[] {
+    return [...this.messageHistory];
+  }
+
   updateSystemPrompt(newPrompt: string): void {
     this.systemPrompt = newPrompt;
   }

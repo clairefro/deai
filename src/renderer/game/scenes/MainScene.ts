@@ -4,6 +4,8 @@ import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { StatusBar } from "../components/StatusBar";
 import playerImage from "../../assets/sprite.png";
+import { Librarian } from "../models/Librarian";
+import ghostImage from "../../assets/ghost.png";
 
 class MainScene extends Phaser.Scene {
   private config!: ConfigSettings;
@@ -11,9 +13,12 @@ class MainScene extends Phaser.Scene {
   private settingsMenu!: SettingsMenu;
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  // TODO: TEMP
+  private baldwin!: Librarian;
 
   preload() {
     this.load.image("player", playerImage);
+    this.load.image("ghost", ghostImage);
   }
 
   async create() {
@@ -51,6 +56,10 @@ class MainScene extends Phaser.Scene {
     if (gameContainer) {
       StatusBar.initialize(gameContainer);
     }
+
+    // TODO: TEMP
+    this.baldwin = new Librarian("James Baldwin", this);
+    this.baldwin.spawn(400, 300);
   }
 
   update() {
