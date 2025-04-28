@@ -49,3 +49,24 @@
 #game .settings-close-button {
   cursor: pointer;
 }
+
+#game .settings-input-select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #666;
+  background: #444;
+  color: white;
+  font-family: monospace;
+  width: 100%;
+  cursor: pointer;
+}
+
+#game .settings-input-select:focus {
+  outline: none;
+  border-color: #888;
+}
+
+#game .settings-input-select option {
+  background: #444;
+  color: white;
+}

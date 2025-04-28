@@ -1,7 +1,7 @@
-import { ChatAdapter, ChatResponse, Message } from "./ChatAdapter";
-import { Config } from "../../../shared/Config";
+import { ConfigSettings } from "../../../shared/Config";
+import { ChatResponse, Message, GenericChatAdapterI } from "./ChatAdapter";
 
-export class OllamaAdapter implements ChatAdapter {
+export class OllamaAdapter implements GenericChatAdapterI {
   private baseUrl: string;
 
   // TODO: MAKE OLLAMA URL CONFIGURABLE
@@ -9,16 +9,18 @@ export class OllamaAdapter implements ChatAdapter {
     this.baseUrl = baseUrl;
   }
 
-  async sendMessage(messages: Message[]): Promise<ChatResponse> {
-    const config = await window.electronAPI.getConfig();
-
+  async sendMessage(
+    messages: Message[],
+    config: ConfigSettings
+  ): Promise<ChatResponse> {
+    // TODO: Check for Ollama model
     const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: config.llm.model,
+        model: config.llm.ollamaModel,
         messages,
       }),
     });

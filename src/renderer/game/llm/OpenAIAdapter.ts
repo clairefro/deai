@@ -1,24 +1,25 @@
-import { ChatAdapter, ChatResponse, Message } from "./ChatAdapter";
+import { ConfigSettings } from "../../../shared/Config";
+import { ChatResponse, GenericChatAdapterI, Message } from "./ChatAdapter";
 
-export class OpenAIAdapter implements ChatAdapter {
-  private apiKey: string;
+export class OpenAIAdapter implements GenericChatAdapterI {
+  private baseUrl: string;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor() {
+    this.baseUrl = "https://api.openai.com/v1";
   }
 
-  async sendMessage(messages: Message[]): Promise<ChatResponse> {
-    // TODO:
-    const config = await window.electronAPI.getConfig();
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  async sendMessage(
+    messages: Message[],
+    config: ConfigSettings
+  ): Promise<ChatResponse> {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${config.apiKeys.openai}`,
       },
       body: JSON.stringify({
-        model: config.llm.model,
+        model: config.llm.openaiModel,
         messages,
       }),
     });

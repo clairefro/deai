@@ -12,7 +12,8 @@ interface ConfigSettings {
   notesDir: string | null;
   llm: {
     platform: "openai" | "ollama";
-    model: string;
+    openaiModel: string;
+    ollamaModel: string | null;
   };
   apiKeys: {
     openai: string | null;
@@ -25,7 +26,8 @@ const DEFAULT_CONFIG: ConfigSettings = {
   notesDir: null,
   llm: {
     platform: "openai",
-    model: "gpt-4o-mini",
+    openaiModel: "gpt-4o-mini",
+    ollamaModel: null,
   },
   apiKeys: {
     openai: null,

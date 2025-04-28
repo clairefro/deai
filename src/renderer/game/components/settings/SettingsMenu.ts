@@ -3,6 +3,7 @@ import { GearIcon } from "./ui/GearIcon";
 import { SettingsField } from "./ui/SettingsField";
 import { TextInput } from "./inputs/TextInput";
 import { DirectoryInput } from "./inputs/DirectoryInput";
+import { SelectInput } from "./inputs/SelectInput";
 import { StatusBar } from "../StatusBar";
 import { ConfigSettings } from "../../../../shared/Config";
 import { SETTINGS_SCHEMA, SettingDefinition } from "./SettingsSchema";
@@ -51,24 +52,33 @@ export class SettingsMenu extends Menu {
   }
 
   private createInput(setting: SettingDefinition): HTMLElement | null {
-    if (setting.inputType === "text") {
-      return TextInput.create(
-        setting,
-        this.config,
-        this.scene,
-        this.updateConfig.bind(this)
-      );
-    }
+    switch (setting.inputType) {
+      case "text":
+        return TextInput.create(
+          setting,
+          this.config,
+          this.scene,
+          this.updateConfig.bind(this)
+        );
 
-    if (setting.inputType === "directory") {
-      return DirectoryInput.create(
-        setting,
-        this.config,
-        this.updateConfig.bind(this),
-        this.onDirectoryChange
-      );
-    }
+      case "directory":
+        return DirectoryInput.create(
+          setting,
+          this.config,
+          this.updateConfig.bind(this),
+          this.onDirectoryChange
+        );
 
-    return null;
+      case "select":
+        return SelectInput.create(
+          setting,
+          this.config,
+          this.scene,
+          this.updateConfig.bind(this)
+        );
+
+      default:
+        return null;
+    }
   }
 }
