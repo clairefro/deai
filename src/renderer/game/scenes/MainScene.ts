@@ -35,8 +35,8 @@ class MainScene extends Phaser.Scene {
 
     // Initialize components
     this.notebook = new Notebook(this);
-    this.settingsMenu = new SettingsMenu(this, this.config, (newDir) => {
-      // Handle directory change by reloading files
+    this.settingsMenu = new SettingsMenu(this, this.config, (_newDir) => {
+      // Handle directory change in notebook by reloading files
       this.notebook.loadFiles();
     });
 
