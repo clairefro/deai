@@ -6,6 +6,7 @@ import { StatusBar } from "../components/StatusBar";
 import playerImage from "../../assets/sprite.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
+import { DEPTHS } from "../constants";
 
 class MainScene extends Phaser.Scene {
   private config!: ConfigSettings;
@@ -15,6 +16,8 @@ class MainScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   // TODO: TEMP
   private baldwin!: Librarian;
+  private librarians: Librarian[] = [];
+  private enterKey!: Phaser.Input.Keyboard.Key;
 
   preload() {
     this.load.image("player", playerImage);
@@ -40,12 +43,16 @@ class MainScene extends Phaser.Scene {
       this.notebook.loadFiles();
     });
 
-    this.player = this.physics.add.sprite(400, 300, "player");
+    this.player = this.physics.add.sprite(300, 400, "player");
     this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
-    this.player.setDepth(50);
+    this.player.setDepth(DEPTHS.PLAYER);
+
     // Create cursor keys for movement
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
+      this.enterKey = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.ENTER
+      );
     } else {
       throw new Error(
         "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
@@ -60,9 +67,22 @@ class MainScene extends Phaser.Scene {
     // TODO: TEMP
     this.baldwin = new Librarian("James Baldwin", this);
     this.baldwin.spawn(400, 300);
+    this.librarians.push(this.baldwin);
+
+    console.log("Scene Depths:", {
+      player: this.player.depth,
+      baldwin: {
+        container: this.baldwin.getContainer()?.depth,
+        sprite: this.baldwin.getSprite()?.depth,
+        nameText: this.baldwin.getNameText()?.depth,
+      },
+    });
   }
 
   update() {
+    let nearestLibrarian: Librarian | null = null;
+    let shortestDistance = Infinity;
+
     if (!this.cursors) return;
     // Game loop logic
     if (this.cursors.left?.isDown) {
@@ -80,6 +100,34 @@ class MainScene extends Phaser.Scene {
     } else {
       this.player.setVelocityY(0); // Stop vertical movement
     }
+    // for (const librarian of this.librarians) {
+    //   if (!librarian.getSprite() || !librarian.getContainer()) continue;
+
+    //   const distance = Phaser.Math.Distance.Between(
+    //     this.player.x,
+    //     this.player.y,
+    //     librarian.getSprite()!.x + librarian.getContainer()!.x,
+    //     librarian.getSprite()!.y + librarian.getContainer()!.y
+    //   );
+
+    //   if (distance <= MainScene.CHAT_RADIUS && distance < shortestDistance) {
+    //     shortestDistance = distance;
+    //     nearestLibrarian = librarian;
+    //   }
+    // }
+
+    // Show/hide chat prompt based on proximity
+    // if (nearestLibrarian) {
+    //   StatusBar.showMessage(
+    //     `Press ENTER to chat with ${nearestLibrarian.name}`
+    //   );
+
+    //   if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+    //     nearestLibrarian.chat();
+    //   }
+    // } else {
+    //   StatusBar.clearMessage();
+    // }
   }
 }
 

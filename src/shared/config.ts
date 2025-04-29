@@ -18,6 +18,7 @@ interface ConfigSettings {
   apiKeys: {
     openai: string | null;
   };
+  localMode: boolean;
 }
 
 const DEFAULT_CONFIG: ConfigSettings = {
@@ -32,6 +33,7 @@ const DEFAULT_CONFIG: ConfigSettings = {
   apiKeys: {
     openai: null,
   },
+  localMode: false,
 };
 
 // Point to props in config object that should be automatically encrypted/decrypted on storage and retrieval
