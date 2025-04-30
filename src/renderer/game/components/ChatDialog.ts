@@ -77,6 +77,7 @@ export class ChatDialog {
 
       // Clear input and show user message immediately
       this.input.value = "";
+      this.input.style.height = "auto";
       const currentHistory = this.chatManager.getHistory();
       this.updateMessages([
         ...currentHistory,
