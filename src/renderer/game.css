@@ -150,3 +150,22 @@
 #game .chat-close-button:hover {
   color: #fff;
 }
+
+#game .chat-loading {
+  padding: 8px;
+  color: #a9a9a9;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}

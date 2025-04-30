@@ -24,11 +24,12 @@ export class Librarian {
   private imageKey: string;
   private mumbleText: Phaser.GameObjects.Text | null = null;
   private mumbleTimer: Phaser.Time.TimerEvent | null = null;
+  private isChatting: boolean = false;
 
   private static readonly NAME_OFFSET_Y = -50;
   private static readonly MUMBLE_OFFSET_Y = -80;
-  private static readonly MUMBLE_DURATION = { MIN: 3000, MAX: 8000 };
-  private static readonly MUMBLE_GAP = { MIN: 1500, MAX: 3000 };
+  private static readonly MUMBLE_DURATION = { MIN: 5000, MAX: 8000 };
+  private static readonly MUMBLE_GAP = { MIN: 3000, MAX: 8000 };
 
   constructor(name: string, scene: Phaser.Scene, persona?: string) {
     this.scene = scene;
@@ -56,6 +57,9 @@ export class Librarian {
     });
     this.nameText.setOrigin(0.5);
     this.nameText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT);
+    this.encountered
+      ? this.nameText.setVisible(true)
+      : this.nameText.setVisible(false); // Hide name initially if not encountered
 
     // MUMBLES
     this.mumbleText = this.scene.add.text(0, Librarian.MUMBLE_OFFSET_Y, "", {
@@ -113,36 +117,34 @@ export class Librarian {
   private startMumbling(): void {
     if (this.mumblings.length === 0) return;
 
-    const showNextMumble = () => {
-      if (!this.mumbleText || this.mumblings.length === 0) return;
+    const mumbleCycle = () => {
+      if (!this.mumbleText || this.mumblings.length === 0 || this.isChatting)
+        return;
 
-      // Show random mumble
-      const randomIndex = Math.floor(Math.random() * this.mumblings.length);
-      this.mumbleText.setText(this.mumblings[randomIndex]);
-      this.mumbleText.setVisible(true);
-
-      // Hide after random duration
-      const duration = Phaser.Math.Between(
-        Librarian.MUMBLE_DURATION.MIN,
-        Librarian.MUMBLE_DURATION.MAX
-      );
-
-      this.scene.time.delayedCall(duration, () => {
-        if (this.mumbleText) {
-          this.mumbleText.setVisible(false);
-
-          // Schedule next mumble after gap
-          const gap = Phaser.Math.Between(
-            Librarian.MUMBLE_GAP.MIN,
-            Librarian.MUMBLE_GAP.MAX
-          );
-          this.scene.time.delayedCall(gap, showNextMumble);
-        }
-      });
+      // If text is visible, hide it and schedule next show
+      if (this.mumbleText.visible) {
+        this.mumbleText.setVisible(false);
+        const gap = Phaser.Math.Between(
+          Librarian.MUMBLE_GAP.MIN,
+          Librarian.MUMBLE_GAP.MAX
+        );
+        this.mumbleTimer = this.scene.time.delayedCall(gap, mumbleCycle);
+      }
+      // If text is hidden, show new mumble and schedule next hide
+      else {
+        const randomIndex = Math.floor(Math.random() * this.mumblings.length);
+        this.mumbleText.setText(this.mumblings[randomIndex]);
+        this.mumbleText.setVisible(true);
+        const duration = Phaser.Math.Between(
+          Librarian.MUMBLE_DURATION.MIN,
+          Librarian.MUMBLE_DURATION.MAX
+        );
+        this.mumbleTimer = this.scene.time.delayedCall(duration, mumbleCycle);
+      }
     };
 
-    // Start the mumble cycle
-    showNextMumble();
+    // Start the cycle
+    mumbleCycle();
   }
 
   private stopMumbling(): void {
@@ -158,29 +160,41 @@ export class Librarian {
   mumble() {
     if (!this.mumblings.length) return;
     this.startMumbling();
-    // TODO: speech bubble
-    // TODO: mumble on intervals
-    // TODO: remove mumbling after a time
   }
 
   async chat(): Promise<void> {
     if (!this.chatDialog) {
-      this.chatDialog = new ChatDialog(this.systemPrompt, this.scene, () =>
-        this.onConversationEnd()
+      this.stopMumbling();
+      this.isChatting = true;
+
+      this.chatDialog = new ChatDialog(
+        this.systemPrompt,
+        this.scene,
+        () => this.onConversationEnd(),
+        () => {
+          if (!this.encountered) {
+            this.encountered = true;
+          }
+          this.revealNameText();
+        }
       );
     }
 
-    if (!this.encountered) {
-      this.encountered = true;
-    }
-
     this.chatDialog.show();
+  }
+
+  private revealNameText() {
+    if (this.nameText) {
+      this.nameText.setVisible(true);
+    }
   }
 
   private onConversationEnd(): void {
     if (this.chatDialog) {
       this.chatDialog.hide();
     }
+    this.isChatting = false;
+    this.scene.time.delayedCall(3000, () => this.startMumbling());
   }
 
   updateSystemPrompt(persona: string) {

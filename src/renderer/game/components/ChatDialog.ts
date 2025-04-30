@@ -7,14 +7,34 @@ export class ChatDialog {
   private input!: HTMLInputElement;
   private chatManager: ChatManager;
   private onClose?: () => void;
+  private onFirstResponse?: () => void;
+  private hasResponded = false;
   private scene: Phaser.Scene;
+  private loadingIndicator: HTMLElement;
 
-  constructor(systemPrompt: string, scene: Phaser.Scene, onClose?: () => void) {
+  constructor(
+    systemPrompt: string,
+    scene: Phaser.Scene,
+    onClose?: () => void,
+    onFirstResponse?: () => void
+  ) {
     this.scene = scene;
     this.chatManager = new ChatManager(systemPrompt);
     this.onClose = onClose;
+    this.onFirstResponse = onFirstResponse;
     this.element = this.createDialog();
     document.getElementById("game")?.appendChild(this.element);
+
+    this.loadingIndicator = this.createLoadingIndicator();
+    this.messagesContainer.appendChild(this.loadingIndicator);
+    this.loadingIndicator.style.display = "none";
+  }
+
+  private createLoadingIndicator(): HTMLElement {
+    const indicator = document.createElement("div");
+    indicator.className = "chat-loading";
+    indicator.textContent = "...";
+    return indicator;
   }
 
   private createDialog(): HTMLElement {
@@ -52,10 +72,37 @@ export class ChatDialog {
 
     const handleSend = async () => {
       const message = this.input.value.trim();
-      if (message) {
-        this.input.value = "";
+      if (!message) return;
+
+      // Clear input and show user message immediately
+      this.input.value = "";
+      const currentHistory = this.chatManager.getHistory();
+      this.updateMessages([
+        ...currentHistory,
+        { role: "user", content: message },
+      ]);
+
+      // Show loading indicator
+      this.loadingIndicator.style.display = "block";
+      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+
+      try {
+        // Wait for AI response
         const response = await this.chatManager.sendMessage(message);
+
+        // Handle first response
+        if (!this.hasResponded) {
+          this.hasResponded = true;
+          this.onFirstResponse?.();
+        }
+
         this.updateMessages(this.chatManager.getHistory());
+      } catch (err) {
+        console.error(err);
+        // Optionally show error message to user
+      } finally {
+        // Hide loading indicator
+        this.loadingIndicator.style.display = "none";
       }
     };
 
@@ -98,13 +145,19 @@ export class ChatDialog {
   }
 
   private updateMessages(messages: Message[]): void {
-    this.messagesContainer.innerHTML = "";
+    // Clear messages but preserve loading indicator
+    while (this.messagesContainer.firstChild !== this.loadingIndicator) {
+      this.messagesContainer.firstChild?.remove();
+    }
+
+    // Add all messages before the loading indicator
     messages.forEach((msg) => {
       const msgElement = document.createElement("div");
       msgElement.className = `chat-message ${msg.role}`;
       msgElement.textContent = msg.content;
-      this.messagesContainer.appendChild(msgElement);
+      this.messagesContainer.insertBefore(msgElement, this.loadingIndicator);
     });
+
     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
   }
 
