@@ -1,68 +1,30 @@
-import { ChatDialog } from "../components/ChatDialog";
 import { DEPTHS } from "../constants";
+import { ChatDialog } from "../components/ChatDialog";
 
-// TODO
-const SYSTEM_PROMPT_PREAMBLE = `You are an AI Simulacra of a persona, wandering in the Library of Babel. Chat with the user as this persona, as if it were a spoken conversation. DO NOT BREAK PERSONA. YOU ARE NOT AN ASSISTANT. Your persona: `;
-
-const DEFAULT_IMGKEY = "ghost";
-
-export class Librarian {
-  name: string;
-  private scene: Phaser.Scene;
-  persona: string;
-  systemPrompt!: string;
-  mumblings: string[] = [];
-  friends: string[] = [];
-  foes: string[] = [];
-  image?: string;
-  // + lastFiveMsgs?
-  encountered = false;
-  private chatDialog: ChatDialog | null = null;
-  private container: Phaser.GameObjects.Container | null = null;
-  private sprite: Phaser.GameObjects.Sprite | null = null;
-  private nameText: Phaser.GameObjects.Text | null = null;
-  private imageKey: string;
-  private mumbleText: Phaser.GameObjects.Text | null = null;
-  private mumbleTimer: Phaser.Time.TimerEvent | null = null;
-  private isChatting: boolean = false;
-
-  private static readonly NAME_OFFSET_Y = -50;
-  private static readonly MUMBLE_OFFSET_Y = -80;
-  private static readonly MUMBLE_DURATION = { MIN: 5000, MAX: 8000 };
-  private static readonly MUMBLE_GAP = { MIN: 3000, MAX: 8000 };
-
-  constructor(name: string, scene: Phaser.Scene, persona?: string) {
-    this.scene = scene;
-    this.name = name;
-    this.persona = persona || this.name;
-    // TODO: make dynamic
-    this.imageKey = DEFAULT_IMGKEY;
-    // TODO: generate other properties of Librarian on construction (mumblings, friends, foes)
-    this.manifest();
-  }
-
-  spawn(x: number, y: number): void {
-    // Create sprite
-    this.sprite = this.scene.add.sprite(0, 0, this.imageKey);
-    this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: true });
-    this.sprite.setDepth(DEPTHS.LIBRARIAN.SPRITE);
-
-    // NAME TEXT
-    this.nameText = this.scene.add.text(0, Librarian.NAME_OFFSET_Y, this.name, {
+const LIBRARIAN_CONFIG = {
+  DEFAULTS: {
+    IMAGE_KEY: "ghost",
+    SYSTEM_PROMPT:
+      "You are an AI Simulacra of a persona, wandering in the Library of Babel. Chat with the user as this persona, as if it were a spoken conversation. DO NOT BREAK PERSONA. YOU ARE NOT AN ASSISTANT. Your persona: ",
+  },
+  POSITIONS: {
+    NAME_OFFSET_Y: -50,
+    MUMBLE_OFFSET_Y: -80,
+  },
+  TIMING: {
+    MUMBLE_DURATION: { MIN: 5000, MAX: 8000 },
+    MUMBLE_GAP: { MIN: 3000, MAX: 8000 },
+    RESUME_MUMBLE_DELAY: 3000,
+  },
+  TEXT_STYLES: {
+    NAME: {
       fontSize: "16px",
       fontFamily: "monospace",
       color: "#ffffff",
       backgroundColor: "#000000aa",
       padding: { x: 8, y: 4 },
-    });
-    this.nameText.setOrigin(0.5);
-    this.nameText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT);
-    this.encountered
-      ? this.nameText.setVisible(true)
-      : this.nameText.setVisible(false); // Hide name initially if not encountered
-
-    // MUMBLES
-    this.mumbleText = this.scene.add.text(0, Librarian.MUMBLE_OFFSET_Y, "", {
+    },
+    MUMBLE: {
       fontSize: "14px",
       fontFamily: "monospace",
       color: "#ffffff",
@@ -71,161 +33,250 @@ export class Librarian {
       align: "center",
       fixedWidth: 200,
       wordWrap: { width: 190 },
-    });
+    },
+  },
+};
 
-    this.mumbleText.setOrigin(0.5);
-    this.mumbleText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT + 1);
+export interface LibrarianProps {
+  name: string;
+  scene: Phaser.Scene;
+  persona?: string;
+  image?: string;
+}
 
-    const textHeight = this.mumbleText.height;
-    const adjustedOffset = Librarian.MUMBLE_OFFSET_Y - textHeight / 2;
-    this.mumbleText.setY(adjustedOffset);
+export interface LibrarianVisuals {
+  container: Phaser.GameObjects.Container | null;
+  sprite: Phaser.GameObjects.Sprite | null;
+  nameText: Phaser.GameObjects.Text | null;
+  mumbleText: Phaser.GameObjects.Text | null;
+}
 
-    this.mumbleText.setVisible(false);
+export interface LibrarianState {
+  encountered: boolean;
+  isChatting: boolean;
+}
 
-    // Create container and add both elements
-    this.container = this.scene.add.container(x, y, [
-      this.sprite,
-      this.nameText,
-      this.mumbleText,
-    ]);
+export class Librarian {
+  private readonly scene: Phaser.Scene;
+  private readonly name: string;
+  private readonly persona: string;
+  private readonly imageKey: string;
 
-    this.container.setDepth(DEPTHS.LIBRARIAN.CONTAINER);
-    // Handle interaction
-    this.sprite.on("pointerdown", () => {
-      this.chat();
-    });
+  private readonly visuals: LibrarianVisuals = {
+    container: null,
+    sprite: null,
+    nameText: null,
+    mumbleText: null,
+  };
+
+  private readonly state: LibrarianState = {
+    encountered: false,
+    isChatting: false,
+  };
+
+  private chatDialog: ChatDialog | null = null;
+  private mumbleTimer: Phaser.Time.TimerEvent | null = null;
+  private systemPrompt: string;
+  private mumblings: string[] = [];
+  private friends: string[] = [];
+  private foes: string[] = [];
+
+  constructor({ name, scene, persona, image }: LibrarianProps) {
+    this.scene = scene;
+    this.name = name;
+    this.persona = persona || name;
+    this.imageKey = image || LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
+    this.systemPrompt = this.createSystemPrompt();
+    this.initialize();
   }
-  setPosition(x: number, y: number): void {
-    if (this.container) {
-      this.container.setPosition(x, y);
-    }
+
+  private createSystemPrompt(): string {
+    return LIBRARIAN_CONFIG.DEFAULTS.SYSTEM_PROMPT + this.persona;
   }
 
-  destroy(): void {
-    this.stopMumbling();
-    this.container?.destroy();
-    // Container destruction will automatically cleanup child elements
-  }
-
-  async manifest() {
-    this.updateSystemPrompt(this.persona);
-
-    await this._generateMumblings();
+  private async initialize(): Promise<void> {
+    await this.generateMumblings();
     this.startMumbling();
+  }
+
+  spawn(x: number, y: number): void {
+    this.createSprite();
+    this.createNameText();
+    this.createMumbleText();
+    this.createContainer(x, y);
+    this.setupInteraction();
+  }
+
+  private createSprite(): void {
+    this.visuals.sprite = this.scene.add.sprite(0, 0, this.imageKey);
+    this.visuals.sprite.setInteractive({
+      useHandCursor: true,
+      pixelPerfect: true,
+    });
+    this.visuals.sprite.setDepth(DEPTHS.LIBRARIAN.SPRITE);
+  }
+
+  private createNameText(): void {
+    this.visuals.nameText = this.scene.add.text(
+      0,
+      LIBRARIAN_CONFIG.POSITIONS.NAME_OFFSET_Y,
+      this.name,
+      LIBRARIAN_CONFIG.TEXT_STYLES.NAME
+    );
+    this.visuals.nameText.setOrigin(0.5);
+    this.visuals.nameText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT);
+    this.visuals.nameText.setVisible(this.state.encountered);
+  }
+
+  private createMumbleText(): void {
+    this.visuals.mumbleText = this.scene.add.text(
+      0,
+      LIBRARIAN_CONFIG.POSITIONS.MUMBLE_OFFSET_Y,
+      "",
+      LIBRARIAN_CONFIG.TEXT_STYLES.MUMBLE
+    );
+
+    this.configureMumbleText();
+  }
+
+  private configureMumbleText(): void {
+    if (!this.visuals.mumbleText) return;
+
+    this.visuals.mumbleText.setOrigin(0.5);
+    this.visuals.mumbleText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT + 1);
+
+    const adjustedOffset =
+      LIBRARIAN_CONFIG.POSITIONS.MUMBLE_OFFSET_Y -
+      this.visuals.mumbleText.height / 2;
+    this.visuals.mumbleText.setY(adjustedOffset);
+    this.visuals.mumbleText.setVisible(false);
+  }
+
+  private createContainer(x: number, y: number): void {
+    const sprite = this.visuals.sprite!;
+    const nameText = this.visuals.nameText!;
+    const mumbleText = this.visuals.mumbleText!;
+
+    this.visuals.container = this.scene.add.container(x, y, [
+      sprite,
+      nameText,
+      mumbleText,
+    ]);
+    this.visuals.container.setDepth(DEPTHS.LIBRARIAN.CONTAINER);
+  }
+
+  private setupInteraction(): void {
+    this.visuals.sprite?.on("pointerdown", () => this.chat());
   }
 
   private startMumbling(): void {
     if (this.mumblings.length === 0) return;
 
     const mumbleCycle = () => {
-      if (!this.mumbleText || this.mumblings.length === 0 || this.isChatting)
+      if (
+        !this.visuals.mumbleText ||
+        this.mumblings.length === 0 ||
+        this.state.isChatting
+      )
         return;
 
-      // If text is visible, hide it and schedule next show
-      if (this.mumbleText.visible) {
-        this.mumbleText.setVisible(false);
+      if (this.visuals.mumbleText.visible) {
+        this.visuals.mumbleText.setVisible(false);
         const gap = Phaser.Math.Between(
-          Librarian.MUMBLE_GAP.MIN,
-          Librarian.MUMBLE_GAP.MAX
+          LIBRARIAN_CONFIG.TIMING.MUMBLE_GAP.MIN,
+          LIBRARIAN_CONFIG.TIMING.MUMBLE_GAP.MAX
         );
         this.mumbleTimer = this.scene.time.delayedCall(gap, mumbleCycle);
-      }
-      // If text is hidden, show new mumble and schedule next hide
-      else {
+      } else {
         const randomIndex = Math.floor(Math.random() * this.mumblings.length);
-        this.mumbleText.setText(this.mumblings[randomIndex]);
-        this.mumbleText.setVisible(true);
+        this.visuals.mumbleText.setText(this.mumblings[randomIndex]);
+        this.visuals.mumbleText.setVisible(true);
         const duration = Phaser.Math.Between(
-          Librarian.MUMBLE_DURATION.MIN,
-          Librarian.MUMBLE_DURATION.MAX
+          LIBRARIAN_CONFIG.TIMING.MUMBLE_DURATION.MIN,
+          LIBRARIAN_CONFIG.TIMING.MUMBLE_DURATION.MAX
         );
         this.mumbleTimer = this.scene.time.delayedCall(duration, mumbleCycle);
       }
     };
 
-    // Start the cycle
     mumbleCycle();
   }
 
   private stopMumbling(): void {
-    if (this.mumbleText) {
-      this.mumbleText.setVisible(false);
+    if (this.visuals.mumbleText) {
+      this.visuals.mumbleText.setVisible(false);
     }
     if (this.mumbleTimer) {
       this.mumbleTimer.destroy();
       this.mumbleTimer = null;
     }
-  }
-
-  mumble() {
-    if (!this.mumblings.length) return;
-    this.startMumbling();
+    this.state.isChatting = true;
   }
 
   async chat(): Promise<void> {
     if (!this.chatDialog) {
       this.stopMumbling();
-      this.isChatting = true;
 
       this.chatDialog = new ChatDialog(
         this.systemPrompt,
         this.scene,
         () => this.onConversationEnd(),
-        () => {
-          if (!this.encountered) {
-            this.encountered = true;
-          }
-          this.revealNameText();
-        }
+        () => this.handleFirstResponse()
       );
     }
 
     this.chatDialog.show();
   }
 
-  private revealNameText() {
-    if (this.nameText) {
-      this.nameText.setVisible(true);
+  private handleFirstResponse(): void {
+    if (!this.state.encountered) {
+      this.state.encountered = true;
+      this.revealNameText();
     }
+  }
+
+  private revealNameText(): void {
+    this.visuals.nameText?.setVisible(true);
   }
 
   private onConversationEnd(): void {
-    if (this.chatDialog) {
-      this.chatDialog.hide();
-    }
-    this.isChatting = false;
-    this.scene.time.delayedCall(3000, () => this.startMumbling());
-  }
-
-  updateSystemPrompt(persona: string) {
-    this.systemPrompt = SYSTEM_PROMPT_PREAMBLE + persona;
-  }
-
-  getImage() {
-    return this.image || DEFAULT_IMGKEY;
-  }
-
-  export() {}
-  import() {}
-
-  //TODO: getter/setter convention for props
-
-  private async _generateMumblings() {
-    // TODO - generate with LLM
-    this.mumblings.push(
-      "Where am I?",
-      "People are trapped in history and history is trapped in them.",
-      "Love takes off the masks that we fear we cannot live without and know we cannot live within."
+    this.chatDialog?.hide();
+    this.state.isChatting = false;
+    this.scene.time.delayedCall(
+      LIBRARIAN_CONFIG.TIMING.RESUME_MUMBLE_DELAY,
+      () => {
+        if (!this.state.isChatting) {
+          this.startMumbling();
+        }
+      }
     );
   }
 
-  getContainer() {
-    return this.container;
+  private async generateMumblings(): Promise<void> {
+    // TODO: Generate with LLM
+    this.mumblings = [
+      "Where am I?",
+      "People are trapped in history and history is trapped in them.",
+      "Love takes off the masks that we fear we cannot live without and know we cannot live within.",
+    ];
   }
-  getSprite() {
-    return this.sprite;
+
+  setPosition(x: number, y: number): void {
+    this.visuals.container?.setPosition(x, y);
   }
-  getNameText() {
-    return this.nameText;
+
+  destroy(): void {
+    this.stopMumbling();
+    this.visuals.container?.destroy();
   }
+
+  updateSystemPrompt(persona: string): void {
+    this.systemPrompt = LIBRARIAN_CONFIG.DEFAULTS.SYSTEM_PROMPT + persona;
+  }
+
+  // Getters
+  getContainer = () => this.visuals.container;
+  getSprite = () => this.visuals.sprite;
+  getNameText = () => this.visuals.nameText;
+  getImage = () => this.imageKey;
 }

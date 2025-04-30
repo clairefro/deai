@@ -17,7 +17,6 @@ class MainScene extends Phaser.Scene {
   // TODO: TEMP
   private baldwin!: Librarian;
   private librarians: Librarian[] = [];
-  private enterKey!: Phaser.Input.Keyboard.Key;
 
   preload() {
     this.load.image("player", playerImage);
@@ -50,9 +49,6 @@ class MainScene extends Phaser.Scene {
     // Create cursor keys for movement
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
-      this.enterKey = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.ENTER
-      );
     } else {
       throw new Error(
         "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
@@ -65,7 +61,7 @@ class MainScene extends Phaser.Scene {
     }
 
     // TODO: TEMP
-    this.baldwin = new Librarian("James Baldwin", this);
+    this.baldwin = new Librarian({ name: "James Baldwin", scene: this });
     this.baldwin.spawn(400, 300);
     this.librarians.push(this.baldwin);
 
@@ -80,9 +76,6 @@ class MainScene extends Phaser.Scene {
   }
 
   update() {
-    let nearestLibrarian: Librarian | null = null;
-    let shortestDistance = Infinity;
-
     if (!this.cursors) return;
     // Game loop logic
     if (this.cursors.left?.isDown) {
@@ -100,34 +93,6 @@ class MainScene extends Phaser.Scene {
     } else {
       this.player.setVelocityY(0); // Stop vertical movement
     }
-    // for (const librarian of this.librarians) {
-    //   if (!librarian.getSprite() || !librarian.getContainer()) continue;
-
-    //   const distance = Phaser.Math.Distance.Between(
-    //     this.player.x,
-    //     this.player.y,
-    //     librarian.getSprite()!.x + librarian.getContainer()!.x,
-    //     librarian.getSprite()!.y + librarian.getContainer()!.y
-    //   );
-
-    //   if (distance <= MainScene.CHAT_RADIUS && distance < shortestDistance) {
-    //     shortestDistance = distance;
-    //     nearestLibrarian = librarian;
-    //   }
-    // }
-
-    // Show/hide chat prompt based on proximity
-    // if (nearestLibrarian) {
-    //   StatusBar.showMessage(
-    //     `Press ENTER to chat with ${nearestLibrarian.name}`
-    //   );
-
-    //   if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-    //     nearestLibrarian.chat();
-    //   }
-    // } else {
-    //   StatusBar.clearMessage();
-    // }
   }
 }
 
