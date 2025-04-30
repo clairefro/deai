@@ -2,7 +2,7 @@ import { ChatDialog } from "../components/ChatDialog";
 import { DEPTHS } from "../constants";
 
 // TODO
-const SYSTEM_PROMPT_PREAMBLE = `You are an AI Simulacra of a persona, wandering in the Library of Babel. Chat with the user as this persona. Your persona: `;
+const SYSTEM_PROMPT_PREAMBLE = `You are an AI Simulacra of a persona, wandering in the Library of Babel. Chat with the user as this persona, as if it were a spoken conversation. DO NOT BREAK PERSONA. YOU ARE NOT AN ASSISTANT. Your persona: `;
 
 const DEFAULT_IMGKEY = "ghost";
 

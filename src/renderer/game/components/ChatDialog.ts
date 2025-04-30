@@ -4,7 +4,7 @@ import { ChatManager } from "../llm/ChatManager";
 export class ChatDialog {
   private element: HTMLElement;
   private messagesContainer!: HTMLElement;
-  private input!: HTMLInputElement;
+  private input!: HTMLTextAreaElement;
   private chatManager: ChatManager;
   private onClose?: () => void;
   private onFirstResponse?: () => void;
@@ -56,9 +56,10 @@ export class ChatDialog {
     const inputContainer = document.createElement("div");
     inputContainer.className = "chat-input-container";
 
-    this.input = document.createElement("input");
-    this.input.type = "text";
-    this.input.placeholder = "Type your message...";
+    this.input = document.createElement("textarea");
+    this.input.placeholder = "What's on your mind...";
+    this.input.rows = 1;
+    this.input.addEventListener("input", this.autoResizeTextarea.bind(this));
 
     const sendButton = document.createElement("button");
     sendButton.textContent = "Send";
@@ -107,8 +108,12 @@ export class ChatDialog {
     };
 
     sendButton.addEventListener("click", handleSend);
-    this.input.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") handleSend();
+    this.input.addEventListener("keydown", (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
     });
 
     // Override phaser defaults to enable typing
@@ -142,6 +147,14 @@ export class ChatDialog {
 
   hide(): void {
     this.element.style.display = "none";
+  }
+
+  private autoResizeTextarea(): void {
+    const textarea = this.input;
+    // Reset height to auto to get correct scrollHeight
+    textarea.style.height = "auto";
+    // Set new height based on content
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`; // Max height 150px
   }
 
   private updateMessages(messages: Message[]): void {

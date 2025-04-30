@@ -135,6 +135,35 @@
   font-family: monospace;
 }
 
+#game .chat-input-container textarea {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  width: auto;
+  padding: 0.25rem;
+}
+
+.chat-input {
+  flex: 1;
+  min-height: 60px;
+  max-height: 150px;
+  padding: 8px;
+  margin-right: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #fff;
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+  width: 100%;
+}
+
+.chat-input:focus {
+  border-color: #666;
+}
+
 #game .chat-close-button {
   position: absolute;
   right: 8px;
