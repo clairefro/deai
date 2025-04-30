@@ -1,4 +1,4 @@
-const DEPTHS = {
+export const DEPTHS = {
   BACKGROUND: 0,
   PLAYER: 20,
   LIBRARIAN: {
@@ -24,4 +24,7 @@ const DEPTHS = {
   },
 };
 
-export { DEPTHS };
+export const CHAT_STYLES = {
+  MAX_HEIGHT: 150,
+  INITIAL_ROWS: 1,
+};

@@ -1,126 +1,109 @@
 import { Message } from "../llm/ChatAdapter";
 import { ChatManager } from "../llm/ChatManager";
+import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 
 export class ChatDialog {
-  private element: HTMLElement;
-  private messagesContainer!: HTMLElement;
-  private input!: HTMLTextAreaElement;
-  private chatManager: ChatManager;
-  private onClose?: () => void;
-  private onFirstResponse?: () => void;
+  private readonly element: HTMLElement;
+  private readonly messagesContainer: HTMLElement;
+  private readonly input: HTMLTextAreaElement;
+  private readonly chatManager: ChatManager;
+  private readonly loadingIndicator: ChatLoadingIndicator;
   private hasResponded = false;
-  private scene: Phaser.Scene;
-  private loadingIndicator: HTMLElement;
 
   constructor(
     systemPrompt: string,
-    scene: Phaser.Scene,
-    onClose?: () => void,
-    onFirstResponse?: () => void
+    private readonly scene: Phaser.Scene,
+    private readonly onClose?: () => void,
+    private readonly onFirstResponse?: () => void
   ) {
-    this.scene = scene;
     this.chatManager = new ChatManager(systemPrompt);
-    this.onClose = onClose;
-    this.onFirstResponse = onFirstResponse;
-    this.element = this.createDialog();
-    document.getElementById("game")?.appendChild(this.element);
+    this.loadingIndicator = new ChatLoadingIndicator();
 
-    this.loadingIndicator = this.createLoadingIndicator();
-    this.messagesContainer.appendChild(this.loadingIndicator);
-    this.loadingIndicator.style.display = "none";
+    const elements = this.createUIElements();
+    this.element = elements.dialog;
+    this.messagesContainer = elements.messages;
+    this.input = elements.input;
+
+    this.setupEventListeners();
+    this.attachToDOM();
   }
 
-  private createLoadingIndicator(): HTMLElement {
-    const indicator = document.createElement("div");
-    indicator.className = "chat-loading";
-    indicator.textContent = "...";
-    return indicator;
-  }
-
-  private createDialog(): HTMLElement {
+  private createUIElements() {
     const dialog = document.createElement("div");
     dialog.className = "chat-dialog";
 
-    // Add close button
-    const closeButton = document.createElement("button");
-    closeButton.className = "chat-close-button";
-    closeButton.textContent = "×";
-    closeButton.onclick = () => {
-      this.hide();
-      this.onClose?.();
+    const messagesContainer = document.createElement("div");
+    messagesContainer.className = "chat-messages";
+    messagesContainer.appendChild(this.loadingIndicator.getElement());
+
+    const inputContainer = this.createInputContainer();
+    const closeButton = this.createCloseButton();
+
+    dialog.appendChild(closeButton);
+    dialog.appendChild(messagesContainer);
+    dialog.appendChild(inputContainer);
+
+    return {
+      dialog,
+      messages: messagesContainer,
+      input: inputContainer.querySelector("textarea")!,
     };
+  }
 
-    this.messagesContainer = document.createElement("div");
-    this.messagesContainer.className = "chat-messages";
+  private createInputContainer(): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "chat-input-container";
 
-    const inputContainer = document.createElement("div");
-    inputContainer.className = "chat-input-container";
-
-    this.input = document.createElement("textarea");
-    this.input.placeholder = "What's on your mind...";
-    this.input.rows = 1;
-    this.input.addEventListener("input", this.autoResizeTextarea.bind(this));
+    const input = document.createElement("textarea");
+    input.placeholder = "What's on your mind...";
+    input.rows = 1;
+    input.className = "chat-input";
 
     const sendButton = document.createElement("button");
     sendButton.textContent = "Send";
+    sendButton.className = "chat-send-button";
 
-    inputContainer.appendChild(this.input);
-    inputContainer.appendChild(sendButton);
+    container.appendChild(input);
+    container.appendChild(sendButton);
 
-    dialog.appendChild(closeButton);
-    dialog.appendChild(this.messagesContainer);
-    dialog.appendChild(inputContainer);
+    return container;
+  }
 
-    const handleSend = async () => {
-      const message = this.input.value.trim();
-      if (!message) return;
-
-      // Clear input and show user message immediately
-      this.input.value = "";
-      this.input.style.height = "auto";
-      const currentHistory = this.chatManager.getHistory();
-      this.updateMessages([
-        ...currentHistory,
-        { role: "user", content: message },
-      ]);
-
-      // Show loading indicator
-      this.loadingIndicator.style.display = "block";
-      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-
-      try {
-        // Wait for AI response
-        const response = await this.chatManager.sendMessage(message);
-
-        // Handle first response
-        if (!this.hasResponded) {
-          this.hasResponded = true;
-          this.onFirstResponse?.();
-        }
-
-        this.updateMessages(this.chatManager.getHistory());
-      } catch (err) {
-        console.error(err);
-        // Optionally show error message to user
-      } finally {
-        // Hide loading indicator
-        this.loadingIndicator.style.display = "none";
-      }
+  private createCloseButton(): HTMLElement {
+    const button = document.createElement("button");
+    button.className = "chat-close-button";
+    button.textContent = "×";
+    button.onclick = () => {
+      this.hide();
+      this.onClose?.();
     };
+    return button;
+  }
 
-    sendButton.addEventListener("click", handleSend);
+  private setupEventListeners(): void {
+    this.setupInputEvents();
+    this.setupPhaserKeyboardHandling();
+  }
+
+  private setupInputEvents(): void {
+    this.input.addEventListener("input", () => this.autoResizeTextarea());
+
+    const sendButton =
+      this.input.parentElement?.querySelector(".chat-send-button");
+    sendButton?.addEventListener("click", () => this.handleSend());
+
     this.input.addEventListener("keydown", (e: KeyboardEvent) => {
       e.stopPropagation();
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        this.handleSend();
       }
     });
+  }
 
-    // Override phaser defaults to enable typing
+  private setupPhaserKeyboardHandling(): void {
     this.input.addEventListener("focus", () => {
       if (this.scene.input.keyboard) {
-        // Disable Phaser's keyboard capture when chat is focused
         this.scene.input.keyboard.enabled = false;
         this.scene.input.keyboard.clearCaptures();
       }
@@ -128,17 +111,84 @@ export class ChatDialog {
 
     this.input.addEventListener("blur", () => {
       if (this.scene.input.keyboard) {
-        // Re-enable Phaser's keyboard when chat loses focus
         this.scene.input.keyboard.enabled = true;
       }
     });
+  }
 
-    // Prevent game from handling these keys
-    this.input.addEventListener("keydown", (e: KeyboardEvent) => {
-      e.stopPropagation();
+  private async handleSend(): Promise<void> {
+    const message = this.input.value.trim();
+    if (!message) return;
+
+    this.resetInput();
+    await this.sendMessage(message);
+  }
+
+  private resetInput(): void {
+    this.input.value = "";
+    this.input.style.height = "auto";
+  }
+
+  private async sendMessage(message: string): Promise<void> {
+    this.showUserMessage(message);
+    this.loadingIndicator.show();
+    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+
+    try {
+      await this.handleAIResponse(message);
+    } catch (err) {
+      console.error("Chat error:", err);
+    } finally {
+      this.loadingIndicator.hide();
+    }
+  }
+
+  private showUserMessage(message: string): void {
+    const currentHistory = this.chatManager.getHistory();
+    this.updateMessages([
+      ...currentHistory,
+      { role: "user", content: message },
+    ]);
+  }
+
+  private async handleAIResponse(message: string): Promise<void> {
+    const response = await this.chatManager.sendMessage(message);
+
+    if (!this.hasResponded) {
+      this.handleFirstResponse();
+    }
+
+    this.updateMessages(this.chatManager.getHistory());
+  }
+  private handleFirstResponse() {
+    this.hasResponded = true;
+    this.onFirstResponse?.();
+  }
+
+  private updateMessages(messages: Message[]): void {
+    const loadingElement = this.loadingIndicator.getElement();
+
+    while (this.messagesContainer.firstChild !== loadingElement) {
+      this.messagesContainer.firstChild?.remove();
+    }
+
+    messages.forEach((msg) => {
+      const msgElement = document.createElement("div");
+      msgElement.className = `chat-message ${msg.role}`;
+      msgElement.innerText = msg.content;
+      this.messagesContainer.insertBefore(msgElement, loadingElement);
     });
 
-    return dialog;
+    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+  }
+
+  private autoResizeTextarea(): void {
+    this.input.style.height = "auto";
+    this.input.style.height = `${Math.min(this.input.scrollHeight, 150)}px`;
+  }
+
+  private attachToDOM(): void {
+    document.getElementById("game")?.appendChild(this.element);
   }
 
   show(): void {
@@ -148,31 +198,6 @@ export class ChatDialog {
 
   hide(): void {
     this.element.style.display = "none";
-  }
-
-  private autoResizeTextarea(): void {
-    const textarea = this.input;
-    // Reset height to auto to get correct scrollHeight
-    textarea.style.height = "auto";
-    // Set new height based on content
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`; // Max height 150px
-  }
-
-  private updateMessages(messages: Message[]): void {
-    // Clear messages but preserve loading indicator
-    while (this.messagesContainer.firstChild !== this.loadingIndicator) {
-      this.messagesContainer.firstChild?.remove();
-    }
-
-    // Add all messages before the loading indicator
-    messages.forEach((msg) => {
-      const msgElement = document.createElement("div");
-      msgElement.className = `chat-message ${msg.role}`;
-      msgElement.textContent = msg.content;
-      this.messagesContainer.insertBefore(msgElement, this.loadingIndicator);
-    });
-
-    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
   }
 
   updateSystemPrompt(newPrompt: string): void {
