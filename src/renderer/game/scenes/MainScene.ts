@@ -7,6 +7,7 @@ import playerImage from "../../assets/sprite.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
 import { DEPTHS } from "../constants";
+import { rand } from "../../../shared/util/rand";
 
 class MainScene extends Phaser.Scene {
   private config!: ConfigSettings;
@@ -14,8 +15,6 @@ class MainScene extends Phaser.Scene {
   private settingsMenu!: SettingsMenu;
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  // TODO: TEMP
-  private baldwin!: Librarian;
   private librarians: Librarian[] = [];
 
   preload() {
@@ -24,7 +23,6 @@ class MainScene extends Phaser.Scene {
   }
 
   async create() {
-    console.log("Input plugin", this.input.keyboard);
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
@@ -55,24 +53,29 @@ class MainScene extends Phaser.Scene {
       );
     }
 
+    const librariansData = await window.electronAPI.getLibrariansData();
+
+    this.librarians = librariansData.map(
+      (data) => new Librarian({ data, scene: this })
+    );
+
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
       StatusBar.initialize(gameContainer);
     }
 
     // TODO: TEMP
-    this.baldwin = new Librarian({ name: "James Baldwin", scene: this });
-    this.baldwin.spawn(400, 300);
-    this.librarians.push(this.baldwin);
-
-    console.log("Scene Depths:", {
-      player: this.player.depth,
-      baldwin: {
-        container: this.baldwin.getContainer()?.depth,
-        sprite: this.baldwin.getSprite()?.depth,
-        nameText: this.baldwin.getNameText()?.depth,
-      },
+    // place librarians
+    this.librarians.forEach((librarian) => {
+      librarian.spawn(rand(100, 800), rand(200, 700));
     });
+    const buber = new Librarian({ name: "Martin Buber", scene: this });
+    buber.spawn(400, 300);
+    // const borges = new Librarian({ name: "Jorge Luis Borges", scene: this });
+    // borges.spawn(500, 400);
+
+    // await window.electronAPI.upsertLibrarianData(borges.serialize());
+    // await window.electronAPI.upsertLibrarianData(baldwin.serialize());
   }
 
   update() {

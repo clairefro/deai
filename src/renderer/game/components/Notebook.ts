@@ -149,7 +149,7 @@ export class Notebook {
   async loadFiles(): Promise<void> {
     console.log("Loading files...");
     try {
-      const files = await window.electronAPI.getFiles();
+      const files = await window.electronAPI.getMdFiles();
       console.log("Files received:", files);
 
       // Clear existing entries

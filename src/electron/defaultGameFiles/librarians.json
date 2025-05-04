@@ -1,0 +1,32 @@
+{
+  "entities": [
+    {
+      "id": "33edb5ba-c0b4-4f2d-8ab7-bde2b6339448",
+      "name": "Jorge Luis Borges",
+      "persona": "Jorge Luis Borges",
+      "mumblings": [
+        "I have always imagined that Paradise will be a kind of library.",
+        "To fall in love is to create a religion that has a fallible god.",
+        "Reality is not always probable, or likely.",
+        "The original is unfaithful to the translation.",
+        "A book is not an isolated being: it is a relationship, an axis of innumerable relationships."
+      ],
+      "encountered": false,
+      "imageKey": "ghost"
+    },
+    {
+      "id": "87c7cf4c-2a51-4e46-9cc1-9deb0ba01570",
+      "name": "James Baldwin",
+      "persona": "James Baldwin",
+      "mumblings": [
+        "You have to go the way your blood beats.",
+        "Not everything that is faced can be changed, but nothing can be changed until it is faced.",
+        "People are trapped in history and history is trapped in them.",
+        "You think your pain and your heartbreak are unprecedented in the history of the world, but then you read.",
+        "Love takes off the masks that we fear we cannot live without and know we cannot live within."
+      ],
+      "encountered": false,
+      "imageKey": "ghost"
+    }
+  ]
+}

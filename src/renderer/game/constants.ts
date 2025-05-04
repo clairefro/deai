@@ -24,6 +24,40 @@ export const DEPTHS = {
   },
 };
 
+export const LIBRARIAN_CONFIG = {
+  DEFAULTS: {
+    IMAGE_KEY: "ghost",
+  },
+  POSITIONS: {
+    NAME_OFFSET_Y: -50,
+    MUMBLE_OFFSET_Y: -80,
+  },
+  TIMING: {
+    MUMBLE_DURATION: { MIN: 5000, MAX: 8000 },
+    MUMBLE_GAP: { MIN: 3000, MAX: 8000 },
+    RESUME_MUMBLE_DELAY: 3000,
+  },
+  TEXT_STYLES: {
+    NAME: {
+      fontSize: "16px",
+      fontFamily: "monospace",
+      color: "#ffffff",
+      backgroundColor: "#000000aa",
+      padding: { x: 8, y: 4 },
+    },
+    MUMBLE: {
+      fontSize: "14px",
+      fontFamily: "monospace",
+      color: "#ffffff",
+      backgroundColor: "#333333",
+      padding: { x: 6, y: 3 },
+      align: "center",
+      fixedWidth: 200,
+      wordWrap: { width: 190 },
+    },
+  },
+};
+
 export const CHAT_STYLES = {
   MAX_HEIGHT: 150,
   INITIAL_ROWS: 1,

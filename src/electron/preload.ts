@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { ConfigSettings, ConfigSettingsUpdate } from "../shared/Config";
 import chokidar from "chokidar";
+import { LibrarianData } from "../shared/types/LibrarianData";
 
 interface FileObj {
   name: string;
@@ -10,7 +11,7 @@ interface FileObj {
 }
 
 const electronAPI = {
-  async getFiles(): Promise<FileObj[]> {
+  async getMdFiles(): Promise<FileObj[]> {
     const config = await ipcRenderer.invoke("get-config");
     if (!config.notesDir) {
       console.warn("Notes directory not configured");
@@ -71,6 +72,41 @@ const electronAPI = {
       watcher.close();
       console.log(`Stopped watching file: ${filepath}`);
     };
+  },
+
+  /** Librarians */
+  async getLibrariansData(): Promise<LibrarianData[]> {
+    try {
+      return await ipcRenderer.invoke("get-librarians-data");
+    } catch (err) {
+      console.error("Failed to get librarians data:", err);
+      return [];
+    }
+  },
+  async getLibrarianIds(): Promise<string[]> {
+    try {
+      const data = await ipcRenderer.invoke("get-librarians-ids");
+      return data;
+    } catch (err) {
+      console.error("Failed to get librarian IDs:", err);
+      return [];
+    }
+  },
+  async getLibrarianDataById(id: string): Promise<LibrarianData | null> {
+    try {
+      return await ipcRenderer.invoke("get-librarian-by-id", id);
+    } catch (err) {
+      console.error(`Failed to get librarian with id ${id}:`, err);
+      return null;
+    }
+  },
+  async upsertLibrarianData(librarian: LibrarianData): Promise<void> {
+    try {
+      await ipcRenderer.invoke("upsert-librarian", librarian);
+    } catch (err) {
+      console.error(`Failed to upsert librarian ${librarian.id}:`, err);
+      throw err;
+    }
   },
 };
 

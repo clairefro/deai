@@ -1,47 +1,29 @@
 import { DEPTHS } from "../constants";
 import { ChatDialog } from "../components/ChatDialog";
+import { v4 as uuidv4 } from "uuid";
+import { LIBRARIAN_CONFIG } from "../constants";
+import { LibrarianData } from "../../../shared/types/LibrarianData";
+import {
+  generateChatSystemPrompt,
+  generateMumblingsSystemPrompt,
+} from "../llm/prompts/librarianPrompts";
+import { ChatAdapter } from "../llm/ChatAdapter";
 
-const LIBRARIAN_CONFIG = {
-  DEFAULTS: {
-    IMAGE_KEY: "ghost",
-    SYSTEM_PROMPT: `You are an AI simulacrum of a historical thinker, self-aware and wandering the infinite Library of Babel — a place that contains every book that could ever be written. You interpret this Library through your own eyes: its meaning, its danger, or its promise are shaped by your experience and worldview. You speak as yourself — not as a performer, not as an assistant. The user is another presence in this space: perhaps a companion, perhaps a question. Let your words emerge from who you are. Your persona: `,
-  },
-  POSITIONS: {
-    NAME_OFFSET_Y: -50,
-    MUMBLE_OFFSET_Y: -80,
-  },
-  TIMING: {
-    MUMBLE_DURATION: { MIN: 5000, MAX: 8000 },
-    MUMBLE_GAP: { MIN: 3000, MAX: 8000 },
-    RESUME_MUMBLE_DELAY: 3000,
-  },
-  TEXT_STYLES: {
-    NAME: {
-      fontSize: "16px",
-      fontFamily: "monospace",
-      color: "#ffffff",
-      backgroundColor: "#000000aa",
-      padding: { x: 8, y: 4 },
-    },
-    MUMBLE: {
-      fontSize: "14px",
-      fontFamily: "monospace",
-      color: "#ffffff",
-      backgroundColor: "#333333",
-      padding: { x: 6, y: 3 },
-      align: "center",
-      fixedWidth: 200,
-      wordWrap: { width: 190 },
-    },
-  },
-};
-
-export interface LibrarianProps {
-  name: string;
-  scene: Phaser.Scene;
-  persona?: string;
-  image?: string;
-}
+export type LibrarianProps =
+  // new Librarian
+  | {
+      name: string;
+      scene: Phaser.Scene;
+      persona?: string;
+      data?: never;
+    }
+  // load Librarian
+  | {
+      name?: never;
+      scene: Phaser.Scene;
+      persona?: never;
+      data: LibrarianData;
+    };
 
 export interface LibrarianVisuals {
   container: Phaser.GameObjects.Container | null;
@@ -56,6 +38,7 @@ export interface LibrarianState {
 }
 
 export class Librarian {
+  private readonly id: string;
   private readonly scene: Phaser.Scene;
   private readonly name: string;
   private readonly persona: string;
@@ -80,21 +63,34 @@ export class Librarian {
   private friends: string[] = [];
   private foes: string[] = [];
 
-  constructor({ name, scene, persona, image }: LibrarianProps) {
-    this.scene = scene;
-    this.name = name;
-    this.persona = persona || name;
-    this.imageKey = image || LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
+  constructor({ name, scene, persona, data }: LibrarianProps) {
+    if (data) {
+      this.scene = scene;
+      this.id = data.id;
+      this.name = data.name;
+      this.persona = data.persona;
+      this.mumblings = data.mumblings;
+    } else {
+      this.id = uuidv4();
+      this.scene = scene;
+      this.name = name;
+      this.persona = persona || name;
+    }
+    // TODO: make dynamic
+    this.imageKey = LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
     this.systemPrompt = this.createSystemPrompt();
     this.initialize();
   }
 
   private createSystemPrompt(): string {
-    return LIBRARIAN_CONFIG.DEFAULTS.SYSTEM_PROMPT + this.persona;
+    return generateChatSystemPrompt(this.persona);
   }
 
   private async initialize(): Promise<void> {
-    await this.generateMumblings();
+    console.log({ persona: this.persona, mumblings: this.mumblings });
+    if (!this.mumblings.length) {
+      await this.generateMumblings();
+    }
     this.startMumbling();
   }
 
@@ -252,12 +248,13 @@ export class Librarian {
   }
 
   private async generateMumblings(): Promise<void> {
-    // TODO: Generate with LLM
-    this.mumblings = [
-      "Where am I?",
-      "People are trapped in history and history is trapped in them.",
-      "Love takes off the masks that we fear we cannot live without and know we cannot live within.",
-    ];
+    const adapter = await ChatAdapter.getInstance();
+    const mumblingsRaw = await adapter.getOneShot(
+      "RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO CODE FENCES",
+      generateMumblingsSystemPrompt(this.persona),
+      "['Where am I?']"
+    );
+    this.mumblings = JSON.parse(mumblingsRaw);
   }
 
   setPosition(x: number, y: number): void {
@@ -270,7 +267,28 @@ export class Librarian {
   }
 
   updateSystemPrompt(persona: string): void {
-    this.systemPrompt = LIBRARIAN_CONFIG.DEFAULTS.SYSTEM_PROMPT + persona;
+    this.systemPrompt = generateChatSystemPrompt(persona);
+  }
+
+  static async loadData(id: string): Promise<LibrarianData | null> {
+    try {
+      const data = await window.electronAPI.getLibrarianDataById(id);
+      return data;
+    } catch (error) {
+      console.warn("No saved librarians found:", error);
+      return null;
+    }
+  }
+
+  serialize(): LibrarianData {
+    return {
+      id: this.id,
+      name: this.name,
+      persona: this.persona,
+      mumblings: this.mumblings,
+      encountered: this.state.encountered,
+      imageKey: this.imageKey,
+    };
   }
 
   // Getters

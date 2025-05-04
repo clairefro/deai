@@ -54,4 +54,23 @@ export class ChatAdapter {
       throw error;
     }
   }
+
+  async getOneShot(
+    systemPrompt: string,
+    prompt: string,
+    fallbackResponse: string
+  ): Promise<string> {
+    try {
+      const messages: Message[] = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ];
+
+      const response = await this.sendMessage(messages);
+      return response.content;
+    } catch (error) {
+      console.error("OneShot generation error:", error);
+      return fallbackResponse;
+    }
+  }
 }

@@ -83,6 +83,13 @@ export class ChatDialog {
   private setupEventListeners(): void {
     this.setupInputEvents();
     this.setupPhaserKeyboardHandling();
+    this.setupClickPrevention();
+  }
+
+  private setupClickPrevention(): void {
+    this.element.addEventListener("mousedown", (e) => e.stopPropagation());
+    this.element.addEventListener("click", (e) => e.stopPropagation());
+    this.element.addEventListener("pointerdown", (e) => e.stopPropagation());
   }
 
   private setupInputEvents(): void {
