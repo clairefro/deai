@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { ConfigSettings } from "../../../shared/Config";
+import { AppConfig } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { StatusBar } from "../components/StatusBar";
@@ -10,7 +10,7 @@ import { DEPTHS } from "../constants";
 import { rand } from "../../../shared/util/rand";
 
 class MainScene extends Phaser.Scene {
-  private config!: ConfigSettings;
+  private config!: AppConfig;
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -35,8 +35,10 @@ class MainScene extends Phaser.Scene {
 
     // Initialize components
     this.notebook = new Notebook(this);
-    this.settingsMenu = new SettingsMenu(this, this.config, (_newDir) => {
-      // Handle directory change in notebook by reloading files
+    this.settingsMenu = new SettingsMenu(this, this.config, (newDir) => {
+      console.log("Notes directory changed to:", newDir);
+
+      // reload notebook files
       this.notebook.loadFiles();
     });
 
@@ -69,6 +71,8 @@ class MainScene extends Phaser.Scene {
     this.librarians.forEach((librarian) => {
       librarian.spawn(rand(100, 800), rand(200, 700));
     });
+
+    console.log(this.librarians);
     const buber = new Librarian({ name: "Martin Buber", scene: this });
     buber.spawn(400, 300);
     // const borges = new Librarian({ name: "Jorge Luis Borges", scene: this });

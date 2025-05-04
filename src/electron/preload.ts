@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { ConfigSettings, ConfigSettingsUpdate } from "../shared/Config";
+import { AppConfig, ConfigSettingsUpdate } from "../shared/Config";
 import chokidar from "chokidar";
 import { LibrarianData } from "../shared/types/LibrarianData";
 
@@ -37,15 +37,15 @@ const electronAPI = {
     }
   },
 
-  async getConfig(): Promise<ConfigSettings> {
+  async getConfig(): Promise<AppConfig> {
     return await ipcRenderer.invoke("get-config");
   },
 
-  async selectDirectory() {
-    return await ipcRenderer.invoke("select-dir");
+  async openDirSelect() {
+    return await ipcRenderer.invoke("open-dir-select");
   },
 
-  async updateConfig(updates: ConfigSettingsUpdate): Promise<ConfigSettings> {
+  async updateConfig(updates: ConfigSettingsUpdate): Promise<AppConfig> {
     return await ipcRenderer.invoke("update-config", updates);
   },
 

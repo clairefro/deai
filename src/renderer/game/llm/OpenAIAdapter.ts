@@ -1,4 +1,4 @@
-import { ConfigSettings } from "../../../shared/Config";
+import { AppConfig } from "../../../shared/Config";
 import { ChatResponse, GenericChatAdapterI, Message } from "./ChatAdapter";
 
 export class OpenAIAdapter implements GenericChatAdapterI {
@@ -10,7 +10,7 @@ export class OpenAIAdapter implements GenericChatAdapterI {
 
   async sendMessage(
     messages: Message[],
-    config: ConfigSettings
+    config: AppConfig
   ): Promise<ChatResponse> {
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",

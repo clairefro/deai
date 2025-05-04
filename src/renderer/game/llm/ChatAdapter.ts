@@ -1,6 +1,6 @@
 import { OpenAIAdapter } from "./OpenAIAdapter";
 import { OllamaAdapter } from "./OllamaAdapter";
-import { ConfigSettings } from "../../../shared/Config";
+import { AppConfig } from "../../../shared/Config";
 
 export interface Message {
   role: "user" | "assistant" | "system";
@@ -15,7 +15,7 @@ export interface ChatResponse {
 export interface GenericChatAdapterI {
   sendMessage: (
     messages: Message[],
-    config: ConfigSettings
+    config: AppConfig
   ) => Promise<ChatResponse>;
 }
 

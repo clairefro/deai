@@ -50,7 +50,7 @@ app.whenReady().then(async () => {
     return await config.getConfig();
   });
 
-  ipcMain.handle("select-dir", async () => {
+  ipcMain.handle("open-dir-select", async () => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
       title: "Select Notes Directory",
@@ -66,7 +66,7 @@ app.whenReady().then(async () => {
   ipcMain.handle(
     "update-config",
     async (_: any, updates: ConfigSettingsUpdate) => {
-      return await config.updateConfig(updates);
+      return await config.setMany(updates);
     }
   );
 

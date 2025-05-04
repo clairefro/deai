@@ -57,6 +57,7 @@
     "chokidar": "^4.0.3",
     "lowdb": "^7.0.1",
     "node-machine-id": "^1.1.12",
+    "ollama": "^0.5.15",
     "phaser": "^3.88.2",
     "uuid": "^11.1.0"
   },

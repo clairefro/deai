@@ -79,7 +79,7 @@ export class Librarian {
     // TODO: make dynamic
     this.imageKey = LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
     this.systemPrompt = this.createSystemPrompt();
-    this.initialize();
+    // this.initialize();
   }
 
   private createSystemPrompt(): string {
@@ -87,19 +87,21 @@ export class Librarian {
   }
 
   private async initialize(): Promise<void> {
-    console.log({ persona: this.persona, mumblings: this.mumblings });
     if (!this.mumblings.length) {
       await this.generateMumblings();
     }
-    this.startMumbling();
-  }
-
-  spawn(x: number, y: number): void {
     this.createSprite();
     this.createNameText();
     this.createMumbleText();
+  }
+
+  async spawn(x: number, y: number): Promise<void> {
+    await this.initialize();
+
     this.createContainer(x, y);
     this.setupInteraction();
+
+    this.startMumbling();
   }
 
   private createSprite(): void {
@@ -250,10 +252,12 @@ export class Librarian {
   private async generateMumblings(): Promise<void> {
     const adapter = await ChatAdapter.getInstance();
     const mumblingsRaw = await adapter.getOneShot(
-      "RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO CODE FENCES",
+      "RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO QUOTATION MARKS AROUND QUOTES. NO CODE FENCES",
       generateMumblingsSystemPrompt(this.persona),
       "['Where am I?']"
     );
+
+    console.log({ mumblingsRaw });
     this.mumblings = JSON.parse(mumblingsRaw);
   }
 
