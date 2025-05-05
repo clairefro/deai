@@ -166,6 +166,13 @@ export class Librarian {
     this.visuals.sprite?.on("pointerdown", () => this.chat());
   }
 
+  getActionTarget(): Phaser.GameObjects.Container {
+    return this.visuals.container as Phaser.GameObjects.Container;
+  }
+  getDisplayName(): string {
+    return this.state.encountered ? this.name : "?";
+  }
+
   private startMumbling(): void {
     if (this.mumblings.length === 0) return;
 

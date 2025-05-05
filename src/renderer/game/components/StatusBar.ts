@@ -20,7 +20,19 @@ export class StatusBar {
     return this.instance;
   }
 
-  show(message: string, duration: number = 2000): void {
+  show(message: string): void {
+    this.element.textContent = message;
+    this.element.style.display = "block";
+    this.element.classList.remove("fade-out");
+  }
+
+  clear(): void {
+    this.element.textContent = "";
+    this.element.style.display = "none";
+    this.element.classList.remove("fade-out");
+  }
+
+  showWithDuration(message: string, duration: number = 2000): void {
     this.element.textContent = message;
     this.element.style.display = "block";
     this.element.classList.remove("fade-out");

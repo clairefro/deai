@@ -9,13 +9,21 @@ import ghostImage from "../../assets/ghost.png";
 import { DEPTHS } from "../constants";
 import { rand } from "../../../shared/util/rand";
 
+import { ProximityAction } from "../actions/types";
+
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  // Entities
+  private player!: Phaser.Physics.Arcade.Sprite;
+  private librarians: Librarian[] = [];
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
-  private player!: Phaser.Physics.Arcade.Sprite;
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private librarians: Librarian[] = [];
+  // Actions
+  private proximityActions: ProximityAction[] = [];
+  private currentAction: ProximityAction | null = null;
+  private enterKey!: Phaser.Input.Keyboard.Key;
+  private hasMovedSinceAction = true;
 
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
@@ -51,6 +59,17 @@ class MainScene extends Phaser.Scene {
     // Create cursor keys for movement
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
+      this.enterKey = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.ENTER
+      );
+      this.enterKey.on(
+        "down",
+        (event: any) => {
+          event.originalEvent.preventDefault(); // prevent propogation so that newlines aren't added in textarea of dialogs from action, etc
+          this.handleActionKey();
+        },
+        this
+      );
     } else {
       throw new Error(
         "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
@@ -70,11 +89,30 @@ class MainScene extends Phaser.Scene {
 
     // TODO: TEMP
     // place librarians
-    this.librarians.forEach((librarian) => {
-      librarian.spawn(rand(100, 800), rand(200, 700));
-    });
+    this.spawnLibrarians();
+  }
+
+  private async spawnLibrarians() {
+    await Promise.all(
+      this.librarians.map(async (librarian) => {
+        await librarian.spawn(rand(100, 800), rand(200, 700));
+      })
+    );
 
     console.log(this.librarians);
+
+    // add proximity actions to loaded librarians
+
+    this.librarians.forEach((librarian) => {
+      this.addProximityAction({
+        target: librarian.getActionTarget(),
+        range: 100,
+        key: "chat",
+        getLabel: () => `<Enter> to Chat with ${librarian.getDisplayName()}`,
+        action: () => librarian.chat(),
+      });
+    });
+
     // const guest = new Librarian({ name: "Martin Buber", scene: this });
     // await guest.spawn(400, 300);
 
@@ -85,9 +123,67 @@ class MainScene extends Phaser.Scene {
     // await window.electronAPI.upsertLibrarianData(borges.serialize());
     // await window.electronAPI.upsertLibrarianData(baldwin.serialize());
   }
+  private addProximityAction(action: ProximityAction): void {
+    if (!action.target) {
+      console.error("Cannot add action without target:", action);
+      return;
+    }
+    this.proximityActions.push(action);
+  }
+
+  private checkProximityActions(): void {
+    if (!this.player) return;
+
+    const playerPos = new Phaser.Math.Vector2(this.player.x, this.player.y);
+    let nearestAction: ProximityAction | null = null;
+    let nearestDistance = Infinity;
+
+    for (const action of this.proximityActions) {
+      const targetX = action.target.x ?? 0;
+      const targetY = action.target.y ?? 0;
+
+      const targetPos = new Phaser.Math.Vector2(targetX, targetY);
+      const distance = Phaser.Math.Distance.BetweenPoints(playerPos, targetPos);
+
+      if (distance <= action.range && distance < nearestDistance) {
+        nearestAction = action;
+        nearestDistance = distance;
+      }
+    }
+
+    // Update status bar if nearest action changed
+    if (nearestAction !== this.currentAction) {
+      this.currentAction = nearestAction;
+      if (nearestAction) {
+        StatusBar.getInstance()?.show(nearestAction.getLabel());
+      } else {
+        StatusBar.getInstance()?.clear();
+      }
+    }
+  }
+
+  private handleActionKey(): void {
+    if (this.currentAction) {
+      this.currentAction.action();
+      StatusBar.getInstance()?.clear();
+      this.currentAction = null;
+      this.hasMovedSinceAction = false;
+    }
+  }
 
   update() {
     if (!this.cursors) return;
+
+    const isMoving =
+      this.cursors.left?.isDown ||
+      this.cursors.right?.isDown ||
+      this.cursors.up?.isDown ||
+      this.cursors.down?.isDown;
+
+    if (isMoving) {
+      this.hasMovedSinceAction = true;
+    }
+
     // Game loop logic
     if (this.cursors.left?.isDown) {
       this.player.setVelocityX(-200); // Move left
@@ -104,6 +200,17 @@ class MainScene extends Phaser.Scene {
     } else {
       this.player.setVelocityY(0); // Stop vertical movement
     }
+
+    if (this.hasMovedSinceAction) {
+      this.checkProximityActions();
+    }
+  }
+
+  shutdown() {
+    // Clean up
+    this.enterKey?.destroy();
+    this.proximityActions = [];
+    this.currentAction = null;
   }
 }
 
