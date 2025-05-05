@@ -276,6 +276,46 @@
   color: #fff;
   font-family: monospace;
 }
+
+/* Tokens bar */
+
+#game canvas {
+  position: relative;
+}
+
+#game .tokens-bar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #666;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+#game .tokens-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #fffb09, #fffb09);
+  transition: width 0.3s ease-out;
+}
+
+#game .tokens-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-family: monospace;
+  font-size: 10px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
 @keyframes pulse {
   0% {
     opacity: 0.5;

@@ -3,6 +3,7 @@ import { AppConfig } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
+import { TokensBar } from "../components/TokensBar";
 import playerImage from "../../assets/sprite.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
@@ -85,6 +86,7 @@ class MainScene extends Phaser.Scene {
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
       NotificationBar.initialize(gameContainer);
+      TokensBar.initialize(gameContainer);
     }
 
     // TODO: TEMP
@@ -113,7 +115,7 @@ class MainScene extends Phaser.Scene {
       });
     });
 
-    // const guest = new Librarian({ name: "Martin Buber", scene: this });
+    // const guest = new Librarian({ name: "Philip K Dick", scene: this });
     // await guest.spawn(400, 300);
 
     // console.log(JSON.stringify(guest.serialize(), null, 2));

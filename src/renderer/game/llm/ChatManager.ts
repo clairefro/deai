@@ -1,4 +1,9 @@
-import { ChatAdapter, Message, MessageWithMeta } from "./ChatAdapter";
+import {
+  ChatAdapter,
+  ChatResponse,
+  Message,
+  MessageWithMeta,
+} from "./ChatAdapter";
 
 export class ChatManager {
   private messageHistory: Message[] = [];
@@ -19,7 +24,7 @@ export class ChatManager {
     }) as Message[];
   }
 
-  async sendMessage(message: string): Promise<string> {
+  async sendMessage(message: string): Promise<ChatResponse> {
     const userMessage: Message = {
       role: "user",
       content: message,
@@ -48,11 +53,14 @@ export class ChatManager {
         this.messageHistory = this.messageHistory.slice(-maxHistory);
       }
 
-      return response.content;
+      return response;
     } catch (error) {
       console.error("Chat error:", error);
       // TODO: make this more clover
-      return "I apologize, I'm having trouble responding right now.";
+      return {
+        content: "I apologize, I'm having trouble responding right now.",
+        tokensUsed: 0,
+      };
     }
   }
 

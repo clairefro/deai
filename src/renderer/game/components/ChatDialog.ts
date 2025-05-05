@@ -1,6 +1,7 @@
-import { Message } from "../llm/ChatAdapter";
+import { Message, MessageWithMeta } from "../llm/ChatAdapter";
 import { ChatManager } from "../llm/ChatManager";
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
+import { TokensBar } from "./TokensBar";
 
 export class ChatDialog {
   private readonly chatManager: ChatManager;
@@ -184,6 +185,7 @@ export class ChatDialog {
     if (!this.hasResponded) {
       this.handleFirstResponse();
     }
+    TokensBar.getInstance()?.addTokens(response.tokensUsed);
 
     this.updateMessages(this.chatManager.getHistory());
   }

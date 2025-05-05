@@ -24,7 +24,7 @@ export class Notebook {
 
     // Create the "closed" notebook tab at bottom
     const notebookTab = this.scene.add.graphics();
-    notebookTab.fillStyle(0x8b6b57, 1);
+    notebookTab.fillStyle(0x444444, 1);
     notebookTab.fillRoundedRect(0, 0, 800, 40, 8);
     notebookTab.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, 800, 40),
@@ -47,12 +47,12 @@ export class Notebook {
 
     // Notebook background
     const notebook = this.scene.add.graphics();
-    notebook.fillStyle(0x8b6b57, 0.95);
+    notebook.fillStyle(0x444444, 0.95);
     notebook.fillRoundedRect(0, 0, 800, 600, 8);
 
     // File explorer section
     const explorer = this.scene.add.graphics();
-    explorer.fillStyle(0x6b4423, 1);
+    explorer.fillStyle(0x333333, 1);
     explorer.fillRect(10, 10, 200, 580);
 
     // Create file list area
@@ -125,6 +125,8 @@ export class Notebook {
         }, 300) // Save after 300ms of inactivity
       );
     }
+
+    console.log("editor: ", this.editor);
 
     this.notebookOpen.add([notebook, explorer, this.fileList, this.editor]);
 
