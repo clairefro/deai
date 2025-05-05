@@ -1,6 +1,5 @@
 import { AppConfig } from "../../../shared/Config";
 import { ChatResponse, Message, GenericChatAdapterI } from "./ChatAdapter";
-import { Ollama } from "ollama";
 export class OllamaAdapter implements GenericChatAdapterI {
   private baseUrl: string;
 
@@ -14,35 +13,19 @@ export class OllamaAdapter implements GenericChatAdapterI {
     messages: Message[],
     config: AppConfig
   ): Promise<ChatResponse> {
-    console.log("ollama baseUrl", this.baseUrl);
-
     const opts = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // model: config.llm.ollamaModel,
-        // TODO: FIX MODEL SETTIGN CONFIG
-        model: "gemma3:latest",
+        model: config.llm.ollamaModel,
         messages,
         stream: false,
       }),
     };
-    console.log({ opts });
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        // model: config.llm.ollamaModel,
-        // TODO: FIX MODEL SETTIGN CONFIG
-        model: "gemma3:latest",
-        messages,
-        stream: false,
-      }),
-    });
+
+    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, opts);
 
     const data = await response.json();
 

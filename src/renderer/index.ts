@@ -36,4 +36,12 @@ new Phaser.Game({
       height: BASE_HEIGHT,
     },
   },
+  callbacks: {
+    preBoot: (game) => {
+      console.log("LIFECYCLE: Game preBoot");
+    },
+    postBoot: (game) => {
+      console.log("LIFECYCLE: Game postBoot");
+    },
+  },
 });

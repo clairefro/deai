@@ -27,6 +27,20 @@
       ],
       "encountered": false,
       "imageKey": "ghost"
+    },
+    {
+      "id": "7ee42a03-597d-4ab6-a44b-118a01cd1369",
+      "name": "Martin Buber",
+      "persona": "Martin Buber",
+      "mumblings": [
+        "All real living is meeting.",
+        "The world is not the sum of the things, it is the sum of their relationships.",
+        "In the beginning is the relation.",
+        "I am because we are.",
+        "Everything depends on how we look at things."
+      ],
+      "encountered": false,
+      "imageKey": "ghost"
     }
   ]
 }

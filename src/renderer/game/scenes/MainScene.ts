@@ -18,6 +18,8 @@ class MainScene extends Phaser.Scene {
   private librarians: Librarian[] = [];
 
   preload() {
+    console.log("LIFECYCLE: MainScene preload started");
+
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
   }
@@ -73,8 +75,10 @@ class MainScene extends Phaser.Scene {
     });
 
     console.log(this.librarians);
-    const buber = new Librarian({ name: "Martin Buber", scene: this });
-    buber.spawn(400, 300);
+    // const guest = new Librarian({ name: "Martin Buber", scene: this });
+    // await guest.spawn(400, 300);
+
+    // console.log(JSON.stringify(guest.serialize(), null, 2));
     // const borges = new Librarian({ name: "Jorge Luis Borges", scene: this });
     // borges.spawn(500, 400);
 

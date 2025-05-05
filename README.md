@@ -20,3 +20,5 @@ either in background :
 
 or in open terminal tab:
 `ollama serve`
+
+TODO: automate ollama connection with wizard + scripts

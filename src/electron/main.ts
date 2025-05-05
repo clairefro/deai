@@ -29,6 +29,14 @@ function createWindow(): void {
   // @ts-ignore
   win.setAspectRatio(1.33);
 
+  // was experiencing dev server errors occassionally on hot reload relating to gpu crash
+  // sometimes vite process was hanging (ps aux | grep vite) (kill - 9 <pid of vite>)
+  win.webContents.on("render-process-gone", (event, details) => {
+    console.error("Renderer process crashed:", details);
+    // Optionally reload the window
+    win.reload();
+  });
+
   if (process.env.NODE_ENV === "development") {
     // In development, load from Vite dev server
     win.loadURL("http://localhost:5173");
