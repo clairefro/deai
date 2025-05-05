@@ -2,6 +2,7 @@ export class Menu {
   protected element: HTMLElement | null;
   protected fields: HTMLElement | null;
   private overlay: HTMLElement | null = null;
+  private escHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(menuId: string, fieldsId: string) {
     this.element = document.getElementById(menuId);
@@ -20,6 +21,22 @@ export class Menu {
     this.element?.parentNode?.insertBefore(this.overlay, this.element);
   }
 
+  private setupEscapeHandler(): void {
+    this.escHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        this.toggle();
+      }
+    };
+    document.addEventListener("keydown", this.escHandler);
+  }
+
+  private removeEscapeHandler(): void {
+    if (this.escHandler) {
+      document.removeEventListener("keydown", this.escHandler);
+      this.escHandler = null;
+    }
+  }
+
   protected toggle(): void {
     if (!this.element || !this.overlay) return;
     const isVisible = this.element.style.display !== "none";
@@ -27,12 +44,14 @@ export class Menu {
     if (isVisible) {
       this.element.style.display = "none";
       this.overlay.style.display = "none";
+      this.removeEscapeHandler();
     } else {
       this.element.style.display = "block";
       this.overlay.style.display = "block";
       this.overlay.addEventListener("click", () => this.toggle(), {
         once: true,
       });
+      this.setupEscapeHandler();
     }
   }
 

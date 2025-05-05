@@ -32,16 +32,4 @@ export class StatusBar {
       }, 300);
     }, duration);
   }
-
-  // static showMessage(text: string) {
-  //   if (this.messageElement) {
-  //     this.messageElement.textContent = text;
-  //   }
-  // }
-
-  // static clearMessage() {
-  //   if (this.messageElement) {
-  //     this.messageElement.textContent = "";
-  //   }
-  // }
 }
