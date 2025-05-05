@@ -21,7 +21,7 @@ export class ChatManager {
         ...this.messageHistory,
         userMessage,
       ]);
-
+      console.log({ response });
       // Update conversation history
       this.messageHistory.push(userMessage);
       this.messageHistory.push({

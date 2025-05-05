@@ -37,8 +37,8 @@ export const SETTINGS_SCHEMA: SchemaSettingConfig[] = [
     type: "select",
     value: (config: AppConfig) => config.llm.platform,
     options: [
-      { value: "openai", label: "OpenAI" },
-      { value: "ollama", label: "Ollama" },
+      { value: "openai", label: "Cloud (OpenAI)" },
+      { value: "ollama", label: "Local (Ollama)" },
     ],
   },
   {
