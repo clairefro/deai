@@ -1,7 +1,7 @@
 import { AppConfig } from "../../../../shared/Config";
 import { Menu } from "../Menu";
 import { GearIcon } from "./ui/GearIcon";
-import { StatusBar } from "../StatusBar";
+import { NotificationBar } from "../NotificationBar";
 import { SETTINGS_SCHEMA, SettingDefinition } from "./SettingsSchema";
 import { SelectSetting } from "./inputs/SelectSetting";
 import { TextSetting } from "./inputs/TextSetting";
@@ -128,7 +128,7 @@ export class SettingsMenu extends Menu {
 
   private async handleUpdate(key: string, value: string): Promise<void> {
     await window.electronAPI.updateConfig({ [key]: value });
-    StatusBar.getInstance()?.show("Settings saved");
+    NotificationBar.getInstance()?.showWithDuration("Settings saved");
   }
 
   updateConfig(newConfig: AppConfig): void {

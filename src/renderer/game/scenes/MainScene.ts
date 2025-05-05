@@ -2,7 +2,7 @@ import * as Phaser from "phaser";
 import { AppConfig } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/settings/SettingsMenu";
-import { StatusBar } from "../components/StatusBar";
+import { NotificationBar } from "../components/NotificationBar";
 import playerImage from "../../assets/sprite.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
@@ -84,7 +84,7 @@ class MainScene extends Phaser.Scene {
 
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
-      StatusBar.initialize(gameContainer);
+      NotificationBar.initialize(gameContainer);
     }
 
     // TODO: TEMP
@@ -155,9 +155,9 @@ class MainScene extends Phaser.Scene {
     if (nearestAction !== this.currentAction) {
       this.currentAction = nearestAction;
       if (nearestAction) {
-        StatusBar.getInstance()?.show(nearestAction.getLabel());
+        NotificationBar.getInstance()?.show(nearestAction.getLabel());
       } else {
-        StatusBar.getInstance()?.clear();
+        NotificationBar.getInstance()?.clear();
       }
     }
   }
@@ -165,7 +165,7 @@ class MainScene extends Phaser.Scene {
   private handleActionKey(): void {
     if (this.currentAction) {
       this.currentAction.action();
-      StatusBar.getInstance()?.clear();
+      NotificationBar.getInstance()?.clear();
       this.currentAction = null;
       this.hasMovedSinceAction = false;
     }

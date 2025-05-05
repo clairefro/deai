@@ -8,6 +8,7 @@ import {
   generateMumblingsSystemPrompt,
 } from "../llm/prompts/librarianPrompts";
 import { ChatAdapter } from "../llm/ChatAdapter";
+import { Message } from "../llm/ChatAdapter";
 
 export type LibrarianProps =
   // new Librarian
@@ -35,6 +36,7 @@ export interface LibrarianVisuals {
 export interface LibrarianState {
   encountered: boolean;
   isChatting: boolean;
+  lastMumble: string | null;
 }
 
 export class Librarian {
@@ -54,14 +56,13 @@ export class Librarian {
   private readonly state: LibrarianState = {
     encountered: false,
     isChatting: false,
+    lastMumble: null,
   };
 
   private chatDialog: ChatDialog | null = null;
   private mumbleTimer: Phaser.Time.TimerEvent | null = null;
   private systemPrompt: string;
   private mumblings: string[] = [];
-  private friends: string[] = [];
-  private foes: string[] = [];
 
   constructor({ name, scene, persona, data }: LibrarianProps) {
     if (data) {
@@ -117,12 +118,12 @@ export class Librarian {
     this.visuals.nameText = this.scene.add.text(
       0,
       LIBRARIAN_CONFIG.POSITIONS.NAME_OFFSET_Y,
-      this.name,
+      this.getDisplayName(),
       LIBRARIAN_CONFIG.TEXT_STYLES.NAME
     );
     this.visuals.nameText.setOrigin(0.5);
     this.visuals.nameText.setDepth(DEPTHS.LIBRARIAN.NAME_TEXT);
-    this.visuals.nameText.setVisible(this.state.encountered);
+    this.visuals.nameText.setVisible(true);
   }
 
   private createMumbleText(): void {
@@ -193,7 +194,9 @@ export class Librarian {
         this.mumbleTimer = this.scene.time.delayedCall(gap, mumbleCycle);
       } else {
         const randomIndex = Math.floor(Math.random() * this.mumblings.length);
-        this.visuals.mumbleText.setText(this.mumblings[randomIndex]);
+        const mumble = this.mumblings[randomIndex];
+        this.state.lastMumble = mumble;
+        this.visuals.mumbleText.setText(mumble);
         this.visuals.mumbleText.setVisible(true);
         const duration = Phaser.Math.Between(
           LIBRARIAN_CONFIG.TIMING.MUMBLE_DURATION.MIN,
@@ -221,12 +224,21 @@ export class Librarian {
     if (!this.chatDialog) {
       this.stopMumbling();
 
+      // shoehorn in last mumble if it exists
+      const initialHistory: Message[] = this.state.lastMumble
+        ? [{ role: "assistant", content: `*${this.state.lastMumble}*` }]
+        : [];
+
       this.chatDialog = new ChatDialog(
         this.systemPrompt,
         this.scene,
         () => this.onConversationEnd(),
         () => this.handleFirstResponse()
       );
+
+      if (this.state.lastMumble) {
+        this.chatDialog.addLastMumble(this.state.lastMumble);
+      }
     }
 
     this.chatDialog.show();
@@ -236,11 +248,18 @@ export class Librarian {
     if (!this.state.encountered) {
       this.state.encountered = true;
       this.revealNameText();
+      this.chatDialog?.updateTitle(this.name);
     }
   }
 
   private revealNameText(): void {
-    this.visuals.nameText?.setVisible(true);
+    if (!this.visuals.nameText) return;
+
+    this.visuals.nameText.setText(this.getDisplayName());
+    this.visuals.nameText.setVisible(true);
+
+    // re-center the text since width may have changed
+    this.visuals.nameText.setOrigin(0.5);
   }
 
   private onConversationEnd(): void {
@@ -264,7 +283,6 @@ export class Librarian {
       "['Where am I?']"
     );
 
-    console.log({ mumblingsRaw });
     this.mumblings = JSON.parse(mumblingsRaw);
   }
 

@@ -29,7 +29,7 @@ export const LIBRARIAN_CONFIG = {
     IMAGE_KEY: "ghost",
   },
   POSITIONS: {
-    NAME_OFFSET_Y: -50,
+    NAME_OFFSET_Y: -40,
     MUMBLE_OFFSET_Y: -80,
   },
   TIMING: {

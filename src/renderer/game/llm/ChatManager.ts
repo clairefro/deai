@@ -1,11 +1,22 @@
-import { ChatAdapter, Message, ChatResponse } from "./ChatAdapter";
+import { ChatAdapter, Message, MessageWithMeta } from "./ChatAdapter";
 
 export class ChatManager {
   private messageHistory: Message[] = [];
   private systemPrompt: string;
+  private initialHistory: MessageWithMeta[] = [];
 
-  constructor(systemPrompt: string) {
+  constructor(systemPrompt: string, initialHistory: Message[] = []) {
     this.systemPrompt = systemPrompt;
+    this.initialHistory = initialHistory;
+  }
+
+  stripMetaFromMessages(messagesWithMeta: MessageWithMeta[]): Message[] {
+    if (!messagesWithMeta.length) return [];
+    return messagesWithMeta.map((msg) => {
+      const { role, content } = msg;
+      // Keep only 'role' and 'content' properties
+      return { role, content };
+    }) as Message[];
   }
 
   async sendMessage(message: string): Promise<string> {
@@ -16,12 +27,13 @@ export class ChatManager {
 
     try {
       const adapter = await ChatAdapter.getInstance();
+
       const response = await adapter.sendMessage([
         { role: "system", content: this.systemPrompt },
+        ...this.stripMetaFromMessages(this.initialHistory),
         ...this.messageHistory,
         userMessage,
       ]);
-      console.log({ response });
       // Update conversation history
       this.messageHistory.push(userMessage);
       this.messageHistory.push({
@@ -48,8 +60,12 @@ export class ChatManager {
     this.messageHistory = [];
   }
 
-  getHistory(): Message[] {
-    return [...this.messageHistory];
+  setInitialHistory(history: MessageWithMeta[]): void {
+    this.initialHistory = history;
+  }
+
+  getHistory(): MessageWithMeta[] {
+    return [...this.initialHistory, ...this.messageHistory];
   }
 
   updateSystemPrompt(newPrompt: string): void {

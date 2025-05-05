@@ -7,6 +7,10 @@ export interface Message {
   content: string;
 }
 
+export interface MessageWithMeta extends Message {
+  hidden?: boolean;
+}
+
 export interface ChatResponse {
   content: string;
   tokensUsed: number;

@@ -24,6 +24,10 @@
   opacity: 0;
 }
 
+#game .status-bar.fade-in {
+  opacity: 1;
+}
+
 /* Menus */
 
 #game .menu-close-button {
@@ -47,7 +51,7 @@
 }
 
 #game .menu-close-button:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 #game .menu-close-button:active {
@@ -65,14 +69,13 @@
   z-index: 998;
 }
 
-#settings-menu {
+#game #settings-menu {
   z-index: 999;
   position: relative;
 }
 
-.menu-close-button {
+#game .menu-close-button {
   z-index: 1000;
-  /* ...existing styles... */
 }
 
 /* Settings */
@@ -141,7 +144,7 @@
   bottom: 20px;
   width: 400px;
   height: 500px;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -208,7 +211,7 @@
   padding: 0.25rem;
 }
 
-.chat-input {
+#game .chat-input {
   flex: 1;
   min-height: 60px;
   max-height: 150px;
@@ -225,7 +228,7 @@
   width: 100%;
 }
 
-.chat-input:focus {
+#game .chat-input:focus {
   border-color: #666;
 }
 
@@ -252,6 +255,27 @@
   animation: pulse 1.5s infinite;
 }
 
+#game .chat-dialog .last-mumble {
+  font-style: italic;
+  color: #fff;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+#game .chat-title {
+  padding: 12px 16px;
+  margin-bottom: 4px;
+}
+
+#game .chat-title h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 1em;
+  font-weight: normal;
+  color: #fff;
+  font-family: monospace;
+}
 @keyframes pulse {
   0% {
     opacity: 0.5;

@@ -3,12 +3,17 @@ import { ChatManager } from "../llm/ChatManager";
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 
 export class ChatDialog {
+  private readonly chatManager: ChatManager;
+
+  // state
+  private hasResponded = false;
+
+  // HTML Elements
   private readonly element: HTMLElement;
   private readonly messagesContainer: HTMLElement;
+  private titleElement!: HTMLElement;
   private readonly input: HTMLTextAreaElement;
-  private readonly chatManager: ChatManager;
   private readonly loadingIndicator: ChatLoadingIndicator;
-  private hasResponded = false;
 
   constructor(
     systemPrompt: string,
@@ -18,7 +23,6 @@ export class ChatDialog {
   ) {
     this.chatManager = new ChatManager(systemPrompt);
     this.loadingIndicator = new ChatLoadingIndicator();
-
     const elements = this.createUIElements();
     this.element = elements.dialog;
     this.messagesContainer = elements.messages;
@@ -32,14 +36,25 @@ export class ChatDialog {
     const dialog = document.createElement("div");
     dialog.className = "chat-dialog";
 
+    const titleContainer = document.createElement("div");
+    titleContainer.className = "chat-title";
+    this.titleElement = document.createElement("h2");
+    this.titleElement.textContent = "?";
+    titleContainer.appendChild(this.titleElement);
+
     const messagesContainer = document.createElement("div");
     messagesContainer.className = "chat-messages";
+    const mumbleContainer = document.createElement("div");
+    mumbleContainer.className = "mumble-container";
+
+    messagesContainer.appendChild(mumbleContainer);
     messagesContainer.appendChild(this.loadingIndicator.getElement());
 
     const inputContainer = this.createInputContainer();
     const closeButton = this.createCloseButton();
 
     dialog.appendChild(closeButton);
+    dialog.appendChild(titleContainer);
     dialog.appendChild(messagesContainer);
     dialog.appendChild(inputContainer);
 
@@ -48,6 +63,12 @@ export class ChatDialog {
       messages: messagesContainer,
       input: inputContainer.querySelector("textarea")!,
     };
+  }
+
+  updateTitle(name: string): void {
+    if (this.titleElement) {
+      this.titleElement.textContent = name;
+    }
   }
 
   private createInputContainer(): HTMLElement {
@@ -139,8 +160,7 @@ export class ChatDialog {
   private async sendMessage(message: string): Promise<void> {
     this.showUserMessage(message);
     this.loadingIndicator.show();
-    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-
+    this.scrollToBottom();
     try {
       await this.handleAIResponse(message);
     } catch (err) {
@@ -172,21 +192,44 @@ export class ChatDialog {
     this.onFirstResponse?.();
   }
 
-  private updateMessages(messages: Message[]): void {
+  private updateMessages(messages: MessageWithMeta[]): void {
     const loadingElement = this.loadingIndicator.getElement();
+    const mumbleContainer =
+      this.messagesContainer.querySelector(".mumble-container");
 
-    while (this.messagesContainer.firstChild !== loadingElement) {
-      this.messagesContainer.firstChild?.remove();
-    }
+    // Remove existing messages
+    const children = Array.from(this.messagesContainer.children);
+    children.forEach((child) => {
+      if (child !== mumbleContainer && child !== loadingElement) {
+        child.remove();
+      }
+    });
 
-    messages.forEach((msg) => {
+    // Only display non-hidden messages
+    const visibleMessages = messages.filter((msg) => !(msg as any).hidden);
+    visibleMessages.forEach((msg) => {
       const msgElement = document.createElement("div");
       msgElement.className = `chat-message ${msg.role}`;
       msgElement.innerText = msg.content;
       this.messagesContainer.insertBefore(msgElement, loadingElement);
     });
 
-    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    // Force a reflow to ensure new content is measured
+    this.messagesContainer.offsetHeight;
+
+    // Double RAF to ensure DOM is fully updated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.messagesContainer.scrollTo({
+          top: this.messagesContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+    });
   }
 
   private autoResizeTextarea(): void {
@@ -209,5 +252,28 @@ export class ChatDialog {
 
   updateSystemPrompt(newPrompt: string): void {
     this.chatManager.updateSystemPrompt(newPrompt);
+  }
+
+  addLastMumble(mumble: string): void {
+    // add mumble as initial chat history
+    this.chatManager.setInitialHistory([
+      {
+        role: "assistant",
+        content: `*${mumble}*`,
+        hidden: true,
+      },
+    ]);
+
+    const mumbleContainer =
+      this.messagesContainer.querySelector(".mumble-container");
+    if (!mumbleContainer) return;
+
+    // Clear existing mumble if any
+    mumbleContainer.innerHTML = "";
+
+    const mumbleEl = document.createElement("div");
+    mumbleEl.className = "last-mumble";
+    mumbleEl.textContent = mumble;
+    mumbleContainer.appendChild(mumbleEl);
   }
 }
