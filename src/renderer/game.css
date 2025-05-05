@@ -277,6 +277,82 @@
   font-family: monospace;
 }
 
+/* Notebook */
+
+.notebook {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  font-family: monospace;
+  z-index: 1000;
+}
+
+.notebook .notebook-tab {
+  background: #333333;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  text-align: center;
+  width: 100px;
+  margin: 0 auto;
+}
+
+.notebook .notebook-content {
+  display: none;
+  background: #333333;
+  height: 600px;
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+}
+
+.notebook.open .notebook-content {
+  display: flex;
+  gap: 16px;
+}
+
+.notebook .notebook-files {
+  width: 200px;
+  background: #222222;
+  padding: 8px;
+  overflow-y: auto;
+  border-radius: 4px;
+}
+
+#game .notebook .notebook-file {
+  color: #fff;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+#game .notebook .notebook-file:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#game .notebook .notebook-file.selected {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#game .notebook #notebook-editor {
+  flex: 1;
+  background: #fff8dc;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 16px;
+  resize: none;
+  outline: none;
+}
+
+#game .notebook #notebook-editor:focus {
+  border-color: #888;
+}
+
 /* Tokens bar */
 
 #game canvas {
@@ -288,7 +364,7 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
+  width: 400px;
   height: 15px;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #666;
