@@ -1,5 +1,5 @@
 import { DEPTHS } from "../constants";
-import { ChatDialog } from "../components/ChatDialog";
+import { ChatDialog } from "../components/chat/ChatDialog";
 import { v4 as uuidv4 } from "uuid";
 import { LIBRARIAN_CONFIG } from "../constants";
 import { LibrarianData } from "../../../shared/types/LibrarianData";

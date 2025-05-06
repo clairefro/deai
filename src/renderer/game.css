@@ -2,9 +2,9 @@
   color: maroon;
 }
 
-/* Status Bar */
+/* Notification Bar */
 
-#game .status-bar {
+#game .notification-bar {
   position: fixed;
   font-size: large;
   font-family: monospace;
@@ -13,18 +13,19 @@
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 18px 16px;
+  padding: 6px;
+  padding-top: 10px;
   border-radius: 0 0 4px 4px;
   font-size: 14px;
   z-index: 1000;
   transition: opacity 0.3s ease-out;
 }
 
-#game .status-bar.fade-out {
+#game .notification-bar.fade-out {
   opacity: 0;
 }
 
-#game .status-bar.fade-in {
+#game .notification-bar.fade-in {
   opacity: 1;
 }
 
@@ -215,7 +216,7 @@
   flex: 1;
   min-height: 60px;
   max-height: 150px;
-  padding: 8px;
+  padding: 10px;
   margin-right: 8px;
   border: 1px solid #333;
   border-radius: 4px;

@@ -4,7 +4,7 @@ export class NotificationBar {
 
   private constructor(parent: HTMLElement) {
     this.element = document.createElement("div");
-    this.element.className = "status-bar";
+    this.element.className = "notification-bar";
     this.element.style.display = "none";
     parent.appendChild(this.element);
   }
