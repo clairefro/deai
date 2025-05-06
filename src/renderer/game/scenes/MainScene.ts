@@ -9,7 +9,7 @@ import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
 import { DEPTHS } from "../constants";
 import { rand } from "../../../shared/util/rand";
-
+import { ChatDirectory } from "../components/ChatDirectory";
 import { ProximityAction } from "../actions/types";
 
 class MainScene extends Phaser.Scene {
@@ -20,6 +20,8 @@ class MainScene extends Phaser.Scene {
   private librarians: Librarian[] = [];
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
+  private chatDirectory!: ChatDirectory;
+
   // Actions
   private proximityActions: ProximityAction[] = [];
   private currentAction: ProximityAction | null = null;
@@ -92,9 +94,13 @@ class MainScene extends Phaser.Scene {
     // TODO: TEMP
     // place librarians
     this.spawnLibrarians();
+
+    this.chatDirectory = new ChatDirectory(this);
   }
 
   private async spawnLibrarians() {
+    // const guest = new Librarian({ name: "Chimamanda Adichie", scene: this });
+    // this.librarians.push(guest);
     await Promise.all(
       this.librarians.map(async (librarian) => {
         await librarian.spawn(rand(100, 800), rand(200, 700));
@@ -114,9 +120,6 @@ class MainScene extends Phaser.Scene {
         action: () => librarian.chat(),
       });
     });
-
-    // const guest = new Librarian({ name: "Philip K Dick", scene: this });
-    // await guest.spawn(400, 300);
 
     // console.log(JSON.stringify(guest.serialize(), null, 2));
     // const borges = new Librarian({ name: "Jorge Luis Borges", scene: this });

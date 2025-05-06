@@ -123,4 +123,14 @@ export class LibrariansStore {
       return null;
     }
   }
+
+  async getEncountered(): Promise<LibrarianData[]> {
+    try {
+      await this.db.read();
+      return this.db.data.entities.filter((lib) => lib.encountered);
+    } catch (error) {
+      console.error("Failed to get encountered librarians:", error);
+      return [];
+    }
+  }
 }

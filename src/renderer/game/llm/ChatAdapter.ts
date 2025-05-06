@@ -9,11 +9,13 @@ export interface Message {
 
 export interface MessageWithMeta extends Message {
   hidden?: boolean;
+  speaker?: string;
 }
 
 export interface ChatResponse {
   content: string;
   tokensUsed: number;
+  metadata?: Record<string, any>;
 }
 
 export interface GenericChatAdapterI {

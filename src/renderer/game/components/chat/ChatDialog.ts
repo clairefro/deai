@@ -3,8 +3,8 @@ import { ChatDialogUiManager } from "./ChatDialogUiManager";
 import { TokensBar } from "../TokensBar";
 
 export class ChatDialog {
-  private ui!: ChatDialogUiManager;
-  private chatManager!: ChatManager;
+  protected ui!: ChatDialogUiManager;
+  protected chatManager!: ChatManager;
   private hasResponded = false;
 
   constructor(
@@ -21,7 +21,7 @@ export class ChatDialog {
     );
   }
 
-  private async handleMessage(message: string): Promise<void> {
+  async handleMessage(message: string): Promise<void> {
     this.ui.showLoading();
 
     try {

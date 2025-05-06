@@ -4,6 +4,7 @@ import {
   Message,
   MessageWithMeta,
 } from "./ChatAdapter";
+import { MessageOptions } from "./types";
 
 export class ChatManager {
   private messageHistory: Message[] = [];
@@ -24,10 +25,15 @@ export class ChatManager {
     }) as Message[];
   }
 
-  async sendMessage(message: string): Promise<ChatResponse> {
-    const userMessage: Message = {
-      role: "user",
+  async sendMessage(
+    message: string,
+    options: MessageOptions = {}
+  ): Promise<ChatResponse> {
+    const userMessage: MessageWithMeta = {
+      role: options.role || "user",
       content: message,
+      ...(options.speaker ? { speaker: options.speaker } : {}),
+      ...(options.metadata ? { metadata: options.metadata } : {}),
     };
 
     try {
@@ -39,21 +45,28 @@ export class ChatManager {
         ...this.messageHistory,
         userMessage,
       ]);
-      // Update conversation history
-      this.messageHistory.push(userMessage);
-      this.messageHistory.push({
+
+      // Store message with full metadata
+      const responseMessage: MessageWithMeta = {
         role: "assistant",
         content: response.content,
-      });
+        ...(options.speaker ? { speaker: options.speaker } : {}),
+        ...(options.metadata ? { metadata: options.metadata } : {}),
+      };
 
-      // TODO: adjust
+      this.messageHistory.push(userMessage);
+      this.messageHistory.push(responseMessage);
+
       // Keep last N messages
       const maxHistory = 10;
       if (this.messageHistory.length > maxHistory) {
         this.messageHistory = this.messageHistory.slice(-maxHistory);
       }
 
-      return response;
+      return {
+        ...response,
+        metadata: options.metadata,
+      };
     } catch (error) {
       console.error("Chat error:", error);
       // TODO: make this more clover

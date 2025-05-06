@@ -121,5 +121,12 @@ app.whenReady().then(async () => {
     }
   );
 
+  ipcMain.handle("get-encountered-librarians", async () => {
+    console.log("Main process: Fetching encountered librarians");
+    const librarians = await librariansStore.getEncountered();
+    console.log("Main process: Found librarians:", librarians);
+    return librarians;
+  });
+
   createWindow();
 });

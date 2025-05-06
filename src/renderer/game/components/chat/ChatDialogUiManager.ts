@@ -157,19 +157,6 @@ export class ChatDialogUiManager {
     });
   }
 
-  private addMessage(message: MessageWithMeta): void {
-    const msgElement = document.createElement("div");
-    msgElement.className = `chat-message ${message.role}`;
-    msgElement.innerText = message.content;
-
-    this.messagesContainer.insertBefore(
-      msgElement,
-      this.loadingIndicator.getElement()
-    );
-
-    this.scrollToBottom();
-  }
-
   private autoResizeTextarea(): void {
     this.input.style.height = "auto";
     this.input.style.height = `${this.input.scrollHeight}px`;
@@ -179,6 +166,30 @@ export class ChatDialogUiManager {
     document.getElementById("game")?.appendChild(this.dialog);
   }
 
+  addMessage(message: MessageWithMeta): void {
+    const msgElement = document.createElement("div");
+    msgElement.className = `chat-message ${message.role}`;
+
+    // Add speaker name if provided
+    if (message.speaker) {
+      const speakerEl = document.createElement("div");
+      speakerEl.className = "chat-message-speaker";
+      speakerEl.textContent = message.speaker;
+      msgElement.appendChild(speakerEl);
+    }
+
+    const contentEl = document.createElement("div");
+    contentEl.className = "chat-message-content";
+    contentEl.innerText = message.content;
+    msgElement.appendChild(contentEl);
+
+    this.messagesContainer.insertBefore(
+      msgElement,
+      this.loadingIndicator.getElement()
+    );
+
+    this.scrollToBottom();
+  }
   showMumble(mumble: string): void {
     this.mumbleContainer.innerHTML = "";
 
@@ -221,8 +232,8 @@ export class ChatDialogUiManager {
     this.scrollToBottom();
   }
 
-  showLoading(): void {
-    this.loadingIndicator.show();
+  showLoading(text?: string): void {
+    this.loadingIndicator.show(text);
   }
 
   hideLoading(): void {

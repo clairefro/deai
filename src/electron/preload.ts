@@ -108,6 +108,14 @@ const electronAPI = {
       throw err;
     }
   },
+  async getEncounteredLibrarians(): Promise<LibrarianData[]> {
+    try {
+      return await ipcRenderer.invoke("get-encountered-librarians");
+    } catch (err) {
+      console.error("Failed to get encountered librarians:", err);
+      return [];
+    }
+  },
 };
 
 // infer interface from definition

@@ -9,6 +9,7 @@ import {
 } from "../llm/prompts/librarianPrompts";
 import { ChatAdapter } from "../llm/ChatAdapter";
 import { Message } from "../llm/ChatAdapter";
+import { GroupChatDialog } from "../components/chat/GroupChatDialog";
 
 export type LibrarianProps =
   // new Librarian
@@ -244,9 +245,20 @@ export class Librarian {
     this.chatDialog.show();
   }
 
-  private handleFirstResponse(): void {
+  private async handleFirstResponse(): Promise<void> {
     if (!this.state.encountered) {
       this.state.encountered = true;
+
+      // update librarian enountered stae
+      try {
+        await window.electronAPI.upsertLibrarianData({
+          ...this.serialize(),
+          encountered: true,
+        });
+      } catch (err) {
+        console.error("Failed to update librarian encountered state:", err);
+      }
+
       this.revealNameText();
       this.chatDialog?.updateTitle(this.name);
     }
@@ -325,4 +337,18 @@ export class Librarian {
   getSprite = () => this.visuals.sprite;
   getNameText = () => this.visuals.nameText;
   getImage = () => this.imageKey;
+
+  joinGroupChat(groupChat: GroupChatDialog): void {
+    this.stopMumbling();
+    this.state.isChatting = true;
+    groupChat.addLibrarian(this);
+  }
+
+  getId(): string {
+    return this.id;
+  }
+
+  getName(): string {
+    return this.name;
+  }
 }

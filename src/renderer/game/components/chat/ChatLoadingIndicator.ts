@@ -1,19 +1,20 @@
 export class ChatLoadingIndicator {
   private element: HTMLElement;
+  private readonly defaultText = "...";
 
   constructor() {
     this.element = this.create();
   }
 
   private create(): HTMLElement {
-    const indicator = document.createElement("div");
-    indicator.className = "chat-loading";
-    indicator.textContent = "...";
-    indicator.style.display = "none"; // hide by default
-    return indicator;
+    const element = document.createElement("div");
+    element.className = "chat-loading";
+    element.style.display = "none"; // hide by default
+    return element;
   }
 
-  show(): void {
+  show(text?: string): void {
+    this.element.textContent = text || this.defaultText;
     this.element.style.display = "block";
   }
 
