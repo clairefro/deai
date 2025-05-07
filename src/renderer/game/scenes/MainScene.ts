@@ -9,7 +9,6 @@ import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
 import { DEPTHS } from "../constants";
 import { rand } from "../../../shared/util/rand";
-import { ChatDirectory } from "../components/ChatDirectory";
 import { ProximityAction } from "../actions/types";
 
 class MainScene extends Phaser.Scene {
@@ -20,7 +19,6 @@ class MainScene extends Phaser.Scene {
   private librarians: Librarian[] = [];
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
-  private chatDirectory!: ChatDirectory;
 
   // Actions
   private proximityActions: ProximityAction[] = [];
@@ -99,11 +97,8 @@ class MainScene extends Phaser.Scene {
       TokensBar.initialize(gameContainer);
     }
 
-    // TODO: TEMP
     // place librarians
     this.spawnLibrarians();
-
-    this.chatDirectory = new ChatDirectory(this);
   }
 
   private async spawnLibrarians() {
@@ -126,13 +121,6 @@ class MainScene extends Phaser.Scene {
         action: () => librarian.chat(),
       });
     });
-
-    // console.log(JSON.stringify(guest.serialize(), null, 2));
-    // const borges = new Librarian({ name: "Jorge Luis Borges", scene: this });
-    // borges.spawn(500, 400);
-
-    // await window.electronAPI.upsertLibrarianData(borges.serialize());
-    // await window.electronAPI.upsertLibrarianData(baldwin.serialize());
   }
   private addProximityAction(action: ProximityAction): void {
     if (!action.target) {
