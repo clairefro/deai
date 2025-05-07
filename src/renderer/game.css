@@ -275,7 +275,7 @@
 
 /* Notebook */
 
-.notebook {
+#game .notebook {
   position: fixed;
   bottom: 0;
   left: 50%;
@@ -285,7 +285,7 @@
   z-index: 1000;
 }
 
-.notebook .notebook-tab {
+#game .notebook .notebook-tab {
   background: #333333;
   color: #fff;
   padding: 8px 16px;
@@ -296,7 +296,7 @@
   margin: 0 auto;
 }
 
-.notebook .notebook-content {
+#game .notebook .notebook-content {
   display: none;
   background: #333333;
   height: 600px;
@@ -304,12 +304,12 @@
   border-radius: 8px 8px 0 0;
 }
 
-.notebook.open .notebook-content {
+#game .notebook.open .notebook-content {
   display: flex;
   gap: 16px;
 }
 
-.notebook .notebook-files {
+#game .notebook .notebook-files {
   width: 200px;
   background: #222222;
   padding: 8px;
@@ -349,45 +349,81 @@
   border-color: #888;
 }
 
-/* Tokens bar */
-
-#game canvas {
-  position: relative;
-}
-
-#game .tokens-bar {
-  position: absolute;
-  top: 20px;
+/* TeetorTotter bar */
+#game .teetor-totter {
+  position: fixed;
+  top: 20px; /* Changed from bottom to top */
   left: 50%;
   transform: translateX(-50%);
   width: 400px;
-  height: 15px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #666;
-  border-radius: 12px;
-  overflow: hidden;
-  z-index: 100;
+  height: 60px; /* Reduced height */
+  display: flex;
+  flex-direction: column-reverse; /* Reversed to put fulcrum under beam */
+  align-items: center;
+  z-index: 1000;
 }
 
-#game .tokens-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #fffb09, #fffb09);
-  transition: width 0.3s ease-out;
+#game .teetor-totter-fulcrum {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid #666;
+  margin-top: 0;
+  z-index: 2;
 }
 
-#game .tokens-bar-text {
+#game .teetor-totter-beam {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #333;
+  position: relative;
+  transform-origin: center;
+  transition: transform 0.3s ease-out;
+  overflow: visible;
+  margin-bottom: 0;
+}
+
+#game .teetor-totter-beam-fill {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-family: monospace;
-  font-size: 10px;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
+  height: 100%;
+  background: rgba(255, 255, 0, 0.5);
+  transition: all 0.3s ease-out;
+  z-index: 1;
 }
 
+#game .teetor-totter-balance-marker {
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: red;
+  top: 0px;
+  transform: translateX(-50%);
+  transition: left 0.3s ease-out;
+  z-index: 2;
+}
+
+#game .teetor-totter-beam.falling {
+  animation: fall 1s ease-in forwards;
+}
+
+#game .teetor-totter-beam {
+  width: 100%;
+  height: 6px; /* Made beam thinner */
+  background: #333;
+  position: relative;
+  transform-origin: center;
+  transition: transform 0.3s ease-out;
+  overflow: visible;
+  margin-bottom: 0; /* Removed margin */
+}
+@keyframes fall {
+  to {
+    transform: rotate(90deg);
+    opacity: 0;
+  }
+}
 /* Chat Directory */
 
 #game .chat-directory {

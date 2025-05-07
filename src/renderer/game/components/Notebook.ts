@@ -1,4 +1,5 @@
 import { debounce } from "../../../shared/util/debounce";
+import { TeetorTotter } from "./TeetorTotter";
 
 export class Notebook {
   private element: HTMLElement;
@@ -7,6 +8,7 @@ export class Notebook {
   private editor: HTMLTextAreaElement;
   private currentFilePath: string | null = null;
   private stopWatchingFile: (() => void) | null = null;
+  private debouncedSave: null | (() => void) = null;
 
   constructor(private readonly scene: Phaser.Scene) {
     this.element = this.createNotebookElement();
@@ -68,15 +70,30 @@ export class Notebook {
       e.stopPropagation();
     });
 
+    let previousLength = 0;
+
     // Auto-save on typing
-    this.editor.addEventListener(
-      "input",
-      debounce(() => {
-        if (this.currentFilePath) {
-          this.saveFileContent(this.currentFilePath, this.editor.value);
-        }
-      }, 300)
-    );
+    this.editor.addEventListener("input", () => {
+      const currentLength = this.editor.value.length;
+      const diff = currentLength - previousLength;
+
+      // Only count added characters, not deletions
+      if (diff > 0) {
+        TeetorTotter.getInstance()?.addOutputTokens(diff);
+      }
+
+      previousLength = currentLength;
+
+      // Debounce the save operation
+      this.debouncedSave && this.debouncedSave();
+    });
+
+    // Move auto-save to separate debounced function
+    this.debouncedSave = debounce(() => {
+      if (this.currentFilePath) {
+        this.saveFileContent(this.currentFilePath, this.editor.value);
+      }
+    }, 300);
   }
 
   private attachToGame(): void {

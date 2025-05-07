@@ -1,6 +1,6 @@
 import { ChatManager } from "../../llm/ChatManager";
 import { ChatDialogUiManager } from "./ChatDialogUiManager";
-import { TokensBar } from "../TokensBar";
+import { TeetorTotter } from "../TeetorTotter";
 
 export class ChatDialog {
   protected ui!: ChatDialogUiManager;
@@ -33,7 +33,7 @@ export class ChatDialog {
         this.onFirstResponse?.();
       }
 
-      TokensBar.getInstance()?.addTokens(response.tokensUsed);
+      TeetorTotter.getInstance()?.addIngestedTokens(response.tokensUsed);
       this.ui.updateMessages(this.chatManager.getHistory());
     } catch (err) {
       console.error("Chat error:", err);

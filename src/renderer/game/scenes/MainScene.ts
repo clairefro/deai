@@ -3,7 +3,7 @@ import { AppConfig } from "../../../shared/Config";
 import { Notebook } from "../components/Notebook";
 import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
-import { TokensBar } from "../components/TokensBar";
+import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
@@ -94,7 +94,7 @@ class MainScene extends Phaser.Scene {
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
       NotificationBar.initialize(gameContainer);
-      TokensBar.initialize(gameContainer);
+      TeetorTotter.initialize(gameContainer);
     }
 
     // place librarians
