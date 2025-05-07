@@ -10,7 +10,6 @@ import {
 } from "../llm/prompts/librarianPrompts";
 import { ChatAdapter } from "../llm/ChatAdapter";
 import { Message } from "../llm/ChatAdapter";
-import { GroupChatDialog } from "../components/chat/GroupChatDialog";
 
 export type LibrarianProps =
   // new Librarian
@@ -358,12 +357,6 @@ export class Librarian {
   getSprite = () => this.visuals.sprite;
   getNameText = () => this.visuals.nameText;
   getImage = () => this.imageKey;
-
-  joinGroupChat(groupChat: GroupChatDialog): void {
-    this.stopMumbling();
-    this.state.isChatting = true;
-    groupChat.addLibrarian(this);
-  }
 
   getId(): string {
     return this.id;
