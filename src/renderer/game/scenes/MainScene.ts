@@ -85,6 +85,14 @@ class MainScene extends Phaser.Scene {
       (data) => new Librarian({ data, scene: this })
     );
 
+    // const guest = new Librarian({
+    //   name: "Friedrich Wilhelm Nietzsche",
+    //   scene: this,
+    // });
+    // this.librarians.push(guest);
+
+    console.log({ librarians: this.librarians });
+
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
       NotificationBar.initialize(gameContainer);
@@ -99,8 +107,6 @@ class MainScene extends Phaser.Scene {
   }
 
   private async spawnLibrarians() {
-    // const guest = new Librarian({ name: "Chimamanda Adichie", scene: this });
-    // this.librarians.push(guest);
     await Promise.all(
       this.librarians.map(async (librarian) => {
         await librarian.spawn(rand(100, 800), rand(200, 700));

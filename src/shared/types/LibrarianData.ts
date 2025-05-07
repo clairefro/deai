@@ -6,4 +6,5 @@ export interface LibrarianData {
   encountered: boolean;
   imageKey: string;
   imageBase64?: string;
+  obsession?: string;
 }

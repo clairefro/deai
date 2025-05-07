@@ -6,6 +6,7 @@ import { LibrarianData } from "../../../shared/types/LibrarianData";
 import {
   generateChatSystemPrompt,
   generateMumblingsSystemPrompt,
+  generateObsessionSystemPrompt,
 } from "../llm/prompts/librarianPrompts";
 import { ChatAdapter } from "../llm/ChatAdapter";
 import { Message } from "../llm/ChatAdapter";
@@ -46,6 +47,8 @@ export class Librarian {
   private readonly name: string;
   private readonly persona: string;
   private readonly imageKey: string;
+  private mumblings: string[] = [];
+  private obsession: string = "";
 
   private readonly visuals: LibrarianVisuals = {
     container: null,
@@ -62,8 +65,7 @@ export class Librarian {
 
   private chatDialog: ChatDialog | null = null;
   private mumbleTimer: Phaser.Time.TimerEvent | null = null;
-  private systemPrompt: string;
-  private mumblings: string[] = [];
+  private systemPrompt: string | null = null;
 
   constructor({ name, scene, persona, data }: LibrarianProps) {
     if (data) {
@@ -80,21 +82,24 @@ export class Librarian {
     }
     // TODO: make dynamic
     this.imageKey = LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
-    this.systemPrompt = this.createSystemPrompt();
-    // this.initialize();
   }
 
   private createSystemPrompt(): string {
-    return generateChatSystemPrompt(this.persona);
+    return generateChatSystemPrompt(this.persona, this.obsession);
   }
 
   private async initialize(): Promise<void> {
     if (!this.mumblings.length) {
       await this.generateMumblings();
     }
+    if (!this.obsession) {
+      await this.generateObsession();
+    }
     this.createSprite();
     this.createNameText();
     this.createMumbleText();
+
+    this.systemPrompt = this.createSystemPrompt();
   }
 
   async spawn(x: number, y: number): Promise<void> {
@@ -230,8 +235,12 @@ export class Librarian {
         ? [{ role: "assistant", content: `*${this.state.lastMumble}*` }]
         : [];
 
+      if (!this.systemPrompt) {
+        await this.initialize();
+      }
+
       this.chatDialog = new ChatDialog(
-        this.systemPrompt,
+        this.systemPrompt as string,
         this.scene,
         () => this.onConversationEnd(),
         () => this.handleFirstResponse()
@@ -298,6 +307,17 @@ export class Librarian {
     this.mumblings = JSON.parse(mumblingsRaw);
   }
 
+  private async generateObsession(): Promise<void> {
+    const adapter = await ChatAdapter.getInstance();
+    const obsession = await adapter.getOneShot(
+      "RESPOND WITH A CONCISE, COMMA SEPARATED LIST",
+      generateObsessionSystemPrompt(this.persona),
+      ""
+    );
+
+    this.obsession = obsession;
+  }
+
   setPosition(x: number, y: number): void {
     this.visuals.container?.setPosition(x, y);
   }
@@ -307,8 +327,8 @@ export class Librarian {
     this.visuals.container?.destroy();
   }
 
-  updateSystemPrompt(persona: string): void {
-    this.systemPrompt = generateChatSystemPrompt(persona);
+  updateSystemPrompt(persona: string, obsession: string): void {
+    this.systemPrompt = generateChatSystemPrompt(persona, obsession);
   }
 
   static async loadData(id: string): Promise<LibrarianData | null> {
@@ -329,6 +349,7 @@ export class Librarian {
       mumblings: this.mumblings,
       encountered: this.state.encountered,
       imageKey: this.imageKey,
+      obsession: this.obsession,
     };
   }
 
