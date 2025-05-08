@@ -62,21 +62,24 @@ export class ChatAdapter {
   }
 
   async getOneShot(
-    systemPrompt: string,
     prompt: string,
-    fallbackResponse: string
-  ): Promise<string> {
+    validationCb?: (responseStr: string) => boolean
+  ): Promise<string | void> {
     try {
-      const messages: Message[] = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
-      ];
+      const messages: Message[] = [{ role: "user", content: prompt }];
 
       const response = await this.sendMessage(messages);
+      if (validationCb) {
+        const isValid = validationCb(response.content);
+        if (!isValid) {
+          throw new Error(
+            `One shot prompt failed validation check. Response content: "${response.content}"`
+          );
+        }
+      }
       return response.content;
     } catch (error) {
       console.error("OneShot generation error:", error);
-      return fallbackResponse;
     }
   }
 }

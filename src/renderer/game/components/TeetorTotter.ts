@@ -6,7 +6,7 @@ export class TeetorTotter {
   private balance: number = 0;
   private beamFill: HTMLElement;
   private balanceMarker: HTMLElement;
-  private readonly maxTilt = 100;
+  private readonly maxTilt = 1000;
 
   private constructor(parent: HTMLElement) {
     this.element = document.createElement("div");
@@ -52,11 +52,10 @@ export class TeetorTotter {
     return this.instance;
   }
 
-  addIngestedTokens(tokens: number): void {
-    console.log({ tokens });
-    this.balance = Math.min(this.balance + tokens / 500, this.maxTilt);
+  addIngestedTokens(charCount: number): void {
+    console.log({ charCount });
+    this.balance = Math.min(this.balance + charCount / 10, this.maxTilt);
     console.log(this.balance);
-
     // this.checkGameOver();
     this.updateDisplay();
   }
@@ -69,26 +68,36 @@ export class TeetorTotter {
     this.updateDisplay();
   }
 
-  // private checkGameOver(): void {
-  //   if (Math.abs(this.balance) >= this.maxTilt) {
-  //     this.triggerGameOver();
-  //   }
-  // }
+  private updateGlitchEffects(): void {
+    // Remove existing glitch classes
+    this.element.classList.remove(
+      "glitch-mild",
+      "glitch-medium",
+      "glitch-severe"
+    );
 
-  // private triggerGameOver(): void {
-  //   this.beam.classList.add("falling");
-  //   // Emit game over event
-  //   this.element.dispatchEvent(
-  //     new CustomEvent("gameOver", {
-  //       bubbles: true,
-  //       detail: { direction: this.balance > 0 ? "right" : "left" },
-  //     })
-  //   );
-  // }
+    // Calculate glitch intensity based on balance
+    const imbalance = Math.abs(this.balance / this.maxTilt);
+
+    // Add appropriate glitch class
+    if (imbalance > 0.75) {
+      document.getElementById("game")?.classList.add("glitch-severe");
+    } else if (imbalance > 0.5) {
+      document.getElementById("game")?.classList.add("glitch-medium");
+      this.createMatrixRain();
+    } else if (imbalance > 0.25) {
+      document.getElementById("game")?.classList.add("glitch-mild");
+    } else {
+      document
+        .getElementById("game")
+        ?.classList.remove("glitch-mild", "glitch-medium", "glitch-severe");
+    }
+  }
 
   private updateDisplay(): void {
     this.updateBeamRotation();
     this.updateFillAndMarker();
+    this.updateGlitchEffects();
   }
 
   private updateBeamRotation(): void {
@@ -97,16 +106,13 @@ export class TeetorTotter {
   }
 
   private updateFillAndMarker(): void {
-    // Calculate fill dimensions
     const fillPercentage = (Math.abs(this.balance) / this.maxTilt) * 50;
     const fillDirection = this.balance >= 0 ? "right" : "left";
 
-    // Update fill position
     this.beamFill.style.width = `${fillPercentage}%`;
     this.beamFill.style.left =
       fillDirection === "right" ? "50%" : `${50 - fillPercentage}%`;
 
-    // Update marker
     const markerPosition = 50 + (this.balance / this.maxTilt) * 50;
     this.balanceMarker.style.left = `${markerPosition}%`;
   }
@@ -115,5 +121,35 @@ export class TeetorTotter {
     this.balance = 0;
     this.beam.classList.remove("falling");
     this.updateDisplay();
+  }
+
+  private createMatrixRain(): void {
+    const game = document.getElementById("game");
+    if (!game) return;
+
+    // Clear existing columns
+    const existing = document.querySelectorAll(".matrix-column");
+    existing.forEach((el) => el.remove());
+
+    // Create new columns
+    const columns = 20;
+    for (let i = 0; i < columns; i++) {
+      const column = document.createElement("div");
+      column.className = "matrix-column";
+
+      // Generate random binary string
+      const binaryString = Array(30)
+        .fill(0)
+        .map(() => Math.round(Math.random()))
+        .join(" ");
+
+      column.textContent = binaryString;
+
+      // Random position and delay
+      column.style.left = `${(100 / columns) * i}%`;
+      column.style.animationDelay = `${Math.random() * 2}s`;
+
+      game.appendChild(column);
+    }
   }
 }

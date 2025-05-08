@@ -75,6 +75,7 @@ export class Notebook {
     // Auto-save on typing
     this.editor.addEventListener("input", () => {
       const currentLength = this.editor.value.length;
+      console.log({ currentLength, previousLength });
       const diff = currentLength - previousLength;
 
       // Only count added characters, not deletions

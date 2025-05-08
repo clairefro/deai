@@ -77,11 +77,13 @@ class MainScene extends Phaser.Scene {
       );
     }
 
-    const librariansData = await window.electronAPI.getLibrariansData();
+    const librarianIds = await window.electronAPI.getLibrarianIds();
 
-    this.librarians = librariansData.map(
-      (data) => new Librarian({ data, scene: this })
-    );
+    this.librarians = (
+      await Promise.all(
+        librarianIds.map((id) => Librarian.loadLibrarianById(this, id))
+      )
+    ).filter((l) => !!l) as Librarian[];
 
     // const guest = new Librarian({
     //   name: "Friedrich Wilhelm Nietzsche",

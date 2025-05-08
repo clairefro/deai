@@ -418,6 +418,158 @@
   overflow: visible;
   margin-bottom: 0; /* Removed margin */
 }
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes colorShift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(5deg);
+  }
+  100% {
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes glitchOffset {
+  0% {
+    clip-path: inset(0 0 0 0);
+  }
+  25% {
+    clip-path: inset(10% 0 20% 0);
+  }
+  50% {
+    clip-path: inset(25% 0 40% 0);
+  }
+  75% {
+    clip-path: inset(15% 0 30% 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+#game.glitch-mild {
+  animation: none; /* Remove direct animation from game container */
+}
+
+#game.glitch-severe::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  animation: glitchOffset 0.2s infinite;
+  pointer-events: none;
+  will-change: transform; /* Optimize animations */
+}
+
+#game.glitch-mild canvas {
+  animation: shake 0.5s infinite;
+  filter: contrast(1.02) brightness(1.02);
+}
+
+.glitch-severe canvas {
+  filter: contrast(1.1) brightness(1.1);
+}
+
+#game.glitch-medium canvas {
+  animation: shake 0.3s infinite;
+  filter: contrast(1.05) brightness(1.05) hue-rotate(5deg);
+  opacity: 0.95; /* Make canvas slightly transparent to show matrix effect */
+}
+
+#game.glitch-severe canvas {
+  animation: shake 0.2s infinite;
+  filter: contrast(1.1) brightness(1.1) hue-rotate(10deg);
+  opacity: 0.9; /* Make canvas more transparent for intense effect */
+}
+
+/* Create matrix columns */
+@keyframes matrixRain {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+#game.glitch-medium::after,
+#game.glitch-severe::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.matrix-column {
+  position: fixed;
+  top: -100%;
+  color: #0f0;
+  font-size: 14px;
+  line-height: 1;
+  white-space: pre;
+  text-shadow: 0 0 2px #0f0;
+  animation: matrixRain 2s linear infinite;
+  opacity: 0.3;
+  pointer-events: none;
+  font-family: monospace;
+}
+
+#game.glitch-severe .matrix-column {
+  font-size: 18px;
+  opacity: 0.5;
+  text-shadow: 0 0 4px #0f0;
+  animation-duration: 1s;
+}
+
+@keyframes matrixRain {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
 @keyframes fall {
   to {
     transform: rotate(90deg);

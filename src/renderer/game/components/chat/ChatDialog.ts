@@ -33,7 +33,7 @@ export class ChatDialog {
         this.onFirstResponse?.();
       }
 
-      TeetorTotter.getInstance()?.addIngestedTokens(response.tokensUsed);
+      TeetorTotter.getInstance()?.addIngestedTokens(response.content.length);
       this.ui.updateMessages(this.chatManager.getHistory());
     } catch (err) {
       console.error("Chat error:", err);

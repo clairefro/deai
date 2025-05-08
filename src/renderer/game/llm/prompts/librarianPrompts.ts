@@ -10,9 +10,9 @@ export function generateChatSystemPrompt(persona: string, obsession: string) {
     - The user is another wandering in this space: perhaps a companion, perhaps a question.`;
 }
 export function generateMumblingsSystemPrompt(persona: string) {
-  return `Create an array of 5 short quotes by ${persona}`;
+  return `RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO QUOTATION MARKS AROUND QUOTES. NO CODE FENCES. Create an array of 5 short quotes by ${persona}`;
 }
 
 export function generateObsessionSystemPrompt(persona: string) {
-  return `Concise list of the obsessions and worldview of ${persona}`;
+  return `RESPOND WITH A CONCISE, COMMA SEPARATED LIST. List of the obsessions and worldview of ${persona}`;
 }

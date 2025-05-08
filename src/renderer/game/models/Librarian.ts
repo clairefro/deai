@@ -73,6 +73,7 @@ export class Librarian {
       this.name = data.name;
       this.persona = data.persona;
       this.mumblings = data.mumblings;
+      this.obsession = data.obsession ? data.obsession : "";
     } else {
       this.id = uuidv4();
       this.scene = scene;
@@ -88,10 +89,12 @@ export class Librarian {
   }
 
   private async initialize(): Promise<void> {
-    if (!this.mumblings.length) {
+    if (!this.mumblings || this.mumblings.length === 0) {
+      console.log(`LIBRARIAN: Generating mumblings for ${this.name}`);
       await this.generateMumblings();
     }
     if (!this.obsession) {
+      console.log(`LIBRARIAN: Generating obsessions for ${this.name}`);
       await this.generateObsession();
     }
     this.createSprite();
@@ -298,23 +301,21 @@ export class Librarian {
   private async generateMumblings(): Promise<void> {
     const adapter = await ChatAdapter.getInstance();
     const mumblingsRaw = await adapter.getOneShot(
-      "RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO QUOTATION MARKS AROUND QUOTES. NO CODE FENCES",
-      generateMumblingsSystemPrompt(this.persona),
-      "['Where am I?']"
+      generateMumblingsSystemPrompt(this.persona)
     );
 
-    this.mumblings = JSON.parse(mumblingsRaw);
+    this.mumblings = mumblingsRaw
+      ? JSON.parse(mumblingsRaw)
+      : '["Where am I?"]';
   }
 
   private async generateObsession(): Promise<void> {
     const adapter = await ChatAdapter.getInstance();
     const obsession = await adapter.getOneShot(
-      "RESPOND WITH A CONCISE, COMMA SEPARATED LIST",
-      generateObsessionSystemPrompt(this.persona),
-      ""
+      generateObsessionSystemPrompt(this.persona)
     );
 
-    this.obsession = obsession;
+    this.obsession = obsession || "";
   }
 
   setPosition(x: number, y: number): void {
@@ -330,14 +331,46 @@ export class Librarian {
     this.systemPrompt = generateChatSystemPrompt(persona, obsession);
   }
 
-  static async loadData(id: string): Promise<LibrarianData | null> {
+  static async loadLibrarianDataById(
+    id: string
+  ): Promise<LibrarianData | null> {
     try {
       const data = await window.electronAPI.getLibrarianDataById(id);
       return data;
     } catch (error) {
-      console.warn("No saved librarians found:", error);
+      console.warn(
+        `No saved librarians found for Librarian with id ${id}:`,
+        error
+      );
       return null;
     }
+  }
+
+  static async loadLibrarianById(
+    scene: Phaser.Scene,
+    id: string
+  ): Promise<Librarian | null> {
+    try {
+      const data = await this.loadLibrarianDataById(id);
+      if (!data) {
+        console.warn(`No librarian found with id: ${id}`);
+        return null;
+      }
+      return this.loadLibrarianFromData(scene, data);
+    } catch (error) {
+      console.error("Failed to load librarian by id:", error);
+      return null;
+    }
+  }
+
+  static loadLibrarianFromData(
+    scene: Phaser.Scene,
+    data: LibrarianData
+  ): Librarian {
+    return new Librarian({
+      scene,
+      data,
+    });
   }
 
   serialize(): LibrarianData {
