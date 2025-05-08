@@ -1,6 +1,6 @@
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { MessageWithMeta } from "../../llm/ChatAdapter";
-
+import { TeetorTotter } from "../TeetorTotter";
 const DEFAULT_TITLE = "?";
 
 export class ChatDialogUiManager {
@@ -95,7 +95,19 @@ export class ChatDialogUiManager {
   }
 
   private setupInputEvents(): void {
-    this.input.addEventListener("input", () => this.autoResizeTextarea());
+    let previousLength = 0;
+    this.input.addEventListener("input", () => {
+      const currentLength = this.input.value.length;
+      const diff = currentLength - previousLength;
+
+      // Only count added characters, not deletions
+      if (diff > 0) {
+        TeetorTotter.getInstance()?.addOutputTokens(diff);
+      }
+
+      previousLength = currentLength;
+      this.autoResizeTextarea();
+    });
 
     const sendButton = this.dialog.querySelector(".chat-send-button");
     sendButton?.addEventListener("click", () => this.handleSend());

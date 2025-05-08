@@ -1,7 +1,10 @@
-#game #game #editor {
+#game #editor {
   color: maroon;
 }
 
+#game {
+  position: relative;
+}
 /* Notification Bar */
 
 #game .notification-bar {
@@ -285,6 +288,27 @@
   z-index: 1000;
 }
 
+#game .notebook-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 998;
+}
+
+#game .notebook-overlay.visible {
+  display: block;
+}
+
+#game .notebook textarea.disabled {
+  background-color: #f0f0f0;
+  color: #666;
+  cursor: default;
+}
+
 #game .notebook .notebook-tab {
   background: #333333;
   color: #fff;
@@ -352,15 +376,15 @@
 /* TeetorTotter bar */
 #game .teetor-totter {
   position: fixed;
-  top: 20px; /* Changed from bottom to top */
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 400px;
-  height: 60px; /* Reduced height */
+  width: 60%;
+  height: 60px;
   display: flex;
-  flex-direction: column-reverse; /* Reversed to put fulcrum under beam */
+  flex-direction: column-reverse;
   align-items: center;
-  z-index: 1000;
+  z-index: 1001;
 }
 
 #game .teetor-totter-fulcrum {

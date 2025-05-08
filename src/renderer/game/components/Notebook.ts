@@ -3,6 +3,8 @@ import { TeetorTotter } from "./TeetorTotter";
 
 export class Notebook {
   private element: HTMLElement;
+  private overlay!: HTMLElement;
+
   private notebookContent: HTMLElement;
   private fileList: HTMLElement;
   private editor: HTMLTextAreaElement;
@@ -19,11 +21,17 @@ export class Notebook {
     this.attachToGame();
     this.setupEventListeners();
     this.loadFiles();
+
+    this.updateEditorState();
   }
 
   private createNotebookElement(): HTMLElement {
     const notebook = document.createElement("div");
     notebook.className = "notebook";
+
+    this.overlay = document.createElement("div");
+    this.overlay.className = "notebook-overlay";
+
     notebook.innerHTML = `
       <div class="notebook-tab">
         <span class="tab-label">Notes</span>
@@ -34,7 +42,7 @@ export class Notebook {
           autocomplete="off"
           autocorrect="off"
           spellcheck="false"
-          placeholder="Select a file to edit..."
+          placeholder="Select a note to edit..."
         ></textarea>
       </div>
     `;
@@ -44,12 +52,13 @@ export class Notebook {
   private setupEventListeners(): void {
     const tab = this.element.querySelector(".notebook-tab");
 
-    // Toggle notebook visibility
     tab?.addEventListener("click", () => {
-      this.element.classList.toggle("open");
-      if (!this.element.classList.contains("open")) {
-        this.scene.input.keyboard!.enabled = true;
-      }
+      this.toggleNotebook(true);
+    });
+
+    // Close notebook when clicking overlay
+    this.overlay.addEventListener("click", () => {
+      this.toggleNotebook(false);
     });
 
     // Handle editor focus/blur
@@ -97,9 +106,22 @@ export class Notebook {
     }, 300);
   }
 
+  private toggleNotebook(open: boolean): void {
+    if (open) {
+      this.element.classList.add("open");
+      this.overlay.classList.add("visible");
+    } else {
+      this.element.classList.remove("open");
+      this.overlay.classList.remove("visible");
+      this.scene.input.keyboard!.enabled = true;
+    }
+  }
+
   private attachToGame(): void {
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
+      gameContainer.appendChild(this.overlay);
+
       gameContainer.appendChild(this.element);
     }
   }
@@ -133,6 +155,7 @@ export class Notebook {
       const content = await window.electronAPI.readFile(filepath);
       this.editor.value = content;
       this.currentFilePath = filepath;
+      this.updateEditorState();
 
       if (this.stopWatchingFile) {
         this.stopWatchingFile();
@@ -159,6 +182,16 @@ export class Notebook {
       await window.electronAPI.writeFile(filepath, content);
     } catch (err) {
       console.error("Failed to save file:", err);
+    }
+  }
+
+  private updateEditorState(): void {
+    if (this.currentFilePath) {
+      this.editor.removeAttribute("readonly");
+      this.editor.classList.remove("disabled");
+    } else {
+      this.editor.setAttribute("readonly", "true");
+      this.editor.classList.add("disabled");
     }
   }
 
