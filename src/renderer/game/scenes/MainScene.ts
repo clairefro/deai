@@ -5,6 +5,7 @@ import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
 import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
+import galleryRoomImage from "../../assets/world/gallery.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
 import { DEPTHS } from "../constants";
@@ -29,6 +30,8 @@ class MainScene extends Phaser.Scene {
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 
+    this.load.image("library-room", galleryRoomImage);
+
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
   }
@@ -52,6 +55,26 @@ class MainScene extends Phaser.Scene {
       // reload notebook files
       this.notebook.loadFiles();
     });
+
+    // WORLD (TEMP)
+    const gameWidth = this.cameras.main.width;
+    const gameHeight = this.cameras.main.height;
+
+    const libraryRoom = this.add
+      .image(gameWidth / 2, gameHeight / 2, "library-room")
+      .setOrigin(0, 0);
+
+    libraryRoom.setOrigin(0.5, 0.5);
+    const bounds = libraryRoom.getBounds();
+    this.cameras.main.setBounds(
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height
+    );
+
+    // Set camera bounds to match the image size
+    this.cameras.main.setBounds(0, 0, libraryRoom.width, libraryRoom.height);
 
     this.player = this.physics.add.sprite(300, 400, "player");
     this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen

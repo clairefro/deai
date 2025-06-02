@@ -17,6 +17,10 @@ function createWindow(): void {
   const win = new BrowserWindow({
     width: 1024,
     height: 768,
+    icon: app.isPackaged
+      ? path.join(process.resourcesPath, "build/icons/deai.png")
+      : path.join(__dirname, "../../build/icons/deai.png"),
+
     webPreferences: {
       nodeIntegration: true,
       //@ts-ignore

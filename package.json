@@ -36,7 +36,9 @@
       "dist/**/*",
       "package.json"
     ],
+    "icon": "build/icons/deai.png",
     "mac": {
+      "icon": "build/icons/deai.icns",
       "category": "public.app-category.games",
       "target": [
         "dmg",
@@ -44,12 +46,14 @@
       ]
     },
     "win": {
+      "icon": "build/icons/deai.ico",
       "target": [
         "nsis",
         "portable"
       ]
     },
     "linux": {
+      "icon": "build/icons/deai.png",
       "target": [
         "AppImage",
         "deb"
