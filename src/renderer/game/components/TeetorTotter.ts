@@ -53,9 +53,7 @@ export class TeetorTotter {
   }
 
   addIngestedTokens(charCount: number): void {
-    console.log({ charCount });
     this.balance = Math.min(this.balance + charCount / 10, this.maxTilt);
-    console.log(this.balance);
     // this.checkGameOver();
     this.updateDisplay();
   }

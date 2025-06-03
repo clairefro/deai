@@ -5,38 +5,48 @@ import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
 import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
-import galleryRoomImage from "../../assets/world/gallery.png";
+import galleryRoomImage from "../../assets/world/gallery-room-debug.png";
+import galleryRoomWalkableMaskImage from "../../assets/world/gallery-room-walkable-mask.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
-import { DEPTHS } from "../constants";
 import { rand } from "../../../shared/util/rand";
-import { ProximityAction } from "../actions/types";
+import { pluck } from "../../../shared/util/pluck";
+import { WalkableMask } from "../components/WalkableMask";
+import { Player } from "../models/Player";
+import { ActionManager } from "../actions/ActionManager";
 
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   // Entities
-  private player!: Phaser.Physics.Arcade.Sprite;
+  private player!: Player;
   private librarians: Librarian[] = [];
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
+  private walkableMask!: WalkableMask;
 
   // Actions
-  private proximityActions: ProximityAction[] = [];
-  private currentAction: ProximityAction | null = null;
+  private actionManager!: ActionManager;
   private enterKey!: Phaser.Input.Keyboard.Key;
-  private hasMovedSinceAction = true;
+
+  // Other state
+  private hasMovedSinceAction: boolean = false;
 
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 
-    this.load.image("library-room", galleryRoomImage);
+    this.load.image("gallery-room-map", galleryRoomImage);
+    this.load.image("gallery-room-map-mask", galleryRoomWalkableMaskImage);
 
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
   }
 
   async create() {
+    this.actionManager = new ActionManager();
+
+    const gameWidth = this.cameras.main.width;
+    const gameHeight = this.cameras.main.height;
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
@@ -47,38 +57,27 @@ class MainScene extends Phaser.Scene {
       fill: "#ffffff",
     });
 
-    // Initialize components
-    this.notebook = new Notebook(this);
-    this.settingsMenu = new SettingsMenu(this, this.config, (newDir) => {
-      console.log("Notes directory changed to:", newDir);
+    const galleryRoom = this.add
+      .image(gameWidth / 2, gameHeight / 2, "gallery-room-map")
+      .setOrigin(0.5, 0.5);
 
-      // reload notebook files
-      this.notebook.loadFiles();
-    });
-
-    // WORLD (TEMP)
-    const gameWidth = this.cameras.main.width;
-    const gameHeight = this.cameras.main.height;
-
-    const libraryRoom = this.add
-      .image(gameWidth / 2, gameHeight / 2, "library-room")
-      .setOrigin(0, 0);
-
-    libraryRoom.setOrigin(0.5, 0.5);
-    const bounds = libraryRoom.getBounds();
-    this.cameras.main.setBounds(
-      bounds.x,
-      bounds.y,
-      bounds.width,
-      bounds.height
-    );
+    this.walkableMask = new WalkableMask(this, "gallery-room-map-mask", true);
+    this.walkableMask.setBounds(galleryRoom.getBounds());
 
     // Set camera bounds to match the image size
-    this.cameras.main.setBounds(0, 0, libraryRoom.width, libraryRoom.height);
+    this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
 
-    this.player = this.physics.add.sprite(300, 400, "player");
-    this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
-    this.player.setDepth(DEPTHS.PLAYER);
+    // const startPos = this.getRandomWalkablePosition();
+    const startPos = { x: 400, y: 300 };
+    this.player = new Player(
+      this,
+      startPos.x,
+      startPos.y,
+      "player",
+      this.walkableMask
+    );
+
+    // this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
 
     // Create cursor keys for movement
     if (this.input.keyboard) {
@@ -101,10 +100,10 @@ class MainScene extends Phaser.Scene {
     }
 
     const librarianIds = await window.electronAPI.getLibrarianIds();
-
+    const randomLibrarian = pluck(librarianIds); // select one at random for now
     this.librarians = (
       await Promise.all(
-        librarianIds.map((id) => Librarian.loadLibrarianById(this, id))
+        [randomLibrarian].map((id) => Librarian.loadLibrarianById(this, id))
       )
     ).filter((l) => !!l) as Librarian[];
 
@@ -124,21 +123,32 @@ class MainScene extends Phaser.Scene {
 
     // place librarians
     this.spawnLibrarians();
+  } // end create()
+
+  private initializeComponents() {
+    // Initialize components
+    this.notebook = new Notebook(this);
+    this.settingsMenu = new SettingsMenu(this, this.config, (newDir) => {
+      console.log("Notes directory changed to:", newDir);
+
+      // reload notebook files
+      this.notebook.loadFiles();
+    });
   }
 
   private async spawnLibrarians() {
     await Promise.all(
       this.librarians.map(async (librarian) => {
-        await librarian.spawn(rand(100, 800), rand(200, 700));
+        const pos = this.getRandomWalkablePosition();
+        await librarian.spawn(pos.x, pos.y);
       })
     );
 
     console.log(this.librarians);
 
     // add proximity actions to loaded librarians
-
     this.librarians.forEach((librarian) => {
-      this.addProximityAction({
+      this.actionManager.addAction({
         target: librarian.getActionTarget(),
         range: 100,
         key: "chat",
@@ -147,50 +157,22 @@ class MainScene extends Phaser.Scene {
       });
     });
   }
-  private addProximityAction(action: ProximityAction): void {
-    if (!action.target) {
-      console.error("Cannot add action without target:", action);
-      return;
-    }
-    this.proximityActions.push(action);
-  }
 
   private checkProximityActions(): void {
     if (!this.player) return;
 
-    const playerPos = new Phaser.Math.Vector2(this.player.x, this.player.y);
-    let nearestAction: ProximityAction | null = null;
-    let nearestDistance = Infinity;
-
-    for (const action of this.proximityActions) {
-      const targetX = action.target.x ?? 0;
-      const targetY = action.target.y ?? 0;
-
-      const targetPos = new Phaser.Math.Vector2(targetX, targetY);
-      const distance = Phaser.Math.Distance.BetweenPoints(playerPos, targetPos);
-
-      if (distance <= action.range && distance < nearestDistance) {
-        nearestAction = action;
-        nearestDistance = distance;
-      }
-    }
-
-    // Update status bar if nearest action changed
-    if (nearestAction !== this.currentAction) {
-      this.currentAction = nearestAction;
-      if (nearestAction) {
-        NotificationBar.getInstance()?.show(nearestAction.getLabel());
-      } else {
-        NotificationBar.getInstance()?.clear();
-      }
-    }
+    const playerPos = new Phaser.Math.Vector2(
+      this.player.sprite.x,
+      this.player.sprite.y
+    );
+    this.actionManager.checkProximity(playerPos);
   }
 
   private handleActionKey(): void {
-    if (this.currentAction) {
-      this.currentAction.action();
-      NotificationBar.getInstance()?.clear();
-      this.currentAction = null;
+    const currentAction = this.actionManager.getCurrentAction();
+    if (currentAction) {
+      currentAction.action();
+      this.actionManager.clearCurrentAction();
       this.hasMovedSinceAction = false;
     }
   }
@@ -198,34 +180,7 @@ class MainScene extends Phaser.Scene {
   update() {
     if (!this.cursors) return;
 
-    const isMoving =
-      this.cursors.left?.isDown ||
-      this.cursors.right?.isDown ||
-      this.cursors.up?.isDown ||
-      this.cursors.down?.isDown;
-
-    if (isMoving) {
-      this.hasMovedSinceAction = true;
-    }
-
-    // Game loop logic
-    if (this.cursors.left?.isDown) {
-      this.player.setVelocityX(-200); // Move left
-    } else if (this.cursors.right?.isDown) {
-      this.player.setVelocityX(200); // Move right
-    } else {
-      this.player.setVelocityX(0); // Stop horizontal movement
-    }
-
-    if (this.cursors.up?.isDown) {
-      this.player.setVelocityY(-200); // Move up
-    } else if (this.cursors.down?.isDown) {
-      this.player.setVelocityY(200); // Move down
-    } else {
-      this.player.setVelocityY(0); // Stop vertical movement
-    }
-
-    if (this.hasMovedSinceAction) {
+    if (this.player.update(this.cursors)) {
       this.checkProximityActions();
     }
   }
@@ -233,9 +188,79 @@ class MainScene extends Phaser.Scene {
   shutdown() {
     // Clean up
     this.enterKey?.destroy();
-    this.proximityActions = [];
-    this.currentAction = null;
+  }
+
+  // -- helpers --
+  private isPointWalkable(x: number, y: number): boolean {
+    // TWO ISSUES
+    // 1. coordinate calculation
+    // 2. mask rendering location
+
+    // const galleryRoom = this.children.list.find(
+    //   (child) =>
+    //     (child as Phaser.GameObjects.Image).texture?.key === "gallery-room-map"
+    // ) as Phaser.GameObjects.Image;
+
+    // if (!galleryRoom) return false;
+
+    // const bounds = galleryRoom.getBounds();
+
+    // // Convert world coordinates to mask coordinates, accounting for center origin
+    // const tx = Math.floor(x - (bounds.x - bounds.width / 2));
+    // const ty = Math.floor(y - (bounds.y - bounds.height / 2));
+
+    // // console.log("DEBUGGING: ", { bounds, x, y });
+    // // this.drawBoundingBox(bounds);
+    // // Early false if outside mask bounds
+    // if (
+    //   tx < 0 ||
+    //   ty < 0 ||
+    //   tx >= this.walkableMaskTexture.width ||
+    //   ty >= this.walkableMaskTexture.height
+    // ) {
+    //   return false;
+    // }
+
+    // const context = this.walkableMaskTexture.getContext();
+    // const imageData = context.getImageData(x, y, 1, 1);
+    // console.log({ imageData });
+    // console.log("oh");
+    // return imageData.data[0] > 0; // r
+    return true;
+  }
+
+  private getRandomWalkablePosition(): { x: number; y: number } {
+    const fallbackCoords = { x: 400, y: 250 };
+    const galleryRoom = this.children.list.find(
+      (child) =>
+        (child as Phaser.GameObjects.Image).texture?.key === "gallery-room-map"
+    ) as Phaser.GameObjects.Image;
+
+    if (!galleryRoom) {
+      return fallbackCoords;
+    }
+
+    const bounds = galleryRoom.getBounds();
+    console.log("yo", { bounds });
+
+    let x = fallbackCoords.x;
+    let y = fallbackCoords.y;
+    let attempts = 0;
+    const maxAttempts = 100;
+
+    do {
+      x = rand(bounds.x - bounds.width / 2, bounds.x + bounds.width / 2);
+      y = rand(bounds.y - bounds.height / 2, bounds.y + bounds.height / 2);
+      console.log(`attempt: ${x}, ${y}`);
+      attempts++;
+    } while (!this.isPointWalkable(x, y) && attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      console.warn("Could not find walkable position, using fallback");
+      return fallbackCoords;
+    }
+
+    return { x, y };
   }
 }
-
 export default MainScene;
