@@ -37,6 +37,16 @@ export class Player {
     if (cursors.up?.isDown) newY -= this.speed * delta;
     if (cursors.down?.isDown) newY += this.speed * delta;
 
+    if (cursors.left?.isDown && cursors.right?.isDown) {
+      console.log(
+        "texture:pixel color",
+        this.scene.textures.getPixel(
+          this.sprite.x,
+          this.sprite.y,
+          "gallery-room-map-mask"
+        )
+      );
+    }
     if (this.walkableMask.isWalkable(newX, newY)) {
       this.sprite.setPosition(newX, newY);
       return true;

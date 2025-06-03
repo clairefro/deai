@@ -44,6 +44,7 @@ class MainScene extends Phaser.Scene {
 
   async create() {
     this.actionManager = new ActionManager();
+    this.initializeComponents();
 
     const gameWidth = this.cameras.main.width;
     const gameHeight = this.cameras.main.height;
@@ -61,8 +62,12 @@ class MainScene extends Phaser.Scene {
       .image(gameWidth / 2, gameHeight / 2, "gallery-room-map")
       .setOrigin(0.5, 0.5);
 
-    this.walkableMask = new WalkableMask(this, "gallery-room-map-mask", true);
-    this.walkableMask.setBounds(galleryRoom.getBounds());
+    this.walkableMask = new WalkableMask(
+      this,
+      "gallery-room-map-mask",
+      galleryRoom
+      // true
+    );
 
     // Set camera bounds to match the image size
     this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
@@ -135,11 +140,10 @@ class MainScene extends Phaser.Scene {
       this.notebook.loadFiles();
     });
   }
-
   private async spawnLibrarians() {
     await Promise.all(
       this.librarians.map(async (librarian) => {
-        const pos = this.getRandomWalkablePosition();
+        const pos = this.walkableMask.getRandomWalkablePosition();
         await librarian.spawn(pos.x, pos.y);
       })
     );
@@ -188,79 +192,6 @@ class MainScene extends Phaser.Scene {
   shutdown() {
     // Clean up
     this.enterKey?.destroy();
-  }
-
-  // -- helpers --
-  private isPointWalkable(x: number, y: number): boolean {
-    // TWO ISSUES
-    // 1. coordinate calculation
-    // 2. mask rendering location
-
-    // const galleryRoom = this.children.list.find(
-    //   (child) =>
-    //     (child as Phaser.GameObjects.Image).texture?.key === "gallery-room-map"
-    // ) as Phaser.GameObjects.Image;
-
-    // if (!galleryRoom) return false;
-
-    // const bounds = galleryRoom.getBounds();
-
-    // // Convert world coordinates to mask coordinates, accounting for center origin
-    // const tx = Math.floor(x - (bounds.x - bounds.width / 2));
-    // const ty = Math.floor(y - (bounds.y - bounds.height / 2));
-
-    // // console.log("DEBUGGING: ", { bounds, x, y });
-    // // this.drawBoundingBox(bounds);
-    // // Early false if outside mask bounds
-    // if (
-    //   tx < 0 ||
-    //   ty < 0 ||
-    //   tx >= this.walkableMaskTexture.width ||
-    //   ty >= this.walkableMaskTexture.height
-    // ) {
-    //   return false;
-    // }
-
-    // const context = this.walkableMaskTexture.getContext();
-    // const imageData = context.getImageData(x, y, 1, 1);
-    // console.log({ imageData });
-    // console.log("oh");
-    // return imageData.data[0] > 0; // r
-    return true;
-  }
-
-  private getRandomWalkablePosition(): { x: number; y: number } {
-    const fallbackCoords = { x: 400, y: 250 };
-    const galleryRoom = this.children.list.find(
-      (child) =>
-        (child as Phaser.GameObjects.Image).texture?.key === "gallery-room-map"
-    ) as Phaser.GameObjects.Image;
-
-    if (!galleryRoom) {
-      return fallbackCoords;
-    }
-
-    const bounds = galleryRoom.getBounds();
-    console.log("yo", { bounds });
-
-    let x = fallbackCoords.x;
-    let y = fallbackCoords.y;
-    let attempts = 0;
-    const maxAttempts = 100;
-
-    do {
-      x = rand(bounds.x - bounds.width / 2, bounds.x + bounds.width / 2);
-      y = rand(bounds.y - bounds.height / 2, bounds.y + bounds.height / 2);
-      console.log(`attempt: ${x}, ${y}`);
-      attempts++;
-    } while (!this.isPointWalkable(x, y) && attempts < maxAttempts);
-
-    if (attempts >= maxAttempts) {
-      console.warn("Could not find walkable position, using fallback");
-      return fallbackCoords;
-    }
-
-    return { x, y };
   }
 }
 export default MainScene;

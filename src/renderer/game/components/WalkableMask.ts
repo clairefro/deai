@@ -1,54 +1,169 @@
+/** Target image and mask texture must be exact same size */
 export class WalkableMask {
-  private texture: Phaser.Textures.CanvasTexture;
   private debugGraphics!: Phaser.GameObjects.Graphics;
   private bounds!: Phaser.Geom.Rectangle;
+  private targetImage: Phaser.GameObjects.Image;
+  private maskLayer: Phaser.GameObjects.Image;
+  private scene: Phaser.Scene;
 
   constructor(
     scene: Phaser.Scene,
     maskKey: string,
-    debugEnabled: boolean = false
+    targetImage: Phaser.GameObjects.Image,
+    debug: boolean = false
   ) {
-    const maskImage = scene.textures.get(maskKey).getSourceImage();
-    this.texture = scene.textures.createCanvas(
-      "walkable-mask-canvas",
-      maskImage.width,
-      maskImage.height
-    ) as Phaser.Textures.CanvasTexture;
+    this.scene = scene;
+    this.targetImage = targetImage;
 
-    const context = this.texture.getContext();
-    context.drawImage(maskImage as HTMLImageElement, 0, 0);
-    this.texture.refresh();
+    // Create mask layer that exactly matches target image
+    this.maskLayer = scene.add
+      .image(this.targetImage.x, this.targetImage.y, maskKey)
+      .setOrigin(0.5, 0.5)
+      .setScale(this.targetImage.scale)
+      .setAlpha(debug ? 0.3 : 0)
+      .setDepth(this.targetImage.depth + 1);
 
-    if (debugEnabled) {
+    // set bounds based on target
+    this.bounds = new Phaser.Geom.Rectangle(
+      this.targetImage.x,
+      this.targetImage.y,
+      this.targetImage.width * this.targetImage.scaleX,
+      this.targetImage.height * this.targetImage.scaleY
+    );
+    if (debug) {
       this.debugGraphics = scene.add.graphics();
-      this.debugGraphics.setDepth(999);
-      scene.add
-        .image(
-          scene.cameras.main.width / 2,
-          scene.cameras.main.height / 2,
-          "walkable-mask-canvas"
-        )
-        .setAlpha(0.3)
-        .setDepth(999);
+      this.drawDebugBox();
     }
+  }
+
+  private drawDebugBox(): void {
+    if (!this.debugGraphics) return;
+
+    this.debugGraphics.clear();
+
+    // Set line style for the box
+    this.debugGraphics.lineStyle(2, 0x00ff00); // 2px thick green line
+
+    // Calculate box coordinates
+    const left = this.bounds.x - this.bounds.width / 2;
+    const top = this.bounds.y - this.bounds.height / 2;
+
+    // Draw the rectangle
+    this.debugGraphics.strokeRect(
+      left,
+      top,
+      this.bounds.width,
+      this.bounds.height
+    );
+
+    // Add corner markers
+    const markerSize = 10;
+    this.debugGraphics.lineStyle(2, 0xff0000); // Red markers
+
+    // Top-left
+    this.debugGraphics.lineBetween(left, top, left + markerSize, top);
+    this.debugGraphics.lineBetween(left, top, left, top + markerSize);
+
+    // Top-right
+    this.debugGraphics.lineBetween(
+      left + this.bounds.width,
+      top,
+      left + this.bounds.width - markerSize,
+      top
+    );
+    this.debugGraphics.lineBetween(
+      left + this.bounds.width,
+      top,
+      left + this.bounds.width,
+      top + markerSize
+    );
+
+    // Bottom-left
+    this.debugGraphics.lineBetween(
+      left,
+      top + this.bounds.height,
+      left + markerSize,
+      top + this.bounds.height
+    );
+    this.debugGraphics.lineBetween(
+      left,
+      top + this.bounds.height,
+      left,
+      top + this.bounds.height - markerSize
+    );
+
+    // Bottom-right
+    this.debugGraphics.lineBetween(
+      left + this.bounds.width,
+      top + this.bounds.height,
+      left + this.bounds.width - markerSize,
+      top + this.bounds.height
+    );
+    this.debugGraphics.lineBetween(
+      left + this.bounds.width,
+      top + this.bounds.height,
+      left + this.bounds.width,
+      top + this.bounds.height - markerSize
+    );
   }
 
   isWalkable(x: number, y: number): boolean {
     const tx = Math.floor(x - (this.bounds.x - this.bounds.width / 2));
     const ty = Math.floor(y - (this.bounds.y - this.bounds.height / 2));
 
-    if (
-      tx < 0 ||
-      ty < 0 ||
-      tx >= this.texture.width ||
-      ty >= this.texture.height
-    ) {
+    // Get pixel color using TextureManager
+
+    const pixel = this.maskLayer.scene.textures.getPixel(
+      tx,
+      ty,
+      this.maskLayer.texture.key
+    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types isn't returning proper vals;
+
+    if (pixel === null) {
       return false;
     }
+    if (this.debugGraphics) {
+      console.log(`Checking position (${x},${y}) -> texture (${tx},${ty})`);
+      console.log(`Pixel: rgba(${pixel.r},${pixel.g},${pixel.b},${pixel.a})`);
+    }
 
-    const context = this.texture.getContext();
-    const imageData = context.getImageData(tx, ty, 1, 1);
-    return imageData.data[3] > 0;
+    return pixel.r > 0;
+  }
+
+  private getRandomInRange(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  getRandomWalkablePosition(): { x: number; y: number } {
+    const fallbackCoords = {
+      x: this.targetImage.width / 2,
+      y: this.targetImage.height / 2,
+    };
+
+    let x = fallbackCoords.x;
+    let y = fallbackCoords.y;
+    let attempts = 0;
+    const maxAttempts = 100;
+
+    do {
+      x = this.getRandomInRange(
+        Math.floor(this.bounds.x - this.bounds.width / 2),
+        Math.floor(this.bounds.x + this.bounds.width / 2)
+      );
+      y = this.getRandomInRange(
+        Math.floor(this.bounds.y - this.bounds.height / 2),
+        Math.floor(this.bounds.y + this.bounds.height / 2)
+      );
+      console.log(`attempt: ${x}, ${y}`);
+      attempts++;
+    } while (!this.isWalkable(x, y) && attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      console.warn("Could not find walkable position, using fallback");
+      return fallbackCoords;
+    }
+
+    return { x, y };
   }
 
   setBounds(bounds: Phaser.Geom.Rectangle): void {
