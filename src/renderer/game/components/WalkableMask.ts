@@ -36,6 +36,77 @@ export class WalkableMask {
     }
   }
 
+  isWalkable(x: number, y: number): boolean {
+    const tx = Math.floor(x - (this.bounds.x - this.bounds.width / 2));
+    const ty = Math.floor(y - (this.bounds.y - this.bounds.height / 2));
+
+    // Get pixel color using TextureManager
+
+    const pixel = this.maskLayer.scene.textures.getPixel(
+      tx,
+      ty,
+      this.maskLayer.texture.key
+    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types isn't returning proper vals;
+
+    if (pixel === null) {
+      return false;
+    }
+    if (this.debugGraphics) {
+      console.log(`Checking position (${x},${y}) -> texture (${tx},${ty})`);
+      console.log(`Pixel: rgba(${pixel.r},${pixel.g},${pixel.b},${pixel.a})`);
+    }
+
+    return pixel.r > 0;
+  }
+
+  private getRandomInRange(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  getRandomWalkablePosition(
+    fallbackCoords = {
+      x: this.targetImage.width / 2,
+      y: this.targetImage.height / 2,
+    },
+    offset?: { x?: number; y?: number }
+  ): {
+    x: number;
+    y: number;
+  } {
+    let x = fallbackCoords.x;
+    let y = fallbackCoords.y;
+    let attempts = 0;
+    const maxAttempts = 100;
+
+    do {
+      x = this.getRandomInRange(
+        Math.floor(this.bounds.x - this.bounds.width / 2),
+        Math.floor(this.bounds.x + this.bounds.width / 2)
+      );
+      y = this.getRandomInRange(
+        Math.floor(this.bounds.y - this.bounds.height / 2),
+        Math.floor(this.bounds.y + this.bounds.height / 2)
+      );
+
+      const checkX = x + (offset?.x || 0);
+      const checkY = y + (offset?.y || 0);
+
+      attempts++;
+      if (this.isWalkable(checkX, checkY)) {
+        return { x, y };
+      }
+    } while (attempts < maxAttempts);
+
+    console.warn("Could not find walkable position, using fallback");
+    return fallbackCoords;
+  }
+
+  setBounds(bounds: Phaser.Geom.Rectangle): void {
+    this.bounds = bounds;
+  }
+
+  // debugging
+
   private drawDebugBox(): void {
     if (!this.debugGraphics) return;
 
@@ -105,68 +176,5 @@ export class WalkableMask {
       left + this.bounds.width,
       top + this.bounds.height - markerSize
     );
-  }
-
-  isWalkable(x: number, y: number): boolean {
-    const tx = Math.floor(x - (this.bounds.x - this.bounds.width / 2));
-    const ty = Math.floor(y - (this.bounds.y - this.bounds.height / 2));
-
-    // Get pixel color using TextureManager
-
-    const pixel = this.maskLayer.scene.textures.getPixel(
-      tx,
-      ty,
-      this.maskLayer.texture.key
-    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types isn't returning proper vals;
-
-    if (pixel === null) {
-      return false;
-    }
-    if (this.debugGraphics) {
-      console.log(`Checking position (${x},${y}) -> texture (${tx},${ty})`);
-      console.log(`Pixel: rgba(${pixel.r},${pixel.g},${pixel.b},${pixel.a})`);
-    }
-
-    return pixel.r > 0;
-  }
-
-  private getRandomInRange(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  getRandomWalkablePosition(): { x: number; y: number } {
-    const fallbackCoords = {
-      x: this.targetImage.width / 2,
-      y: this.targetImage.height / 2,
-    };
-
-    let x = fallbackCoords.x;
-    let y = fallbackCoords.y;
-    let attempts = 0;
-    const maxAttempts = 100;
-
-    do {
-      x = this.getRandomInRange(
-        Math.floor(this.bounds.x - this.bounds.width / 2),
-        Math.floor(this.bounds.x + this.bounds.width / 2)
-      );
-      y = this.getRandomInRange(
-        Math.floor(this.bounds.y - this.bounds.height / 2),
-        Math.floor(this.bounds.y + this.bounds.height / 2)
-      );
-      console.log(`attempt: ${x}, ${y}`);
-      attempts++;
-    } while (!this.isWalkable(x, y) && attempts < maxAttempts);
-
-    if (attempts >= maxAttempts) {
-      console.warn("Could not find walkable position, using fallback");
-      return fallbackCoords;
-    }
-
-    return { x, y };
-  }
-
-  setBounds(bounds: Phaser.Geom.Rectangle): void {
-    this.bounds = bounds;
   }
 }

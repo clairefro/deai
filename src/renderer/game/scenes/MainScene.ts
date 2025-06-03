@@ -43,19 +43,22 @@ class MainScene extends Phaser.Scene {
 
   async create() {
     this.actionManager = new ActionManager();
-    this.initializeComponents();
 
     const gameWidth = this.cameras.main.width;
     const gameHeight = this.cameras.main.height;
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
+    this.initializeComponents();
+
     // Add welcome text
-    this.add.text(100, 100, "Welcome to the Library of Babel...", {
-      font: "24px monospace",
-      // @ts-ignore
-      fill: "#ffffff",
-    });
+    this.add
+      .text(100, 50, "Welcome to the Library of Babel...", {
+        font: "24px monospace",
+        // @ts-ignore
+        fill: "#ffffff",
+      })
+      .setDepth(9999);
 
     const galleryRoom = this.add
       .image(gameWidth / 2, gameHeight / 2, "gallery-room-map")
@@ -71,14 +74,21 @@ class MainScene extends Phaser.Scene {
     // Set camera bounds to match the image size
     this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
 
-    // const startPos = this.getRandomWalkablePosition();
-    const startPos = { x: 400, y: 300 };
+    const playerYOffset =
+      this.textures.get("player").getSourceImage().height / 2;
+
+    const startPos = this.walkableMask.getRandomWalkablePosition(
+      { x: 400, y: 300 },
+      { y: playerYOffset }
+    );
+
     this.player = new Player(
       this,
       startPos.x,
       startPos.y,
       "player",
-      this.walkableMask
+      this.walkableMask,
+      playerYOffset
     );
 
     // this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
