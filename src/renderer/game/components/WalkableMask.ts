@@ -40,13 +40,12 @@ export class WalkableMask {
     const tx = Math.floor(x - (this.bounds.x - this.bounds.width / 2));
     const ty = Math.floor(y - (this.bounds.y - this.bounds.height / 2));
 
-    // Get pixel color using TextureManager
-
+    // get pixel color from texture manager
     const pixel = this.maskLayer.scene.textures.getPixel(
       tx,
       ty,
       this.maskLayer.texture.key
-    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types isn't returning proper vals;
+    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types are't correct, so I shimmed here
 
     if (pixel === null) {
       return false;
@@ -105,21 +104,18 @@ export class WalkableMask {
     this.bounds = bounds;
   }
 
-  // debugging
+  // ----- debugging  ------
 
   private drawDebugBox(): void {
     if (!this.debugGraphics) return;
 
     this.debugGraphics.clear();
 
-    // Set line style for the box
-    this.debugGraphics.lineStyle(2, 0x00ff00); // 2px thick green line
+    this.debugGraphics.lineStyle(2, 0x00ff00); // green
 
-    // Calculate box coordinates
     const left = this.bounds.x - this.bounds.width / 2;
     const top = this.bounds.y - this.bounds.height / 2;
 
-    // Draw the rectangle
     this.debugGraphics.strokeRect(
       left,
       top,
@@ -127,15 +123,14 @@ export class WalkableMask {
       this.bounds.height
     );
 
-    // Add corner markers
     const markerSize = 10;
-    this.debugGraphics.lineStyle(2, 0xff0000); // Red markers
+    this.debugGraphics.lineStyle(2, 0xff0000); // red
 
-    // Top-left
+    // top-left
     this.debugGraphics.lineBetween(left, top, left + markerSize, top);
     this.debugGraphics.lineBetween(left, top, left, top + markerSize);
 
-    // Top-right
+    // top-right
     this.debugGraphics.lineBetween(
       left + this.bounds.width,
       top,
@@ -149,7 +144,7 @@ export class WalkableMask {
       top + markerSize
     );
 
-    // Bottom-left
+    // bottom-left
     this.debugGraphics.lineBetween(
       left,
       top + this.bounds.height,
@@ -163,7 +158,7 @@ export class WalkableMask {
       top + this.bounds.height - markerSize
     );
 
-    // Bottom-right
+    // bottom-right
     this.debugGraphics.lineBetween(
       left + this.bounds.width,
       top + this.bounds.height,
