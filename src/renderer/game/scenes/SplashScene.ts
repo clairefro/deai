@@ -11,9 +11,9 @@ class SplashScene extends Phaser.Scene {
   //   private readonly LETTERS = "က";
   private muteButton!: Phaser.GameObjects.Image;
 
-  private readonly LETTERS = (rtl + ltr).split("");
+  private readonly BRICKS = (rtl + ltr).split("");
 
-  private readonly INITIAL_LETTER_BURST_COUNT = 20;
+  private readonly INITIAL_BRICK_BURST_COUNT = 50;
 
   private themeMusic!:
     | Phaser.Sound.NoAudioSound
@@ -83,7 +83,7 @@ class SplashScene extends Phaser.Scene {
   }
 
   private createFlyingLetters() {
-    for (let i = 0; i < this.INITIAL_LETTER_BURST_COUNT; i++) {
+    for (let i = 0; i < this.INITIAL_BRICK_BURST_COUNT; i++) {
       this.spawnLetter();
     }
 
@@ -113,8 +113,7 @@ class SplashScene extends Phaser.Scene {
   }
   private spawnLetter() {
     const startPosition = this.getRandomStartPosition();
-    const letter =
-      this.LETTERS[Phaser.Math.Between(0, this.LETTERS.length - 1)];
+    const letter = this.BRICKS[Phaser.Math.Between(0, this.BRICKS.length - 1)];
 
     const text = this.add.text(startPosition.x, startPosition.y, letter, {
       fontSize: Phaser.Math.Between(16, 32) + "px",
