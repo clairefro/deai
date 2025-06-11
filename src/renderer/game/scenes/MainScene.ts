@@ -31,6 +31,10 @@ class MainScene extends Phaser.Scene {
   // Other state
   private hasMovedSinceAction: boolean = false;
 
+  constructor() {
+    super({ key: "MainScene" });
+  }
+
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 

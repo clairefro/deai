@@ -1,0 +1,5 @@
+MCVMC   VMCVMC      M     CVMCVM  
+CV  MC  VM       C    V     M
+CV  MC  VMCVM    CVMCVM     C 
+VM  CV  MC       V    M     C
+VMCVM   CVMCVM   C    V   MCVMCV       

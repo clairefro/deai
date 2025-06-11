@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monospace Font Preview</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 1rem;
+        background-color: #f4f4f4;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        font-size: 16px;
+        margin-bottom: 1rem;
+      }
+      select {
+        font-size: 16px;
+        margin-bottom: 1rem;
+      }
+      #output {
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        background: white;
+        font-size: 16px;
+        min-height: 100px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Monospaced Font Preview</h2>
+
+    <textarea id="input" placeholder="Type your text here..."></textarea><br />
+
+    <label for="fontSelect">Choose a monospace font:</label>
+    <select id="fontSelect"></select>
+    <div class="control-item">
+      <label for="boldCheck">Bold:</label>
+      <input type="checkbox" id="boldCheck" />
+    </div>
+
+    <div id="output"></div>
+
+    <script>
+      const textarea = document.getElementById("input");
+      const fontSelect = document.getElementById("fontSelect");
+      const output = document.getElementById("output");
+      const boldCheck = document.getElementById("boldCheck");
+
+      const knownMonoFonts = [
+        "Courier New",
+        "Courier",
+        "Consolas",
+        "Monaco",
+        "Lucida Console",
+        "Menlo",
+        "Source Code Pro",
+        "Ubuntu Mono",
+        "Fira Code",
+        "Inconsolata",
+      ];
+
+      knownMonoFonts.forEach((font) => {
+        const option = document.createElement("option");
+        // Handle fonts with spaces by wrapping in quotes
+        const fontValue = font.includes(" ") ? `'${font}'` : font;
+        option.value = `${fontValue}, monospace`;
+        option.textContent = font;
+        fontSelect.appendChild(option);
+      });
+
+      function updateOutput() {
+        output.textContent = textarea.value;
+        output.style.fontFamily = fontSelect.value;
+        output.style.fontWeight = boldCheck.checked ? "bold" : "normal";
+      }
+
+      textarea.addEventListener("input", updateOutput);
+      fontSelect.addEventListener("change", updateOutput);
+      boldCheck.addEventListener("change", updateOutput);
+
+      // Initial update
+      updateOutput();
+    </script>
+  </body>
+</html>

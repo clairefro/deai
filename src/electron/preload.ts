@@ -124,7 +124,14 @@ type ElectronAPI = typeof electronAPI;
 declare global {
   interface Window {
     electronAPI: ElectronAPI;
+    devConfig: {
+      skipSplash: boolean;
+    };
   }
 }
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);
+
+contextBridge.exposeInMainWorld("devConfig", {
+  skipSplash: process.argv.includes("--skip-splash=true"),
+});

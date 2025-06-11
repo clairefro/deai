@@ -14,6 +14,7 @@ if (!app) {
 }
 
 function createWindow(): void {
+  console.log("MAIN, SKIP_SPLASH", process.env.SKIP_SPLASH);
   const win = new BrowserWindow({
     width: 1024,
     height: 768,
@@ -26,6 +27,7 @@ function createWindow(): void {
       //@ts-ignore
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      additionalArguments: [`--skip-splash=${process.env.SKIP_SPLASH}`],
     },
     useContentSize: true,
     backgroundColor: BACKGROUND_COLOR,
@@ -44,8 +46,8 @@ function createWindow(): void {
     // in dev, load from Vite dev server
     win.loadURL("http://localhost:5173");
 
-    // open devtools by deafult
-    win.webContents.openDevTools();
+    // uncomment to open devtools by deafult - kinda buggy tbh
+    // win.webContents.openDevTools();
   } else {
     // In production, load from built files
     win.loadFile(path.join(__dirname, "../renderer", "index.html"));
