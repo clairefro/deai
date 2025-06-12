@@ -2,18 +2,29 @@ import splashLogoImg from "../../assets/splash/splash-logo.png";
 import splashMusic from "../../assets/sound/music/clockwork.ogg";
 import soundOnImg from "../../assets/volume-on.svg";
 import soundOffImg from "../../assets/volume-off.svg";
+import hexagonImg from "../../assets/deai.png";
 
 const ltr =
   "011010010010000001110100011010000110111101110101.ΩεγώκαιεσύяитыIch-du나와너凸凹شकのಗಿದೆx☀Бi&thouאᄀ的ᚠを無有ကი∞߷စअहम्त्वम्ฉันและเธอእኔእናአንተმედაშენ我と汝ⴰⵏⴰⴷⵓⵔ";
 const rtl = "منوتوאניואתה";
 
 class SplashScene extends Phaser.Scene {
-  //   private readonly LETTERS = "က";
   private muteButton!: Phaser.GameObjects.Image;
+
+  private hexGrid: Phaser.GameObjects.Image[] = [];
 
   private readonly BRICKS = (rtl + ltr).split("");
 
   private readonly INITIAL_BRICK_BURST_COUNT = 50;
+
+  private readonly HEX_SIZE = 64;
+  private readonly HEX_ALPHA_MIN = 0.01;
+  private readonly HEX_ALPHA_MAX = 0.1;
+  private readonly HEX_FADE = {
+    MIN_DURATION: 3000,
+    MAX_DURATION: 5000,
+    CHANCE: 0.5,
+  };
 
   private themeMusic!:
     | Phaser.Sound.NoAudioSound
@@ -30,6 +41,8 @@ class SplashScene extends Phaser.Scene {
 
     this.load.image("sound-on", soundOnImg);
     this.load.image("sound-off", soundOffImg);
+
+    this.load.image("hexagon", hexagonImg);
   }
 
   async create() {
@@ -43,6 +56,7 @@ class SplashScene extends Phaser.Scene {
     }
 
     this.createFlyingLetters();
+    this.createHexagonGrid();
 
     // center logo
     const centerX = this.cameras.main.width / 2;
@@ -51,14 +65,14 @@ class SplashScene extends Phaser.Scene {
 
     this.add.image(centerX, centerY, "logo");
 
-    // Play music
+    //  music
     this.themeMusic = this.sound.add("theme", { loop: true });
     this.game.sound.pauseOnBlur = false;
 
     this.themeMusic.play();
     this.addMuteButton();
 
-    // Add text to start
+    // add text to start
     this.startText = this.add
       .text(centerX, centerY + 200, "Press any key to start", {
         fontSize: "20px",
@@ -104,7 +118,7 @@ class SplashScene extends Phaser.Scene {
       .setDepth(1000)
       .setTint(0xffffff); // Set initial color to white
 
-    // Toggle mute state on click
+    // toggle mute state on click
     this.muteButton.on("pointerdown", () => {
       const isMuted = !this.sound.mute;
       this.sound.setMute(isMuted);
@@ -150,6 +164,57 @@ class SplashScene extends Phaser.Scene {
       default: // left
         return { x: -20, y: Phaser.Math.Between(0, height) };
     }
+  }
+
+  private createHexagonGrid() {
+    const { width, height } = this.cameras.main;
+    const cols = Math.ceil(width / (this.HEX_SIZE * 0.75)) + 1;
+    const rows = Math.ceil(height / (this.HEX_SIZE * 0.866)) + 2;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        // offset every other row - (multiple by half od hex width)
+        const offset = row % 2 ? this.HEX_SIZE * 0.445 : 0;
+        const x = col * this.HEX_SIZE * 0.89 + offset;
+        const y = row * this.HEX_SIZE * 0.78; // honestly, i eyeballed this
+
+        const hex = this.add
+          .image(x, y, "hexagon")
+          .setOrigin(0.5)
+          .setAlpha(this.HEX_ALPHA_MIN)
+          .setDepth(-1);
+
+        this.hexGrid.push(hex);
+
+        // add random fade animation
+        this.addHexagonFadeEffect(hex);
+      }
+    }
+  }
+
+  private addHexagonFadeEffect(hex: Phaser.GameObjects.Image) {
+    if (Phaser.Math.FloatBetween(0, 1) > this.HEX_FADE.CHANCE) {
+      return;
+    }
+
+    const duration = Phaser.Math.Between(
+      this.HEX_FADE.MIN_DURATION,
+      this.HEX_FADE.MAX_DURATION
+    );
+    const delay = Phaser.Math.Between(0, 2000);
+
+    this.tweens.add({
+      targets: hex,
+      alpha: {
+        from: this.HEX_ALPHA_MIN,
+        to: this.HEX_ALPHA_MAX,
+      },
+      duration: duration,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1,
+      delay: delay,
+    });
   }
 
   destroy() {
