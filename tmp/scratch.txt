@@ -3,3 +3,11 @@ CV  MC  VM       C    V     M
 CV  MC  VMCVM    CVMCVM     C 
 VM  CV  MC       V    M     C
 VMCVM   CVMCVM   C    V   MCVMCV       
+
+
+
+MCVMC   VMCVMC     MC     VMCVMC  
+VM  CV  MC       VM  CV     MC
+VM  CV  MCVMC    VMCVMC     VM 
+MC  VM  CV       MC  VM     CV
+MCVMC   VMCVMC   VM  CV   MCVMCV       
