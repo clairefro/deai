@@ -1,5 +1,5 @@
 import { NotificationBar } from "../components/NotificationBar";
-import { ProximityAction } from "./types";
+import { ProximityAction } from "../../types";
 
 export class ActionManager {
   private proximityActions: ProximityAction[] = [];

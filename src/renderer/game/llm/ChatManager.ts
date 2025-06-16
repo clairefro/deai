@@ -4,7 +4,7 @@ import {
   Message,
   MessageWithMeta,
 } from "./ChatAdapter";
-import { MessageOptions } from "./types";
+import { MessageOptions } from "../../types";
 
 export class ChatManager {
   private messageHistory: Message[] = [];

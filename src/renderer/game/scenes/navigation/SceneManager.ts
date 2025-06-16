@@ -1,4 +1,5 @@
-import { NavigationManager, Location } from "./NavigationManager";
+import { NavigationManager } from "./NavigationManager";
+import { Location } from "../../../types";
 
 export class SceneManager {
   private scene: Phaser.Scene;
@@ -54,8 +55,8 @@ export class SceneManager {
         return "GalleryScene";
       case "hallway":
         return "HallwayScene";
-      case "bathroom":
-        return "BathroomScene";
+      // case "bathroom":
+      //   return "BathroomScene";
       default:
         throw new Error(`Unknown location type: ${location.type}`);
     }

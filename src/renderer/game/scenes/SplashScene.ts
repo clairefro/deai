@@ -231,7 +231,7 @@ class SplashScene extends Phaser.Scene {
     const letter = this.BRICKS[Phaser.Math.Between(0, this.BRICKS.length - 1)];
 
     const color =
-      Phaser.Math.FloatBetween(0, 1) < 0.3 ? COLORS.accent : "#ffffff";
+      Phaser.Math.FloatBetween(0, 1) < 0.3 ? COLORS.ACCENT : "#ffffff";
 
     const initialScale = Phaser.Math.FloatBetween(0.9, 1);
     const finalScale = Phaser.Math.FloatBetween(0.5, 2);

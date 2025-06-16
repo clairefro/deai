@@ -2,7 +2,7 @@ import { AppConfig } from "../../../../shared/Config";
 import { DotNotation } from "../../../../shared/util/DotNotation";
 import { mask } from "../../../../shared/util/mask";
 import { getAvailableOllamaModels } from "../../llm/ollamaUtils";
-import { SchemaSettingConfig } from "./types";
+import { SchemaSettingConfig } from "../../../types";
 
 export type SupportedInput = "text" | "directory" | "select";
 

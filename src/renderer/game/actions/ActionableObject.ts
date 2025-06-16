@@ -1,6 +1,7 @@
 import * as Phaser from "phaser";
 import { ActionManager } from "../actions/ActionManager";
-import { ProximityAction } from "../actions/types";
+import { ProximityAction } from "../../types";
+import { ACTIONS } from "../constants";
 
 export class ActionableObject {
   private sprite: Phaser.GameObjects.Sprite;
@@ -24,7 +25,7 @@ export class ActionableObject {
 
     this.action = {
       target: this.sprite,
-      range: config.range || 100,
+      range: config.range || ACTIONS.DEFAULT_RANGE,
       key: config.key,
       getLabel: () => config.label,
       action: config.action,

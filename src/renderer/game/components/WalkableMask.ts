@@ -104,6 +104,14 @@ export class WalkableMask {
     this.bounds = bounds;
   }
 
+  destroy(): void {
+    if (this.maskLayer) {
+      this.maskLayer.destroy();
+    }
+    if (this.debugGraphics) {
+      this.debugGraphics.destroy();
+    }
+  }
   // ----- debugging  ------
 
   private drawDebugBox(): void {

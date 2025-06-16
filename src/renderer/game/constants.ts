@@ -25,7 +25,11 @@ export const DEPTHS = {
 };
 
 export const COLORS = {
-  accent: "#be3813",
+  ACCENT: "#be3813",
+};
+
+export const ACTIONS = {
+  DEFAULT_RANGE: 100,
 };
 
 export const LIBRARIAN_CONFIG = {
