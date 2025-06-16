@@ -1,5 +1,9 @@
 :root {
-  --color-accent: rgb(190, 56, 19);
+  --color-accent: rgb(
+    190,
+    56,
+    19
+  ); /* NOTE: must manually sync with constants.ts color... just do it*/
   --color-grey-dark: #444444;
   --color-bg-light-alpha: rgba(255, 255, 255, 1);
   --color-bg-dark-alpha: rgba(58, 57, 57, 1);

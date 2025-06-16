@@ -25,7 +25,7 @@ export const DEPTHS = {
 };
 
 export const COLORS = {
-  accent: "#CD6245",
+  accent: "#be3813",
 };
 
 export const LIBRARIAN_CONFIG = {
