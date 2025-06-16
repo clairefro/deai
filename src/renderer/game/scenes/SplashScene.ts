@@ -27,6 +27,16 @@ class SplashScene extends Phaser.Scene {
     CHANCE: 0.5,
   };
 
+  private noiseTexture!: Phaser.Textures.CanvasTexture;
+  private noiseMask!: Phaser.GameObjects.RenderTexture;
+  private readonly NOISE = {
+    SIZE: 256,
+    SCALE: 1,
+    ALPHA: 0.08,
+    UPDATE_DELAY: 50,
+    DEPTH: 999,
+  };
+
   private themeMusic!:
     | Phaser.Sound.NoAudioSound
     | Phaser.Sound.HTML5AudioSound
@@ -58,11 +68,12 @@ class SplashScene extends Phaser.Scene {
 
     this.createFlyingLetters();
     this.createHexagonGrid();
+    this.createNoiseTexture();
+    this.createNoiseMask();
 
     // center logo
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
-    console.log();
 
     this.add.image(centerX, centerY, "logo");
 
@@ -91,24 +102,26 @@ class SplashScene extends Phaser.Scene {
       repeatDelay: 800,
     });
 
+    await this.fadeInScreen();
+
     // start game on key press
     if (this.input.keyboard) {
       this.input.keyboard.once("keydown", this.startGame, this);
     }
   }
-
   private createFlyingLetters() {
     for (let i = 0; i < this.INITIAL_BRICK_BURST_COUNT; i++) {
-      this.spawnLetter();
+      this.spawnBrick();
     }
 
     // continuously spawn new letters
     this.time.addEvent({
       delay: 200,
-      callback: () => this.spawnLetter(),
+      callback: () => this.spawnBrick(),
       loop: true,
     });
   }
+
   private addMuteButton() {
     const margin = 20;
     this.muteButton = this.add
@@ -117,7 +130,7 @@ class SplashScene extends Phaser.Scene {
       .setScale(0.8)
       .setInteractive({ useHandCursor: true })
       .setDepth(1000)
-      .setTint(0xffffff); // Set initial color to white
+      .setTint(0xffffff); // set initial color to white
 
     // toggle mute state on click
     this.muteButton.on("pointerdown", () => {
@@ -126,7 +139,94 @@ class SplashScene extends Phaser.Scene {
       this.muteButton.setTexture(isMuted ? "sound-off" : "sound-on");
     });
   }
-  private spawnLetter() {
+
+  private fadeInScreen(): Promise<void> {
+    return new Promise((resolve) => {
+      //  black overlay
+      const overlay = this.add
+        .rectangle(
+          0,
+          0,
+          this.cameras.main.width,
+          this.cameras.main.height,
+          0x000000
+        )
+        .setOrigin(0, 0)
+        .setDepth(99999);
+
+      this.tweens.add({
+        targets: overlay,
+        alpha: { from: 1, to: 0 },
+        duration: 3000,
+        ease: "Power2",
+        onComplete: () => {
+          overlay.destroy();
+          resolve();
+        },
+      });
+    });
+  }
+
+  private createNoiseTexture() {
+    const noiseTexture = this.textures.createCanvas(
+      "noise",
+      this.NOISE.SIZE,
+      this.NOISE.SIZE
+    );
+    if (!noiseTexture) {
+      throw new Error("Failed to create noise canvas texture");
+    }
+    this.noiseTexture = noiseTexture;
+    const context = this.noiseTexture.getContext();
+    const imageData = context.createImageData(this.NOISE.SIZE, this.NOISE.SIZE);
+    const pixels = imageData.data;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const value = Phaser.Math.Between(0, 255);
+      pixels[i] = pixels[i + 1] = pixels[i + 2] = value;
+      pixels[i + 3] = 255;
+    }
+
+    context.putImageData(imageData, 0, 0);
+    this.noiseTexture.refresh();
+  }
+
+  private createNoiseMask() {
+    const { width, height } = this.cameras.main;
+
+    this.noiseMask = this.add.renderTexture(0, 0, width, height);
+
+    this.noiseMask
+      .setOrigin(0, 0)
+      .setDepth(this.NOISE.DEPTH)
+      .setBlendMode(Phaser.BlendModes.OVERLAY)
+      .setAlpha(this.NOISE.ALPHA);
+
+    this.time.addEvent({
+      delay: this.NOISE.UPDATE_DELAY,
+      callback: this.updateNoiseMask,
+      callbackScope: this,
+      loop: true,
+    });
+  }
+
+  private updateNoiseMask() {
+    if (!this.noiseMask || !this.noiseMask.scene) return;
+
+    this.noiseMask.clear();
+
+    const { width, height } = this.cameras.main;
+    const cols = Math.ceil(width / this.NOISE.SIZE) + 1;
+    const rows = Math.ceil(height / this.NOISE.SIZE) + 1;
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        this.noiseMask.draw("noise", x * this.NOISE.SIZE, y * this.NOISE.SIZE);
+      }
+    }
+  }
+
+  private spawnBrick() {
     const startPosition = this.getRandomStartPosition();
     const letter = this.BRICKS[Phaser.Math.Between(0, this.BRICKS.length - 1)];
 
@@ -150,7 +250,7 @@ class SplashScene extends Phaser.Scene {
     const angleToCenter = Phaser.Math.Angle.Between(
       startPosition.x,
       startPosition.y,
-      centerX + Phaser.Math.Between(-100, 100), // Add randomness to target position
+      centerX + Phaser.Math.Between(-100, 100),
       centerY + Phaser.Math.Between(-100, 100)
     );
 
@@ -158,23 +258,41 @@ class SplashScene extends Phaser.Scene {
     const vx = Math.cos(angleToCenter) * speed;
     const vy = Math.sin(angleToCenter) * speed;
 
-    this.tweens.add({
-      targets: text,
-      rotation: Phaser.Math.FloatBetween(-Math.PI / 2, Math.PI / 2),
-      duration: 8000,
-      ease: "Sine.easeInOut",
-    });
-
+    // movement and fade
     this.tweens.add({
       targets: text,
       x: text.x + vx * 2,
       y: text.y + vy * 2,
-      scaleX: finalScale,
-      scaleY: finalScale,
       alpha: 0,
       duration: 5500,
       ease: "Linear",
       onComplete: () => text.destroy(),
+    });
+
+    // y-axis rotation
+    this.tweens.add({
+      targets: text,
+      scaleX: { from: initialScale, to: -initialScale },
+      duration: Phaser.Math.Between(2000, 3000),
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1,
+    });
+
+    // z-axis rotation
+    this.tweens.add({
+      targets: text,
+      rotation: Phaser.Math.FloatBetween(-Math.PI / 4, Math.PI / 4),
+      duration: 4000,
+      ease: "Sine.easeInOut",
+    });
+
+    // scale animation
+    this.tweens.add({
+      targets: text,
+      scaleY: { from: initialScale, to: finalScale },
+      duration: 5500,
+      ease: "Linear",
     });
   }
 
@@ -246,6 +364,8 @@ class SplashScene extends Phaser.Scene {
   }
 
   destroy() {
+    this.noiseMask?.destroy();
+    this.textures.remove("noise");
     this.time.removeAllEvents();
     this.time.removeAllEvents();
     this.muteButton?.destroy();
