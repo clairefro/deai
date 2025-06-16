@@ -1,116 +1,117 @@
 import { EventEmitter } from "events";
 import {
   HexDirection,
-  OPPOSITE_DIRECTIONS,
-  HEX_DIRECTIONS,
+  Coordinates,
+  TraversalRecord,
+  Location,
+  RoomType,
 } from "../../../types";
-import { Location } from "../../../types";
-
-export enum RoomType {
-  GALLERY = "gallery",
-  HALLWAY = "hallway",
-}
-
-// TODO RM
-const fakeLocation: Location = {
-  x: 1,
-  y: 1,
-  z: 1,
-  type: RoomType.HALLWAY,
-  exits: ["sw", "ne"],
-  connections: {
-    sw: "foo",
-    ne: "bar",
-  },
-};
 
 export class NavigationManager extends EventEmitter {
-  private currentLocation!: Location;
-  private rooms: Map<string, Location> = new Map();
-  private traversalHistory: Array<{
-    from: string;
-    to: string;
-    direction: HexDirection;
-    timestamp: number;
-  }> = [];
+  private currentCoordinates: Coordinates;
+  private prevCoordinates: Coordinates | null;
+  private currentLocation: Location;
+  private prevLocation: Location | null;
+  private traversalHistory: TraversalRecord[] = [];
 
   constructor() {
     super();
-    this.initializeFirstRoom();
+    // TODO: LOAD CURRENT/PREV POSITION FROM TRAVERSAL HISTORY
+    this.currentCoordinates = { x: 0, y: 0, z: 0 };
+    this.currentLocation = { type: "gallery", ...this.currentCoordinates };
+    this.prevLocation = null;
+    this.prevCoordinates = null;
   }
 
-  private initializeFirstRoom() {
-    const startingGallery: Location = {
-      x: 0,
-      y: 0,
-      z: 0,
-      type: RoomType.GALLERY,
-      exits: this.generateRandomExits(),
-      connections: {},
-    };
-
-    const roomId = this.generateRoomId(startingGallery);
-    this.rooms.set(roomId, startingGallery);
-    this.currentLocation = startingGallery;
-  }
-
-  private generateRandomExits(): HexDirection[] {
-    // Get 2 random exits from the 6 possible horizontal directions
-    const horizontalExits = HEX_DIRECTIONS.filter(
-      (d) => d !== "up" && d !== "dn"
+  /** TODO: STORE TRAVERSAL HISTORY IN FILE */
+  traverse(direction: HexDirection): {
+    position: Coordinates;
+    location: Location;
+  } {
+    const nextPosition = this.calculateNextCoordinates(
+      this.currentCoordinates,
+      direction
     );
-    return horizontalExits.sort(() => Math.random() - 0.5).slice(0, 2);
-  }
 
-  async traverse(direction: HexDirection): Promise<Location> {
-    const currentId = this.generateRoomId(this.currentLocation);
-    let nextLocation: Location;
-
-    if (this.currentLocation.type === RoomType.GALLERY) {
-      nextLocation = this.generateHallway(this.currentLocation, direction);
-    } else {
-      nextLocation = this.generateGallery(this.currentLocation, direction);
-    }
-
-    const nextId = this.generateRoomId(nextLocation);
-
-    // Record traversal
+    // Record movement
     this.traversalHistory.push({
-      from: currentId,
-      to: nextId,
+      from: { ...this.currentCoordinates },
+      to: { ...nextPosition },
       direction,
       timestamp: Date.now(),
     });
 
-    // Update connections
-    this.currentLocation.connections[direction] = nextId;
-    nextLocation.connections[OPPOSITE_DIRECTIONS[direction]] = currentId;
+    // Update positions
+    this.prevCoordinates = { ...this.currentCoordinates };
+    this.currentCoordinates = nextPosition;
 
-    this.rooms.set(nextId, nextLocation);
-    this.currentLocation = nextLocation;
+    // Update locations
+    this.prevLocation = { ...this.currentLocation };
+    this.currentLocation = {
+      ...nextPosition,
+      type: this.determineNextLocationType(this.currentLocation.type),
+    };
 
-    this.emit("locationChanged", nextLocation);
-    return nextLocation;
+    this.emit("positionChanged", {
+      position: nextPosition,
+      location: this.currentLocation,
+    });
+    return {
+      position: { ...nextPosition },
+      location: { ...this.currentLocation },
+    };
   }
 
-  private generateRoomId(location: Location): string {
-    return `${location.type}-${location.x}-${location.y}-${location.z}`;
+  private calculateNextCoordinates(
+    current: Coordinates,
+    direction: HexDirection
+  ): Coordinates {
+    const hexDirectionVectors = {
+      ne: { x: 1, y: -1, z: 0 },
+      ee: { x: 1, y: 0, z: -1 },
+      se: { x: 0, y: 1, z: -1 },
+      sw: { x: -1, y: 1, z: 0 },
+      ww: { x: -1, y: 0, z: 1 },
+      nw: { x: 0, y: -1, z: 1 },
+      up: { x: 0, y: 0, z: 1 },
+      dn: { x: 0, y: 0, z: -1 },
+    };
+
+    const vector = hexDirectionVectors[direction];
+    return {
+      x: current.x + vector.x,
+      y: current.y + vector.y,
+      z: current.z + vector.z,
+    };
   }
 
-  generateHallway(loc: Location, hd: HexDirection) {
-    // TODO
-    console.log("TODO - IMPL HALLWAY GENERATION");
-    return fakeLocation;
+  private determineNextLocationType(currentType: RoomType): RoomType {
+    return currentType === "gallery" ? "hallway" : "gallery";
   }
 
-  generateGallery(loc: Location, hd: HexDirection) {
-    console.log("TODO");
-    // TODO
-    console.log("TODO - IMPL GALLERY GENERATION");
-    return fakeLocation;
+  getCurrentCoordinates(): Coordinates {
+    return { ...this.currentCoordinates };
+  }
+
+  getPrevCoordinates(): Coordinates | null {
+    return { ...this.prevCoordinates };
   }
 
   getCurrentLocation(): Location {
     return { ...this.currentLocation };
+  }
+
+  getPrevLocation(): Location | null {
+    return this.prevLocation ? { ...this.prevLocation } : null;
+  }
+
+  getTraversalHistory(): TraversalRecord[] {
+    return [...this.traversalHistory];
+  }
+
+  isValidMove(direction: HexDirection): boolean {
+    const next = this.calculateNextCoordinates(this.currentLocation, direction);
+    // Add any validation logic here (e.g., boundaries, blocked paths)
+    return true;
   }
 }

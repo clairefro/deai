@@ -77,6 +77,8 @@ export class SceneManager {
   }
 
   private generateRoomId(location: Location): string {
-    return `${location.type}-${location.x}-${location.y}-${location.z}`;
+    return `${location.x}-${location.y}-${location.z}-${location.type}${
+      location.type === "hallway" ? "h:" + location.cameFrom : ""
+    }`;
   }
 }

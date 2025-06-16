@@ -1,8 +1,14 @@
 import * as Phaser from "phaser";
-import { WalkableMask } from "../../components/WalkableMask";
-import { ActionableObject } from "../../actions/ActionableObject";
-import { ActionManager } from "../../actions/ActionManager";
-import { RoomConfig, ExitPositions, Location } from "../../../types";
+import { WalkableMask } from "../../../components/WalkableMask";
+import { ActionableObject } from "../../../actions/ActionableObject";
+import { ActionManager } from "../../../actions/ActionManager";
+import {
+  RoomConfig,
+  ExitPositions,
+  Location,
+  HexDirection
+  HEX_DIRECTIONS_PLANAR,
+} from "../../../../types";
 
 export class RoomManager {
   private scene: Phaser.Scene;
@@ -43,6 +49,10 @@ export class RoomManager {
     if (location.type === "hallway") {
       this.createStairs();
     }
+  }
+
+  private generateRandomExits(): HexDirection[] {
+    return HEX_DIRECTIONS_PLANAR.sort(() => Math.random() - 0.5).slice(0, 2);
   }
 
   private createExits(location: Location): void {
