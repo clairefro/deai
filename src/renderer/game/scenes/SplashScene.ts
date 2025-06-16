@@ -129,22 +129,48 @@ class SplashScene extends Phaser.Scene {
     const startPosition = this.getRandomStartPosition();
     const letter = this.BRICKS[Phaser.Math.Between(0, this.BRICKS.length - 1)];
 
-    const text = this.add.text(startPosition.x, startPosition.y, letter, {
-      fontSize: Phaser.Math.Between(16, 32) + "px",
-      color: "#ffffff",
-    });
+    const color = Phaser.Math.FloatBetween(0, 1) < 0.3 ? "#CD6245" : "#ffffff";
 
-    const angle = Phaser.Math.Between(0, 360);
-    const speed = Phaser.Math.Between(100, 250);
-    const vx = Math.cos((angle * Math.PI) / 180) * speed;
-    const vy = Math.sin((angle * Math.PI) / 180) * speed;
+    const initialScale = Phaser.Math.FloatBetween(0.9, 1);
+    const finalScale = Phaser.Math.FloatBetween(0.5, 2);
+
+    const text = this.add
+      .text(startPosition.x, startPosition.y, letter, {
+        fontSize: Phaser.Math.Between(16, 32) + "px",
+        color,
+      })
+      .setScale(initialScale)
+      .setRotation(Phaser.Math.FloatBetween(-Math.PI / 4, Math.PI / 4));
+
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+
+    const angleToCenter = Phaser.Math.Angle.Between(
+      startPosition.x,
+      startPosition.y,
+      centerX + Phaser.Math.Between(-100, 100), // Add randomness to target position
+      centerY + Phaser.Math.Between(-100, 100)
+    );
+
+    const speed = Phaser.Math.Between(40, 120);
+    const vx = Math.cos(angleToCenter) * speed;
+    const vy = Math.sin(angleToCenter) * speed;
+
+    this.tweens.add({
+      targets: text,
+      rotation: Phaser.Math.FloatBetween(-Math.PI / 2, Math.PI / 2),
+      duration: 8000,
+      ease: "Sine.easeInOut",
+    });
 
     this.tweens.add({
       targets: text,
       x: text.x + vx * 2,
       y: text.y + vy * 2,
+      scaleX: finalScale,
+      scaleY: finalScale,
       alpha: 0,
-      duration: 4000,
+      duration: 5500,
       ease: "Linear",
       onComplete: () => text.destroy(),
     });
