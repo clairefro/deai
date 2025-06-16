@@ -24,6 +24,10 @@ export const DEPTHS = {
   },
 };
 
+export const COLORS = {
+  accent: "#CD6245",
+};
+
 export const LIBRARIAN_CONFIG = {
   DEFAULTS: {
     IMAGE_KEY: "ghost",

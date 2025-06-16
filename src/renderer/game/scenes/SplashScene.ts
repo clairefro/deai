@@ -3,6 +3,7 @@ import splashMusic from "../../assets/sound/music/clockwork.ogg";
 import soundOnImg from "../../assets/volume-on.svg";
 import soundOffImg from "../../assets/volume-off.svg";
 import hexagonImg from "../../assets/deai.png";
+import { COLORS } from "../constants";
 
 const ltr =
   "011010010010000001110100011010000110111101110101.ΩεγώκαιεσύяитыIch-du나와너凸凹شकのಗಿದೆx☀Бi&thouאᄀ的ᚠを無有ကი∞߷စअहम्त्वम्ฉันและเธอእኔእናአንተმედაშენ我と汝ⴰⵏⴰⴷⵓⵔ";
@@ -129,7 +130,8 @@ class SplashScene extends Phaser.Scene {
     const startPosition = this.getRandomStartPosition();
     const letter = this.BRICKS[Phaser.Math.Between(0, this.BRICKS.length - 1)];
 
-    const color = Phaser.Math.FloatBetween(0, 1) < 0.3 ? "#CD6245" : "#ffffff";
+    const color =
+      Phaser.Math.FloatBetween(0, 1) < 0.3 ? COLORS.accent : "#ffffff";
 
     const initialScale = Phaser.Math.FloatBetween(0.9, 1);
     const finalScale = Phaser.Math.FloatBetween(0.5, 2);
