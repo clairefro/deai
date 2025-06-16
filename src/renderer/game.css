@@ -1,5 +1,8 @@
-#game #editor {
-  color: maroon;
+:root {
+  --color-accent: rgb(190, 56, 19);
+  --color-grey-dark: #444444;
+  --color-bg-light-alpha: rgba(255, 255, 255, 1);
+  --color-bg-dark-alpha: rgba(58, 57, 57, 1);
 }
 
 #game {
@@ -169,12 +172,13 @@
 }
 
 #game .chat-message.user {
-  background: #2c3e50;
+  background: var(--color-bg-light-alpha);
+  color: var(--color-accent);
   margin-left: 20%;
 }
 
 #game .chat-message.assistant {
-  background: #34495e;
+  background: var(--color-bg-dark-alpha);
   margin-right: 20%;
 }
 
@@ -196,7 +200,7 @@
   padding: 8px 16px;
   border-radius: 4px;
   border: none;
-  background: #2e40cc;
+  background: var(--color-grey-dark);
   color: white;
   cursor: pointer;
   font-family: monospace;
@@ -359,7 +363,7 @@
 
 #game .notebook #notebook-editor {
   flex: 1;
-  background: #fff8dc;
+  background: #f4f4f4;
   border: 1px solid #666;
   border-radius: 4px;
   padding: 16px;
@@ -367,6 +371,7 @@
   font-size: 16px;
   resize: none;
   outline: none;
+  color: var(--color-accent);
 }
 
 #game .notebook #notebook-editor:focus {
@@ -412,7 +417,7 @@
 #game .teetor-totter-beam-fill {
   position: absolute;
   height: 100%;
-  background: rgba(255, 255, 0, 0.5);
+  background: var(--color-bg-light-alpha);
   transition: all 0.3s ease-out;
   z-index: 1;
 }
@@ -421,7 +426,7 @@
   position: absolute;
   width: 2px;
   height: 8px;
-  background: red;
+  background: var(--color-accent);
   top: 0px;
   transform: translateX(-50%);
   transition: left 0.3s ease-out;
@@ -599,78 +604,6 @@
     transform: rotate(90deg);
     opacity: 0;
   }
-}
-/* Chat Directory */
-
-#game .chat-directory {
-  position: fixed;
-  bottom: 0;
-  left: 20px;
-  width: 300px;
-  font-family: monospace;
-  z-index: 1000;
-}
-
-#game .chat-directory .chat-directory-tab {
-  background: #333333;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px 8px 0 0;
-  cursor: pointer;
-  text-align: center;
-  width: 80px;
-  margin: 0 auto;
-}
-
-#game .chat-directory .chat-directory-content {
-  display: none;
-  background: #333333;
-  border-radius: 8px 8px 0 0;
-  padding: 16px;
-  height: 400px;
-}
-
-#game .chat-directory.open .chat-directory-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-#game .chat-directory .librarian-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-#game .chat-directory .librarian-item {
-  padding: 8px;
-  color: white;
-}
-
-#game .chat-directory .librarian-item label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-#game .chat-directory .chat-directory-actions {
-  padding: 8px;
-  border-top: 1px solid #444;
-}
-
-#game .chat-directory .chat-button {
-  width: 100%;
-  padding: 8px;
-  background: #2e40cc;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#game .chat-directory .chat-button:disabled {
-  background: #666;
-  cursor: not-allowed;
 }
 
 @keyframes pulse {
