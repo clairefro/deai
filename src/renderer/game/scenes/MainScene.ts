@@ -37,6 +37,17 @@ class MainScene extends Phaser.Scene {
     super({ key: "MainScene" });
   }
 
+  setupEventListeners() {
+    this.events.on("walkableMaskChanged", (newMask: WalkableMask) => {
+      this.walkableMask = newMask;
+      if (this.player) {
+        this.player.setWalkableMask(newMask);
+        const pos = this.walkableMask.getRandomWalkablePosition();
+        this.player.setPosition(pos.x, pos.y);
+      }
+    });
+  }
+
   initManagers() {
     this.actionManager = new ActionManager();
     this.roomManager = new RoomManager(this, this.actionManager);
@@ -81,7 +92,7 @@ class MainScene extends Phaser.Scene {
       cameFrom: "sw",
     };
 
-    this.roomManager.renderRoom(startLocation);
+    await this.roomManager.renderRoom(startLocation);
 
     // Set camera bounds to match the image size
     // this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
@@ -123,6 +134,7 @@ class MainScene extends Phaser.Scene {
       );
     }
 
+    // TODO: MOVE TO ROOM MANAGER
     const librarianIds = await window.electronAPI.getLibrarianIds();
     const randomLibrarian = pluck(librarianIds); // select one at random for now
     this.librarians = (
@@ -147,6 +159,8 @@ class MainScene extends Phaser.Scene {
 
     // place librarians
     this.spawnLibrarians();
+
+    this.setupEventListeners();
   } // end create()
 
   private initializeComponents() {
@@ -159,6 +173,8 @@ class MainScene extends Phaser.Scene {
       this.notebook.loadFiles();
     });
   }
+
+  // TODO: MOVE TO ROOM MANAGER
   private async spawnLibrarians() {
     await Promise.all(
       this.librarians.map(async (librarian) => {

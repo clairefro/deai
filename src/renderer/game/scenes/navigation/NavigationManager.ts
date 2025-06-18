@@ -7,6 +7,8 @@ import {
   RoomType,
 } from "../../../types";
 
+import { EVENTS } from "../../constants";
+
 export class NavigationManager extends EventEmitter {
   private currentCoordinates: Coordinates;
   private prevCoordinates: Coordinates | null;
@@ -52,7 +54,7 @@ export class NavigationManager extends EventEmitter {
       type: this.determineNextLocationType(this.currentLocation.type),
     };
 
-    this.emit("locationChanged", {
+    this.emit(EVENTS.LOCATION_CHANGED, {
       position: nextCoordinates,
       location: this.currentLocation,
     });

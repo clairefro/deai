@@ -13,6 +13,18 @@ export class ActionManager {
     this.proximityActions.push(action);
   }
 
+  removeAction(action: ProximityAction): void {
+    const index = this.proximityActions.findIndex((a) => a.key === action.key);
+    if (index !== -1) {
+      this.proximityActions.splice(index, 1);
+    }
+
+    // clear label if this was the current action
+    if (this.currentAction?.key === action.key) {
+      this.currentAction = null;
+    }
+  }
+
   checkProximity(playerPos: Phaser.Math.Vector2): void {
     let nearestAction: ProximityAction | null = null;
     let nearestDistance = Infinity;

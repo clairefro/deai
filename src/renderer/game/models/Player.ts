@@ -55,4 +55,12 @@ export class Player {
 
     return false;
   }
+
+  setPosition(x: number, y: number) {
+    this._sprite.setPosition(x, y);
+  }
+
+  setWalkableMask(newMask: WalkableMask): void {
+    this.walkableMask = newMask;
+  }
 }

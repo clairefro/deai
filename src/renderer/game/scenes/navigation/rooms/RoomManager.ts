@@ -10,6 +10,7 @@ import {
   RoomAssets,
   RoomType,
 } from "../../../../types";
+import { ACTIONS, EVENTS } from "../../../constants";
 
 import galleryRoomMap from "../../../../assets/world/rooms/gallery.png";
 import galleryRoomMapMask from "../../../../assets/world/rooms/gallery-room-walkable-mask.png";
@@ -19,9 +20,21 @@ import hallwayRoomMapMask from "../../../../assets/world/rooms/vestibule-walkabl
 
 import doorImg from "../../../../assets/world/objects/door.png";
 
+const DIRECTION_DISPLAY_NAMES: Record<HexDirection, string> = {
+  ww: "W",
+  ee: "E",
+  ne: "NE",
+  nw: "NW",
+  se: "SE",
+  sw: "SW",
+  up: "up",
+  dn: "down",
+};
+
 export class RoomManager {
   private scene: Phaser.Scene;
   private currentRoomType: RoomType | undefined;
+  private currentBackground?: Phaser.GameObjects.Image;
   walkableMask?: WalkableMask;
   private exits: ActionableObject[] = [];
   private actionManager: ActionManager;
@@ -59,25 +72,26 @@ export class RoomManager {
   }
 
   async renderRoom(location: Location): Promise<void> {
-    // Clear existing room if any
-    this.destroy();
+    if (this.scene.cameras.main.fadeEffect.isRunning) {
+      await new Promise((resolve) => {
+        this.scene.cameras.main.once(
+          Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
+          resolve
+        );
+      });
+    }
+    // clear existing room, if any
+    await this.destroyCurrentRoom();
+
+    this.scene.cameras.main.fadeIn(500);
 
     const assets = this.roomAssets[location.type];
-
-    // const texture = this.scene.textures.get(assets.backgroundKey);
-    // const { width, height } = texture.source[0];
-
-    this.currentRoomType = location.type;
-
-    const texture = this.scene.textures.get(assets.backgroundKey);
-    if (!texture) {
-      throw new Error(
-        `Texture not found for ${location.type}: ${assets.backgroundKey}`
-      );
+    if (!assets) {
+      throw new Error(`No assets found for room type: ${location.type}`);
     }
 
     // Create room background
-    const background = this.scene.add
+    this.currentBackground = this.scene.add
       .image(
         this.scene.cameras.main.width / 2,
         this.scene.cameras.main.height / 2,
@@ -85,15 +99,37 @@ export class RoomManager {
       )
       .setOrigin(0.5, 0.5);
 
-    // Create walkable mask
+    // wait for bg to load
+    await new Promise((resolve) => {
+      if (this.scene.textures.exists(assets.backgroundKey)) {
+        resolve(null);
+      } else {
+        this.scene.load.once(Phaser.Loader.Events.COMPLETE, resolve);
+      }
+    });
+
+    // create walkable mask
     this.walkableMask = new WalkableMask(
       this.scene,
       assets.walkableMaskKey,
-      background
+      this.currentBackground
+      // true // enable for debug
     );
 
+    // ensure WalkableMask is initialized
+    await new Promise((resolve) => {
+      if (this.scene.textures.exists(assets.walkableMaskKey)) {
+        this.scene.time.delayedCall(100, resolve); // Small delay to ensure mask is ready
+      } else {
+        this.scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
+          this.scene.time.delayedCall(100, resolve);
+        });
+      }
+    });
+
+    this.scene.events.emit(EVENTS.WALKABLE_MASK_CHANGED, this.walkableMask);
+
     // Add exits if it's a gallery
-    console.log({ location });
     if (location.type === "gallery") {
       this.createGalleryExits(location);
     }
@@ -102,6 +138,9 @@ export class RoomManager {
     if (location.type === "hallway") {
       this.createStairs();
     }
+
+    this.currentRoomType = location.type;
+    this.scene.events.emit(EVENTS.ROOM_READY, location);
   }
 
   private generateRandomGalleryExits(): HexDirection[] {
@@ -110,14 +149,12 @@ export class RoomManager {
 
   private createGalleryExits(location: Location): void {
     const exitPositions = this.calculateGalleryExitPositions();
-    console.log({ exitPositions });
 
     const exits = this.generateRandomGalleryExits();
-    console.log({ exits });
 
     exits.forEach((direction) => {
       // const position = exitPositions[direction];
-      const position = exitPositions["se"];
+      const position = exitPositions[direction];
       if (!position) return;
 
       // Use a string key for the ActionableObject (e.g., "door")
@@ -129,10 +166,27 @@ export class RoomManager {
         this.actionManager,
         {
           key: `exit-${direction}`,
-          label: `<Enter> to go ${direction}`,
+          label: `<Enter> to go ${DIRECTION_DISPLAY_NAMES[direction]}`,
           rotation: position.rotation,
-          action: () => {
-            this.scene.events.emit("exitSelected", direction);
+          range: ACTIONS.DOOR_RANGE,
+          action: async () => {
+            // disable input
+            this.exits.forEach((exit) => exit.disable?.());
+
+            this.scene.cameras.main.fadeOut(500);
+
+            // gallery => hallway
+            const nextLocation: Location = {
+              type: "hallway",
+              x: location.x,
+              y: location.y,
+              z: location.z,
+              cameFrom: direction,
+            };
+
+            await this.renderRoom(nextLocation);
+
+            this.scene.events.emit(EVENTS.EXIT_SELECTED, direction, location);
           },
         }
       );
@@ -153,7 +207,7 @@ export class RoomManager {
         key: "stairs",
         label: "<Enter> to use stairs",
         action: () => {
-          this.scene.events.emit("stairsSelected");
+          this.scene.events.emit(EVENTS.STAIRS_SELECTED);
         },
       }
     );
@@ -208,10 +262,26 @@ export class RoomManager {
     return this.walkableMask;
   }
 
-  destroy(): void {
-    this.currentRoomType = undefined;
-    this.walkableMask?.destroy();
-    this.exits.forEach((exit) => exit.destroy());
+  private async destroyCurrentRoom(): Promise<void> {
+    // Disable all exits first
+    this.exits.forEach((exit) => {
+      exit.disable?.();
+      this.actionManager.removeAction(exit.getAction());
+      exit.destroy();
+    });
     this.exits = [];
+
+    // Destroy walkable mask
+    if (this.walkableMask) {
+      this.walkableMask.destroy();
+      this.walkableMask = undefined;
+    }
+
+    // Destroy background
+    if (this.currentBackground) {
+      this.currentBackground.destroy(true);
+      this.currentBackground = undefined;
+    }
+    this.currentRoomType = undefined;
   }
 }

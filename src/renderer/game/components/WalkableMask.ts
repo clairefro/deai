@@ -1,10 +1,13 @@
-/** Target image and mask texture must be exact same size */
+/** Creates a "walkable" layer on a target image, where white areas in the mask are walkable. Target image and mask texture must be exact same size */
 export class WalkableMask {
-  private debugGraphics!: Phaser.GameObjects.Graphics;
+  private debugGraphics?: Phaser.GameObjects.Graphics;
   private bounds!: Phaser.Geom.Rectangle;
   private targetImage: Phaser.GameObjects.Image;
-  private maskLayer: Phaser.GameObjects.Image;
+  private maskLayer?: Phaser.GameObjects.Image;
+  private maskKey: string;
   private scene: Phaser.Scene;
+  private enabled: boolean = true;
+  private textureManager: Phaser.Textures.TextureManager | undefined;
 
   constructor(
     scene: Phaser.Scene,
@@ -13,10 +16,12 @@ export class WalkableMask {
     debug: boolean = false
   ) {
     this.scene = scene;
+    this.textureManager = scene.textures;
+    this.maskKey = maskKey;
     this.targetImage = targetImage;
 
     // Create mask layer that exactly matches target image
-    this.maskLayer = scene.add
+    this.maskLayer = this.scene.add
       .image(this.targetImage.x, this.targetImage.y, maskKey)
       .setOrigin(0.5, 0.5)
       .setScale(this.targetImage.scale)
@@ -31,30 +36,33 @@ export class WalkableMask {
       this.targetImage.height * this.targetImage.scaleY
     );
     if (debug) {
+      console.log(`DEBUG: Loaded walkable mask ${this.maskKey}`);
       this.debugGraphics = scene.add.graphics();
       this.drawDebugBox();
     }
   }
 
   isWalkable(x: number, y: number): boolean {
+    if (!this.enabled || !this.textureManager) return true;
     const tx = Math.floor(x - (this.bounds.x - this.bounds.width / 2));
     const ty = Math.floor(y - (this.bounds.y - this.bounds.height / 2));
 
     // get pixel color from texture manager
-    const pixel = this.maskLayer.scene.textures.getPixel(
-      tx,
-      ty,
-      this.maskLayer.texture.key
-    ) as { r: number; g: number; b: number; a: number } | null; // Phaser's types are't correct, so I shimmed here
+    const pixel = this.textureManager.getPixel(tx, ty, this.maskKey) as {
+      r: number;
+      g: number;
+      b: number;
+      a: number;
+    } | null; // Phaser's types are't correct, so I shimmed here
 
-    if (pixel === null) {
-      return false;
-    }
+    if (!pixel) return false;
+
     if (this.debugGraphics) {
       console.log(`Checking position (${x},${y}) -> texture (${tx},${ty})`);
       console.log(`Pixel: rgba(${pixel.r},${pixel.g},${pixel.b},${pixel.a})`);
     }
 
+    // check the red channel - if > 0, likely not black
     return pixel.r > 0;
   }
 
@@ -104,20 +112,39 @@ export class WalkableMask {
     this.bounds = bounds;
   }
 
+  enable(): void {
+    this.enabled = true;
+  }
+
+  disable(): void {
+    this.enabled = false;
+  }
+
   destroy(): void {
     if (this.maskLayer) {
-      this.maskLayer.destroy();
+      this.maskLayer.destroy(true);
+      this.maskLayer = undefined;
     }
     if (this.debugGraphics) {
-      this.debugGraphics.destroy();
+      if (this.debugGraphics) {
+        this.debugGraphics.clear();
+        this.debugGraphics.destroy(true);
+        this.debugGraphics = undefined;
+      }
     }
+    this.textureManager = undefined;
+    this.targetImage = undefined!;
+    this.bounds = undefined!;
   }
+
   // ----- debugging  ------
 
   private drawDebugBox(): void {
     if (!this.debugGraphics) return;
 
     this.debugGraphics.clear();
+
+    this.drawWalkableAreas();
 
     this.debugGraphics.lineStyle(2, 0x00ff00); // green
 
@@ -179,5 +206,31 @@ export class WalkableMask {
       left + this.bounds.width,
       top + this.bounds.height - markerSize
     );
+  }
+
+  private drawWalkableAreas(): void {
+    if (!this.debugGraphics || !this.textureManager) return;
+
+    this.debugGraphics.fillStyle(0x00ff00, 0.2); // semi-transparent green
+
+    const left = this.bounds.x - this.bounds.width / 2;
+    const top = this.bounds.y - this.bounds.height / 2;
+
+    // Check each pixel in the mask
+    for (let y = 0; y < this.bounds.height; y++) {
+      for (let x = 0; x < this.bounds.width; x++) {
+        const pixel = this.textureManager.getPixel(x, y, this.maskKey) as {
+          r: number;
+          g: number;
+          b: number;
+          a: number;
+        } | null;
+
+        if (pixel && pixel.r > 0) {
+          // Draw a 1x1 rectangle for each walkable pixel
+          this.debugGraphics.fillRect(left + x, top + y, 1, 1);
+        }
+      }
+    }
   }
 }

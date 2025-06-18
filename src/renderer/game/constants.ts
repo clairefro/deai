@@ -30,6 +30,7 @@ export const COLORS = {
 
 export const ACTIONS = {
   DEFAULT_RANGE: 100,
+  DOOR_RANGE: 200,
 };
 
 export const LIBRARIAN_CONFIG = {
@@ -69,4 +70,12 @@ export const LIBRARIAN_CONFIG = {
 export const CHAT_STYLES = {
   MAX_HEIGHT: 150,
   INITIAL_ROWS: 1,
+};
+
+export const EVENTS = {
+  WALKABLE_MASK_CHANGED: "walkableMaskChanged",
+  LOCATION_CHANGED: "locationChanged",
+  EXIT_SELECTED: "exitSelected",
+  STAIRS_SELECTED: "stairsSelected",
+  ROOM_READY: "roomReady",
 };
