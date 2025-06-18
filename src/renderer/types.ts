@@ -36,15 +36,10 @@ export interface ProximityAction {
 export type RoomType = "gallery" | "hallway";
 
 export interface RoomAssets {
-  background: string;
-  walkableMask: string;
-}
-
-export interface RoomConfig {
-  type: RoomType;
-  assets: RoomAssets;
-  width: number;
-  height: number;
+  backgroundImg: string;
+  backgroundKey: string;
+  walkableMaskImg: string;
+  walkableMaskKey: string;
 }
 
 export interface ExitPosition {

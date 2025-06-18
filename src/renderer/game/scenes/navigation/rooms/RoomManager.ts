@@ -3,46 +3,99 @@ import { WalkableMask } from "../../../components/WalkableMask";
 import { ActionableObject } from "../../../actions/ActionableObject";
 import { ActionManager } from "../../../actions/ActionManager";
 import {
-  RoomConfig,
   ExitPositions,
   Location,
-  HexDirection
+  HexDirection,
   HEX_DIRECTIONS_PLANAR,
+  RoomAssets,
+  RoomType,
 } from "../../../../types";
+
+import galleryRoomMap from "../../../../assets/world/rooms/gallery.png";
+import galleryRoomMapMask from "../../../../assets/world/rooms/gallery-room-walkable-mask.png";
+
+import hallwayRoomMap from "../../../../assets/world/rooms/vestibule.png";
+import hallwayRoomMapMask from "../../../../assets/world/rooms/vestibule-walkable-mask.png";
+
+import doorImg from "../../../../assets/world/objects/door.png";
 
 export class RoomManager {
   private scene: Phaser.Scene;
-  private currentRoom?: Phaser.GameObjects.Image;
-  private walkableMask?: WalkableMask;
+  private currentRoomType: RoomType | undefined;
+  walkableMask?: WalkableMask;
   private exits: ActionableObject[] = [];
   private actionManager: ActionManager;
+
+  private readonly roomAssets: Record<RoomType, RoomAssets> = {
+    gallery: {
+      backgroundImg: galleryRoomMap,
+      backgroundKey: "gallery-room",
+      walkableMaskImg: galleryRoomMapMask,
+      walkableMaskKey: "gallery-room-mask",
+    },
+    hallway: {
+      backgroundImg: hallwayRoomMap,
+      backgroundKey: "vestibule-room",
+      walkableMaskImg: hallwayRoomMapMask,
+      walkableMaskKey: "vestibule-room-mask",
+    },
+    // bathroom: { background: "TODO", WalkableMask: "TODO" },
+  };
 
   constructor(scene: Phaser.Scene, actionManager: ActionManager) {
     this.scene = scene;
     this.actionManager = actionManager;
   }
 
-  async renderRoom(location: Location, config: RoomConfig): Promise<void> {
+  preloadRoomAssets(): void {
+    Object.values(this.roomAssets).forEach((assets) => {
+      this.scene.load.image(assets.backgroundKey, assets.backgroundImg);
+      this.scene.load.image(assets.walkableMaskKey, assets.walkableMaskImg);
+    });
+
+    // Load door and stairs sprites
+    this.scene.load.image("door", doorImg);
+    // this.scene.load.image("stairs", "assets/objects/stairs.png");
+  }
+
+  async renderRoom(location: Location): Promise<void> {
     // Clear existing room if any
     this.destroy();
 
-    const { width, height } = config;
+    const assets = this.roomAssets[location.type];
+
+    // const texture = this.scene.textures.get(assets.backgroundKey);
+    // const { width, height } = texture.source[0];
+
+    this.currentRoomType = location.type;
+
+    const texture = this.scene.textures.get(assets.backgroundKey);
+    if (!texture) {
+      throw new Error(
+        `Texture not found for ${location.type}: ${assets.backgroundKey}`
+      );
+    }
 
     // Create room background
-    this.currentRoom = this.scene.add
-      .image(width / 2, height / 2, config.assets.background)
+    const background = this.scene.add
+      .image(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2,
+        assets.backgroundKey
+      )
       .setOrigin(0.5, 0.5);
 
     // Create walkable mask
     this.walkableMask = new WalkableMask(
       this.scene,
-      config.assets.walkableMask,
-      this.currentRoom
+      assets.walkableMaskKey,
+      background
     );
 
     // Add exits if it's a gallery
-    if (location.type === "gallery" && location.exits) {
-      this.createExits(location);
+    console.log({ location });
+    if (location.type === "gallery") {
+      this.createGalleryExits(location);
     }
 
     // Add stairs if it's a hallway
@@ -51,17 +104,23 @@ export class RoomManager {
     }
   }
 
-  private generateRandomExits(): HexDirection[] {
+  private generateRandomGalleryExits(): HexDirection[] {
     return HEX_DIRECTIONS_PLANAR.sort(() => Math.random() - 0.5).slice(0, 2);
   }
 
-  private createExits(location: Location): void {
-    const exitPositions = this.calculateExitPositions();
+  private createGalleryExits(location: Location): void {
+    const exitPositions = this.calculateGalleryExitPositions();
+    console.log({ exitPositions });
 
-    location.exits?.forEach((direction) => {
-      const position = exitPositions[direction];
+    const exits = this.generateRandomGalleryExits();
+    console.log({ exits });
+
+    exits.forEach((direction) => {
+      // const position = exitPositions[direction];
+      const position = exitPositions["se"];
       if (!position) return;
 
+      // Use a string key for the ActionableObject (e.g., "door")
       const exit = new ActionableObject(
         this.scene,
         position.x,
@@ -71,6 +130,7 @@ export class RoomManager {
         {
           key: `exit-${direction}`,
           label: `<Enter> to go ${direction}`,
+          rotation: position.rotation,
           action: () => {
             this.scene.events.emit("exitSelected", direction);
           },
@@ -100,17 +160,47 @@ export class RoomManager {
     this.exits.push(stairs);
   }
 
-  private calculateExitPositions(): ExitPositions {
+  private calculateGalleryExitPositions(): ExitPositions {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
 
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const radius = Math.min(width, height) * 0.25;
+
     return {
-      ne: { x: width * 0.85, y: height * 0.25, rotation: Math.PI / 6 },
-      nw: { x: width * 0.15, y: height * 0.25, rotation: -Math.PI / 6 },
-      ee: { x: width * 0.95, y: height * 0.5, rotation: Math.PI / 2 },
-      ww: { x: width * 0.05, y: height * 0.5, rotation: -Math.PI / 2 },
-      se: { x: width * 0.85, y: height * 0.75, rotation: -Math.PI / 6 },
-      sw: { x: width * 0.15, y: height * 0.75, rotation: Math.PI / 6 },
+      // rotations are in radians
+      ee: {
+        x: centerX + radius,
+        y: centerY,
+        rotation: Math.PI / 2,
+      },
+      ne: {
+        x: centerX + radius * Math.cos(Math.PI / 3),
+        y: centerY - radius * Math.sin(Math.PI / 3),
+        rotation: -Math.PI / 2 - Math.PI / 3 + Math.PI,
+      },
+      nw: {
+        x: centerX - radius * Math.cos(Math.PI / 3),
+        y: centerY - radius * Math.sin(Math.PI / 3),
+        rotation: -Math.PI / 2 - (2 * Math.PI) / 3 + Math.PI,
+      },
+      ww: {
+        x: centerX - radius,
+        y: centerY,
+        rotation: -Math.PI / 2,
+      },
+      sw: {
+        x: centerX - radius * Math.cos(Math.PI / 3),
+        y: centerY + radius * Math.sin(Math.PI / 3),
+        rotation: -Math.PI / 2 - (4 * Math.PI) / 3 + Math.PI,
+      },
+      se: {
+        x: centerX + radius * Math.cos(Math.PI / 3),
+        y: centerY + radius * Math.sin(Math.PI / 3),
+        rotation: -Math.PI / 2 - (5 * Math.PI) / 3 + Math.PI,
+      },
     };
   }
 
@@ -119,7 +209,7 @@ export class RoomManager {
   }
 
   destroy(): void {
-    this.currentRoom?.destroy();
+    this.currentRoomType = undefined;
     this.walkableMask?.destroy();
     this.exits.forEach((exit) => exit.destroy());
     this.exits = [];

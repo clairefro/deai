@@ -5,15 +5,14 @@ import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
 import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
-import galleryRoomImage from "../../assets/world/gallery.png";
-import galleryRoomWalkableMaskImage from "../../assets/world/gallery-room-walkable-mask.png";
 import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
 import { pluck } from "../../../shared/util/pluck";
 import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
-
+import { RoomManager } from "./navigation/rooms/RoomManager";
+import { Location } from "../../types";
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -28,6 +27,9 @@ class MainScene extends Phaser.Scene {
   private actionManager!: ActionManager;
   private enterKey!: Phaser.Input.Keyboard.Key;
 
+  // Rooms
+  private roomManager!: RoomManager;
+
   // Other state
   private hasMovedSinceAction: boolean = false;
 
@@ -35,21 +37,28 @@ class MainScene extends Phaser.Scene {
     super({ key: "MainScene" });
   }
 
+  initManagers() {
+    this.actionManager = new ActionManager();
+    this.roomManager = new RoomManager(this, this.actionManager);
+  }
+
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 
-    this.load.image("gallery-room-map", galleryRoomImage);
-    this.load.image("gallery-room-map-mask", galleryRoomWalkableMaskImage);
+    // this.load.image("gallery-room-map", galleryRoomImage);
+    // this.load.image("gallery-room-map-mask", galleryRoomWalkableMaskImage);
 
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
+
+    this.initManagers();
+    this.roomManager.preloadRoomAssets();
   }
 
   async create() {
-    this.actionManager = new ActionManager();
-
     const gameWidth = this.cameras.main.width;
     const gameHeight = this.cameras.main.height;
+
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
@@ -64,24 +73,23 @@ class MainScene extends Phaser.Scene {
       })
       .setDepth(9999);
 
-    const galleryRoom = this.add
-      .image(gameWidth / 2, gameHeight / 2, "gallery-room-map")
-      .setOrigin(0.5, 0.5);
+    const startLocation: Location = {
+      type: "gallery",
+      x: 0,
+      y: 0,
+      z: 0,
+      cameFrom: "sw",
+    };
 
-    this.walkableMask = new WalkableMask(
-      this,
-      "gallery-room-map-mask",
-      galleryRoom
-      // true
-    );
+    this.roomManager.renderRoom(startLocation);
 
     // Set camera bounds to match the image size
-    this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
+    // this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
 
     const playerYOffset =
       this.textures.get("player").getSourceImage().height / 2;
 
-    const startPos = this.walkableMask.getRandomWalkablePosition(
+    const startPos = this.roomManager.walkableMask!.getRandomWalkablePosition(
       { x: 400, y: 300 },
       { y: playerYOffset }
     );
@@ -91,11 +99,9 @@ class MainScene extends Phaser.Scene {
       startPos.x,
       startPos.y,
       "player",
-      this.walkableMask,
+      this.roomManager.walkableMask!,
       playerYOffset
     );
-
-    // this.player.setCollideWorldBounds(true); // Prevent the sprite from leaving the screen
 
     // Create cursor keys for movement
     if (this.input.keyboard) {
@@ -156,7 +162,7 @@ class MainScene extends Phaser.Scene {
   private async spawnLibrarians() {
     await Promise.all(
       this.librarians.map(async (librarian) => {
-        const pos = this.walkableMask.getRandomWalkablePosition();
+        const pos = this.roomManager.walkableMask!.getRandomWalkablePosition();
         await librarian.spawn(pos.x, pos.y);
       })
     );

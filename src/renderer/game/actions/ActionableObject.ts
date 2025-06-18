@@ -17,11 +17,16 @@ export class ActionableObject {
       range?: number;
       key: string;
       label: string;
+      rotation?: number;
       action: () => void;
     }
   ) {
     this.sprite = scene.add.sprite(x, y, texture);
     this.sprite.setInteractive({ useHandCursor: true });
+
+    if (config.rotation !== undefined) {
+      this.sprite.setRotation(config.rotation);
+    }
 
     this.action = {
       target: this.sprite,

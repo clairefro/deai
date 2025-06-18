@@ -28,7 +28,7 @@ export class NavigationManager extends EventEmitter {
     position: Coordinates;
     location: Location;
   } {
-    const nextPosition = this.calculateNextCoordinates(
+    const nextCoordinates = this.calculateNextCoordinates(
       this.currentCoordinates,
       direction
     );
@@ -36,28 +36,28 @@ export class NavigationManager extends EventEmitter {
     // Record movement
     this.traversalHistory.push({
       from: { ...this.currentCoordinates },
-      to: { ...nextPosition },
+      to: { ...nextCoordinates },
       direction,
       timestamp: Date.now(),
     });
 
     // Update positions
     this.prevCoordinates = { ...this.currentCoordinates };
-    this.currentCoordinates = nextPosition;
+    this.currentCoordinates = nextCoordinates;
 
     // Update locations
     this.prevLocation = { ...this.currentLocation };
     this.currentLocation = {
-      ...nextPosition,
+      ...nextCoordinates,
       type: this.determineNextLocationType(this.currentLocation.type),
     };
 
-    this.emit("positionChanged", {
-      position: nextPosition,
+    this.emit("locationChanged", {
+      position: nextCoordinates,
       location: this.currentLocation,
     });
     return {
-      position: { ...nextPosition },
+      position: { ...nextCoordinates },
       location: { ...this.currentLocation },
     };
   }
@@ -94,7 +94,7 @@ export class NavigationManager extends EventEmitter {
   }
 
   getPrevCoordinates(): Coordinates | null {
-    return { ...this.prevCoordinates };
+    return this.prevCoordinates ? { ...this.prevCoordinates } : null;
   }
 
   getCurrentLocation(): Location {
