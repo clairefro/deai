@@ -9,8 +9,13 @@ import {
   HEX_DIRECTIONS_PLANAR,
   RoomAssets,
   RoomType,
+  OPPOSITE_DIRECTIONS,
+  DIRECTION_OFFSETS,
 } from "../../../../types";
 import { ACTIONS, EVENTS } from "../../../constants";
+import { Librarian } from "../../../models/Librarian";
+
+import { pluck } from "../../../../../shared/util/pluck";
 
 import galleryRoomMap from "../../../../assets/world/rooms/gallery.png";
 import galleryRoomMapMask from "../../../../assets/world/rooms/gallery-room-walkable-mask.png";
@@ -35,9 +40,11 @@ export class RoomManager {
   private scene: Phaser.Scene;
   private currentRoomType: RoomType | undefined;
   private currentBackground?: Phaser.GameObjects.Image;
+  private currentLocation: Location | undefined;
   walkableMask?: WalkableMask;
   private exits: ActionableObject[] = [];
   private actionManager: ActionManager;
+  private librarians: Librarian[] = [];
 
   private readonly roomAssets: Record<RoomType, RoomAssets> = {
     gallery: {
@@ -72,14 +79,7 @@ export class RoomManager {
   }
 
   async renderRoom(location: Location): Promise<void> {
-    if (this.scene.cameras.main.fadeEffect.isRunning) {
-      await new Promise((resolve) => {
-        this.scene.cameras.main.once(
-          Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
-          resolve
-        );
-      });
-    }
+    console.log("LOCATION: ", location);
     // clear existing room, if any
     await this.destroyCurrentRoom();
 
@@ -99,15 +99,6 @@ export class RoomManager {
       )
       .setOrigin(0.5, 0.5);
 
-    // wait for bg to load
-    await new Promise((resolve) => {
-      if (this.scene.textures.exists(assets.backgroundKey)) {
-        resolve(null);
-      } else {
-        this.scene.load.once(Phaser.Loader.Events.COMPLETE, resolve);
-      }
-    });
-
     // create walkable mask
     this.walkableMask = new WalkableMask(
       this.scene,
@@ -116,23 +107,9 @@ export class RoomManager {
       // true // enable for debug
     );
 
-    // ensure WalkableMask is initialized
-    await new Promise((resolve) => {
-      if (this.scene.textures.exists(assets.walkableMaskKey)) {
-        this.scene.time.delayedCall(100, resolve); // Small delay to ensure mask is ready
-      } else {
-        this.scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-          this.scene.time.delayedCall(100, resolve);
-        });
-      }
-    });
-
     this.scene.events.emit(EVENTS.WALKABLE_MASK_CHANGED, this.walkableMask);
 
-    // Add exits if it's a gallery
-    if (location.type === "gallery") {
-      this.createGalleryExits(location);
-    }
+    this.createExits(location);
 
     // Add stairs if it's a hallway
     if (location.type === "hallway") {
@@ -140,24 +117,29 @@ export class RoomManager {
     }
 
     this.currentRoomType = location.type;
+
+    this.spawnRandomLibrarian();
     this.scene.events.emit(EVENTS.ROOM_READY, location);
   }
 
-  private generateRandomGalleryExits(): HexDirection[] {
-    return HEX_DIRECTIONS_PLANAR.sort(() => Math.random() - 0.5).slice(0, 2);
-  }
+  private createExits(location: Location): void {
+    const exitPositions =
+      location.type === "gallery"
+        ? this.calculateGalleryExitPositions()
+        : this.calculateHallwayExitPositions();
 
-  private createGalleryExits(location: Location): void {
-    const exitPositions = this.calculateGalleryExitPositions();
-
-    const exits = this.generateRandomGalleryExits();
+    const exits =
+      location.type === "gallery"
+        ? this.generateRandomGalleryExits()
+        : (["ee", "ww"] as HexDirection[]);
 
     exits.forEach((direction) => {
-      // const position = exitPositions[direction];
       const position = exitPositions[direction];
       if (!position) return;
 
-      // Use a string key for the ActionableObject (e.g., "door")
+      const nextLocationType =
+        location.type === "gallery" ? "hallway" : "gallery";
+
       const exit = new ActionableObject(
         this.scene,
         position.x,
@@ -165,35 +147,38 @@ export class RoomManager {
         "door",
         this.actionManager,
         {
-          key: `exit-${direction}`,
+          key: `${ACTIONS.PREFIX_EXIT}${direction}`,
           label: `<Enter> to go ${DIRECTION_DISPLAY_NAMES[direction]}`,
           rotation: position.rotation,
           range: ACTIONS.DOOR_RANGE,
           action: async () => {
-            // disable input
             this.exits.forEach((exit) => exit.disable?.());
-
             this.scene.cameras.main.fadeOut(500);
 
-            // gallery => hallway
+            const nextCoords = this.calculateNextCoordinates(
+              location,
+              direction
+            );
+
             const nextLocation: Location = {
-              type: "hallway",
-              x: location.x,
-              y: location.y,
-              z: location.z,
+              type: nextLocationType,
+              x: nextCoords.x,
+              y: nextCoords.y,
+              z: nextCoords.z,
               cameFrom: direction,
             };
-
+            this.currentLocation = nextLocation;
             await this.renderRoom(nextLocation);
-
             this.scene.events.emit(EVENTS.EXIT_SELECTED, direction, location);
           },
         }
       );
-
-      //   exit.setRotation(position.rotation);
       this.exits.push(exit);
     });
+  }
+
+  private generateRandomGalleryExits(): HexDirection[] {
+    return HEX_DIRECTIONS_PLANAR.sort(() => Math.random() - 0.5).slice(0, 2);
   }
 
   private createStairs(): void {
@@ -212,6 +197,29 @@ export class RoomManager {
       }
     );
     this.exits.push(stairs);
+  }
+
+  private calculateHallwayExitPositions(): ExitPositions {
+    const width = this.scene.cameras.main.width;
+    const height = this.scene.cameras.main.height;
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const doorOffset = width * 0.2;
+
+    return {
+      ee: {
+        x: centerX + doorOffset,
+        y: centerY,
+        rotation: Math.PI / 2,
+      },
+      ww: {
+        x: centerX - doorOffset,
+        y: centerY,
+        rotation: -Math.PI / 2,
+      },
+    };
   }
 
   private calculateGalleryExitPositions(): ExitPositions {
@@ -258,26 +266,114 @@ export class RoomManager {
     };
   }
 
+  private calculateNextCoordinates(
+    current: Location,
+    direction: HexDirection
+  ): { x: number; y: number; z: number } {
+    // if in gallery, calculate hex grid movement
+    if (current.type === "gallery") {
+      const [dx, dy] = DIRECTION_OFFSETS[direction];
+      return {
+        x: current.x + dx,
+        y: current.y + dy,
+        z: current.z,
+      };
+    }
+
+    // if in hallway, calculate movement based on entry direction
+    if (current.type === "hallway") {
+      // if moving through hallway (ee/ww), maintain same coordinates
+      if (direction === "ee" || direction === "ww") {
+        return { x: current.x, y: current.y, z: current.z };
+      }
+
+      // if using stairs, change z level
+      if (direction === "up" || direction === "dn") {
+        return {
+          x: current.x,
+          y: current.y,
+          z: current.z + (direction === "up" ? 1 : -1),
+        };
+      }
+
+      // if exiting hallway to gallery, calculate opposite movement from entry
+      const exitOffset = OPPOSITE_DIRECTIONS[current.cameFrom || "ww"];
+
+      const [dx, dy] = DIRECTION_OFFSETS[exitOffset];
+      return {
+        x: current.x + dx,
+        y: current.y + dy,
+        z: current.z,
+      };
+    }
+
+    return { x: current.x, y: current.y, z: current.z };
+  }
+
   getWalkableMask(): WalkableMask | undefined {
     return this.walkableMask;
   }
 
+  async spawnRandomLibrarian(): Promise<void> {
+    // Clear previous librarians
+    this.librarians.forEach((librarian) => {
+      this.actionManager.removeAction(
+        `${ACTIONS.PREFIX_LIBRIAN_CHAT}${librarian.getId()}`
+      );
+      librarian.destroy();
+    });
+    this.librarians = [];
+
+    // Get random librarian
+    const librarianIds = await window.electronAPI.getLibrarianIds();
+    const randomId = pluck(librarianIds);
+
+    const librarian = await Librarian.loadLibrarianById(this.scene, randomId);
+    if (!librarian) return;
+
+    // spawn in walkable area
+    const pos = this.walkableMask?.getRandomWalkablePosition();
+    if (pos) {
+      await librarian.spawn(pos.x, pos.y);
+      this.librarians.push(librarian);
+
+      // add chat action
+      this.actionManager.addAction({
+        target: librarian.getActionTarget(),
+        range: 100,
+        key: `${ACTIONS.PREFIX_LIBRIAN_CHAT}${librarian.getId()}`,
+        getLabel: () => `<Enter> to Chat with ${librarian.getDisplayName()}`,
+        action: () => librarian.chat(),
+      });
+    }
+  }
+
   private async destroyCurrentRoom(): Promise<void> {
-    // Disable all exits first
+    // disable and destroy all exits first
     this.exits.forEach((exit) => {
       exit.disable?.();
-      this.actionManager.removeAction(exit.getAction());
+      this.actionManager.removeAction(exit.getAction().key);
       exit.destroy();
     });
     this.exits = [];
 
-    // Destroy walkable mask
+    // destroy librarians
+    this.librarians.forEach((librarian) => {
+      const chatActionKey = `${
+        ACTIONS.PREFIX_LIBRIAN_CHAT
+      }${librarian.getId()}`;
+      this.actionManager.removeAction(chatActionKey);
+      librarian.destroy();
+    });
+    this.librarians = [];
+
+    // destroy walkable mask
     if (this.walkableMask) {
       this.walkableMask.destroy();
       this.walkableMask = undefined;
     }
 
-    // Destroy background
+    // destroy background
     if (this.currentBackground) {
       this.currentBackground.destroy(true);
       this.currentBackground = undefined;

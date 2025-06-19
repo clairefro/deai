@@ -13,12 +13,14 @@ import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
 import { RoomManager } from "./navigation/rooms/RoomManager";
 import { Location } from "../../types";
+import { EVENTS } from "../constants";
+
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   // Entities
   private player!: Player;
-  private librarians: Librarian[] = [];
+  // private librarians: Librarian[] = [];
   private notebook!: Notebook;
   private settingsMenu!: SettingsMenu;
   private walkableMask!: WalkableMask;
@@ -38,12 +40,20 @@ class MainScene extends Phaser.Scene {
   }
 
   setupEventListeners() {
-    this.events.on("walkableMaskChanged", (newMask: WalkableMask) => {
+    this.events.on(EVENTS.WALKABLE_MASK_CHANGED, (newMask: WalkableMask) => {
       this.walkableMask = newMask;
       if (this.player) {
         this.player.setWalkableMask(newMask);
-        const pos = this.walkableMask.getRandomWalkablePosition();
+      }
+    });
+
+    this.events.on(EVENTS.ROOM_READY, () => {
+      if (this.player) {
+        const pos = this.walkableMask.getRandomWalkablePosition({
+          y: this.player.getYOffset(),
+        });
         this.player.setPosition(pos.x, pos.y);
+        this.roomManager.spawnRandomLibrarian();
       }
     });
   }
@@ -56,9 +66,6 @@ class MainScene extends Phaser.Scene {
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 
-    // this.load.image("gallery-room-map", galleryRoomImage);
-    // this.load.image("gallery-room-map-mask", galleryRoomWalkableMaskImage);
-
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
 
@@ -67,9 +74,6 @@ class MainScene extends Phaser.Scene {
   }
 
   async create() {
-    const gameWidth = this.cameras.main.width;
-    const gameHeight = this.cameras.main.height;
-
     // Load configuration
     this.config = await window.electronAPI.getConfig();
 
@@ -94,27 +98,20 @@ class MainScene extends Phaser.Scene {
 
     await this.roomManager.renderRoom(startLocation);
 
-    // Set camera bounds to match the image size
-    // this.cameras.main.setBounds(0, 0, galleryRoom.width, galleryRoom.height);
-
     const playerYOffset =
       this.textures.get("player").getSourceImage().height / 2;
 
-    const startPos = this.roomManager.walkableMask!.getRandomWalkablePosition(
-      { x: 400, y: 300 },
-      { y: playerYOffset }
-    );
+    const startPos = this.roomManager.walkableMask!.getRandomWalkablePosition();
 
     this.player = new Player(
       this,
       startPos.x,
       startPos.y,
       "player",
-      this.roomManager.walkableMask!,
-      playerYOffset
+      this.roomManager.walkableMask!
     );
 
-    // Create cursor keys for movement
+    // create cursor keys for movement
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.enterKey = this.input.keyboard.addKey(
@@ -135,13 +132,13 @@ class MainScene extends Phaser.Scene {
     }
 
     // TODO: MOVE TO ROOM MANAGER
-    const librarianIds = await window.electronAPI.getLibrarianIds();
-    const randomLibrarian = pluck(librarianIds); // select one at random for now
-    this.librarians = (
-      await Promise.all(
-        [randomLibrarian].map((id) => Librarian.loadLibrarianById(this, id))
-      )
-    ).filter((l) => !!l) as Librarian[];
+    // const librarianIds = await window.electronAPI.getLibrarianIds();
+    // const randomLibrarian = pluck(librarianIds); // select one at random for now
+    // this.librarians = (
+    //   await Promise.all(
+    //     [randomLibrarian].map((id) => Librarian.loadLibrarianById(this, id))
+    //   )
+    // ).filter((l) => !!l) as Librarian[];
 
     // const guest = new Librarian({
     //   name: "Friedrich Wilhelm Nietzsche",
@@ -149,7 +146,7 @@ class MainScene extends Phaser.Scene {
     // });
     // this.librarians.push(guest);
 
-    console.log({ librarians: this.librarians });
+    // console.log({ librarians: this.librarians });
 
     const gameContainer = document.getElementById("game");
     if (gameContainer) {
@@ -158,7 +155,7 @@ class MainScene extends Phaser.Scene {
     }
 
     // place librarians
-    this.spawnLibrarians();
+    // this.spawnLibrarians();
 
     this.setupEventListeners();
   } // end create()
@@ -171,29 +168,6 @@ class MainScene extends Phaser.Scene {
 
       // reload notebook files
       this.notebook.loadFiles();
-    });
-  }
-
-  // TODO: MOVE TO ROOM MANAGER
-  private async spawnLibrarians() {
-    await Promise.all(
-      this.librarians.map(async (librarian) => {
-        const pos = this.roomManager.walkableMask!.getRandomWalkablePosition();
-        await librarian.spawn(pos.x, pos.y);
-      })
-    );
-
-    console.log(this.librarians);
-
-    // add proximity actions to loaded librarians
-    this.librarians.forEach((librarian) => {
-      this.actionManager.addAction({
-        target: librarian.getActionTarget(),
-        range: 100,
-        key: "chat",
-        getLabel: () => `<Enter> to Chat with ${librarian.getDisplayName()}`,
-        action: () => librarian.chat(),
-      });
     });
   }
 

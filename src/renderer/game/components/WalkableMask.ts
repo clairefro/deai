@@ -70,22 +70,15 @@ export class WalkableMask {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  getRandomWalkablePosition(
-    fallbackCoords = {
-      x: this.targetImage.width / 2,
-      y: this.targetImage.height / 2,
-    },
-    offset?: { x?: number; y?: number }
-  ): {
+  getRandomWalkablePosition(offset?: { x?: number; y?: number }): {
     x: number;
     y: number;
   } {
-    let x = fallbackCoords.x;
-    let y = fallbackCoords.y;
+    let x, y;
     let attempts = 0;
     const maxAttempts = 100;
 
-    do {
+    while (attempts < maxAttempts) {
       x = this.getRandomInRange(
         Math.floor(this.bounds.x - this.bounds.width / 2),
         Math.floor(this.bounds.x + this.bounds.width / 2)
@@ -102,10 +95,32 @@ export class WalkableMask {
       if (this.isWalkable(checkX, checkY)) {
         return { x, y };
       }
-    } while (attempts < maxAttempts);
+    }
 
-    console.warn("Could not find walkable position, using fallback");
-    return fallbackCoords;
+    // ff random attempts fail, scan outward from center
+    const centerX = this.bounds.x;
+    const centerY = this.bounds.y;
+    const scanRadius = Math.min(this.bounds.width, this.bounds.height) / 4;
+
+    for (let r = 0; r <= scanRadius; r += 5) {
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+        const x = centerX + r * Math.cos(angle);
+        const y = centerY + r * Math.sin(angle);
+
+        const checkX = x + (offset?.x || 0);
+        const checkY = y + (offset?.y || 0);
+
+        if (this.isWalkable(checkX, checkY)) {
+          return { x, y };
+        }
+      }
+    }
+    // default: center
+    console.warn("No walkable position found, using center position");
+    return {
+      x: this.bounds.x + (offset?.x || 0),
+      y: this.bounds.y + (offset?.y || 0),
+    };
   }
 
   setBounds(bounds: Phaser.Geom.Rectangle): void {

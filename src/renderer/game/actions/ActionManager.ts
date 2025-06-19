@@ -13,14 +13,14 @@ export class ActionManager {
     this.proximityActions.push(action);
   }
 
-  removeAction(action: ProximityAction): void {
-    const index = this.proximityActions.findIndex((a) => a.key === action.key);
+  removeAction(actionKey: string): void {
+    const index = this.proximityActions.findIndex((a) => a.key === actionKey);
     if (index !== -1) {
       this.proximityActions.splice(index, 1);
     }
 
     // clear label if this was the current action
-    if (this.currentAction?.key === action.key) {
+    if (this.currentAction?.key === actionKey) {
       this.currentAction = null;
     }
   }

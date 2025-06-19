@@ -88,6 +88,17 @@ export const OPPOSITE_DIRECTIONS: Record<HexDirection, HexDirection> = {
   dn: "up",
 };
 
+export const DIRECTION_OFFSETS: Record<HexDirection, [number, number]> = {
+  ee: [1, 0],
+  ww: [-1, 0],
+  ne: [1, -1],
+  nw: [-1, 1],
+  se: [1, -1],
+  sw: [-1, -1],
+  up: [0, 0],
+  dn: [0, 0],
+};
+
 // pointy-top hex vectors
 export const HEX_VECTORS: Record<HexDirection, [number, number]> = {
   ne: [1, -1], // up-right

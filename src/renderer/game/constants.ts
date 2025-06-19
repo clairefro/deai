@@ -31,6 +31,8 @@ export const COLORS = {
 export const ACTIONS = {
   DEFAULT_RANGE: 100,
   DOOR_RANGE: 200,
+  PREFIX_LIBRIAN_CHAT: "chat-",
+  PREFIX_EXIT: "exit-",
 };
 
 export const LIBRARIAN_CONFIG = {
