@@ -22,6 +22,8 @@ import vestibuleRoomMap from "../../../assets/world/rooms/vestibule.png";
 import vestibuleRoomMapMask from "../../../assets/world/rooms/vestibule-walkable-mask.png";
 
 import doorImg from "../../../assets/world/objects/door.png";
+import arrowImg from "../../../assets/world/objects/arrow.png";
+
 import { NavigationManager } from "./NavigationManager";
 
 const DIRECTION_DISPLAY_NAMES: Record<HexDirection, string> = {
@@ -87,7 +89,7 @@ export class RoomManager {
 
     // Load door and stairs sprites
     this.scene.load.image("door", doorImg);
-    this.scene.load.image("arrow", "assets/objects/arrow.png");
+    this.scene.load.image("arrow", arrowImg);
   }
 
   async renderRoom(location?: Location): Promise<void> {
@@ -139,6 +141,8 @@ export class RoomManager {
       this.spawnRandomLibrarian();
     }
     this.scene.events.emit(EVENTS.ROOM_READY, location);
+
+    console.log("TRAVERSAL RECORD: ", this.navigationManager.traversalHistory);
   }
 
   private createExits(location: Location): void {
@@ -156,9 +160,6 @@ export class RoomManager {
       const position = exitPositions[direction];
       if (!position) return;
 
-      const nextLocationType =
-        location.type === "gallery" ? "vestibule" : "gallery";
-
       const exit = new ActionableObject(
         this.scene,
         position.x,
@@ -174,14 +175,15 @@ export class RoomManager {
             this.exits.forEach((exit) => exit.disable?.());
             this.scene.cameras.main.fadeOut(500);
 
-            const nextLocation = this.navigationManager.getNextLocation(
-              location,
-              direction
-            );
+            const nextLocation = this.navigationManager.traverse(direction);
 
-            this.currentLocation = nextLocation;
             await this.renderRoom(nextLocation);
-            this.scene.events.emit(EVENTS.EXIT_SELECTED, direction, location);
+            this.scene.events.emit(
+              EVENTS.EXIT_SELECTED,
+              direction,
+              this.navigationManager.prevLocation,
+              this.navigationManager.currentLocation
+            );
           },
         }
       );
@@ -205,6 +207,7 @@ export class RoomManager {
         direction as "up" | "dn",
         positions[direction as keyof typeof positions]
       );
+
       this.stairs.push(stair);
     });
   }
@@ -215,11 +218,11 @@ export class RoomManager {
   ): ActionableObject {
     const displayText = DIRECTION_DISPLAY_NAMES[direction];
 
-    return new ActionableObject(
+    const stair = new ActionableObject(
       this.scene,
       position.x,
       position.y,
-      "stairs",
+      "arrow",
       this.actionManager,
       {
         key: `${ACTIONS.PREFIX_STAIRS}${direction}`,
@@ -230,21 +233,23 @@ export class RoomManager {
           this.stairs.forEach((stair) => stair.disable?.());
           this.scene.cameras.main.fadeOut(500);
 
-          const nextLocation = this.navigationManager.getNextLocation(
-            this.currentLocation,
-            direction
-          );
+          const nextLocation = this.navigationManager.traverse(direction);
 
-          this.currentLocation = nextLocation;
           await this.renderRoom(nextLocation);
           this.scene.events.emit(
             EVENTS.STAIRS_SELECTED,
             direction,
-            this.currentLocation
+            this.navigationManager.prevLocation,
+            this.navigationManager.currentLocation
           );
         },
       }
     );
+
+    if (direction === "dn") {
+      stair.sprite.setFlipY(true);
+    }
+    return stair;
   }
 
   private calculateStairsPositions() {

@@ -1,27 +1,6 @@
 import { AppConfig } from "../shared/Config";
 import { DotNotation } from "../shared/util/DotNotation";
 
-/** NAVIGATION */
-
-export interface Coordinates {
-  x: number;
-  y: number;
-  z: number;
-}
-
-export interface Location extends Coordinates {
-  type: RoomType;
-  exits?: HexDirection[];
-  cameFrom?: HexDirection;
-}
-
-export interface TraversalRecord {
-  from: Coordinates;
-  to: Coordinates;
-  direction: HexDirection;
-  timestamp: number;
-}
-
 /** ACTIONS */
 export interface ProximityAction {
   target: Phaser.GameObjects.Container | Phaser.GameObjects.Sprite;
@@ -63,6 +42,20 @@ export type HexDirection =
   | "sw" // southwest
   | "up"
   | "dn";
+
+export interface Location {
+  type: RoomType;
+  x: number;
+  y: number;
+  z: number;
+  cameFrom?: HexDirection;
+}
+
+export interface TraversalRecord {
+  from: Location;
+  to: Location;
+  direction: HexDirection;
+}
 
 /** CHAT */
 export interface MessageOptions {

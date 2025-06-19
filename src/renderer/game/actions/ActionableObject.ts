@@ -4,7 +4,7 @@ import { ProximityAction } from "../../types";
 import { ACTIONS } from "../constants";
 
 export class ActionableObject {
-  private sprite: Phaser.GameObjects.Sprite;
+  sprite: Phaser.GameObjects.Sprite;
   private action: ProximityAction;
   private isEnabled: boolean = true;
 

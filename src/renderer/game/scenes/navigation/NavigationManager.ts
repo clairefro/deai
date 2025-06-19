@@ -1,6 +1,5 @@
 import {
   HexDirection,
-  Coordinates,
   TraversalRecord,
   Location,
   RoomType,
@@ -13,58 +12,52 @@ import {
 } from "../../constants";
 
 export class NavigationManager {
-  private currentCoordinates: Coordinates;
-  private prevCoordinates: Coordinates | null;
-  private currentLocation: Location;
-  private prevLocation: Location | null;
-  private traversalHistory: TraversalRecord[] = [];
+  currentLocation: Location;
+  prevLocation: Location | null;
+  traversalHistory: TraversalRecord[] = [];
 
   constructor() {
-    // TODO: LOAD CURRENT/PREV POSITION FROM TRAVERSAL HISTORY
-    this.currentCoordinates = { x: 0, y: 0, z: 0 };
-    this.currentLocation = { type: "gallery", ...this.currentCoordinates };
+    // TODO: Load from saved history
+    // Initialize with starting location
+    this.currentLocation = {
+      type: "gallery",
+      x: 0,
+      y: 0,
+      z: 0,
+      cameFrom: "ww",
+    };
     this.prevLocation = null;
-    this.prevCoordinates = null;
   }
 
-  /** TODO: STORE TRAVERSAL HISTORY IN FILE */
-  // traverse(direction: HexDirection): {
-  //   position: Coordinates;
-  //   location: Location;
-  // } {
-  //   const nextCoordinates = this.calculateNextCoordinates(
-  //     this.currentCoordinates,
-  //     direction
-  //   );
+  traverse(direction: HexDirection): Location {
+    this.prevLocation = { ...this.currentLocation };
 
-  //   // Record movement
-  //   this.traversalHistory.push({
-  //     from: { ...this.currentCoordinates },
-  //     to: { ...nextCoordinates },
-  //     direction,
-  //     timestamp: Date.now(),
-  //   });
+    this.currentLocation = this.getNextLocation(
+      this.currentLocation,
+      direction
+    );
 
-  //   // Update positions
-  //   this.prevCoordinates = { ...this.currentCoordinates };
-  //   this.currentCoordinates = nextCoordinates;
+    this.traversalHistory.push({
+      from: { ...this.prevLocation },
+      to: { ...this.currentLocation },
+      direction,
+    });
 
-  //   // Update locations
-  //   this.prevLocation = { ...this.currentLocation };
-  //   this.currentLocation = {
-  //     ...nextCoordinates,
-  //     type: this.determineNextLocationType(this.currentLocation.type),
-  //   };
+    return { ...this.currentLocation };
+  }
 
-  //   this.emit(EVENTS.LOCATION_CHANGED, {
-  //     position: nextCoordinates,
-  //     location: this.currentLocation,
-  //   });
-  //   return {
-  //     position: { ...nextCoordinates },
-  //     location: { ...this.currentLocation },
-  //   };
-  // }
+  getNextLocation(current: Location, direction: HexDirection): Location {
+    const nextCoords = this.calculateNextCoordinates(current, direction);
+    let nextType = this.determineNextLocationType(current.type, direction);
+
+    return {
+      type: nextType,
+      x: nextCoords.x,
+      y: nextCoords.y,
+      z: nextCoords.z,
+      cameFrom: OPPOSITE_DIRECTIONS[direction],
+    };
+  }
 
   calculateNextCoordinates(
     current: Location,
@@ -104,19 +97,6 @@ export class NavigationManager {
     return { x: current.x, y: current.y, z: current.z };
   }
 
-  getNextLocation(current: Location, direction: HexDirection): Location {
-    const nextCoords = this.calculateNextCoordinates(current, direction);
-    let nextType = this.determineNextLocationType(current.type, direction);
-
-    return {
-      type: nextType,
-      x: nextCoords.x,
-      y: nextCoords.y,
-      z: nextCoords.z,
-      cameFrom: direction,
-    };
-  }
-
   private determineNextLocationType(
     currentType: RoomType,
     direction: HexDirection
@@ -134,14 +114,6 @@ export class NavigationManager {
       // Moving from gallery - always go to vestibule
       return "vestibule";
     }
-  }
-
-  getCurrentCoordinates(): Coordinates {
-    return { ...this.currentCoordinates };
-  }
-
-  getPrevCoordinates(): Coordinates | null {
-    return this.prevCoordinates ? { ...this.prevCoordinates } : null;
   }
 
   getCurrentLocation(): Location {

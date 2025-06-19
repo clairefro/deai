@@ -4,6 +4,8 @@ import { ProximityAction } from "../../types";
 export class ActionManager {
   private proximityActions: ProximityAction[] = [];
   private currentAction: ProximityAction | null = null;
+  private readonly HIGHLIGHT_OPACITY: number = 0.8;
+  private readonly DEFAULT_OPACITY: number = 1;
 
   addAction(action: ProximityAction): void {
     if (!action.target) {
@@ -30,6 +32,10 @@ export class ActionManager {
     let nearestDistance = Infinity;
 
     for (const action of this.proximityActions) {
+      if (action.target?.alpha !== undefined) {
+        action.target.alpha = this.DEFAULT_OPACITY;
+      }
+
       const targetX = action.target.x ?? 0;
       const targetY = action.target.y ?? 0;
 
@@ -40,6 +46,10 @@ export class ActionManager {
         nearestAction = action;
         nearestDistance = distance;
       }
+    }
+
+    if (nearestAction?.target?.alpha !== undefined) {
+      nearestAction.target.alpha = this.HIGHLIGHT_OPACITY;
     }
 
     // update notification if nearest action changed
