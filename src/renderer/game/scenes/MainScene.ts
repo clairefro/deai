@@ -113,14 +113,6 @@ class MainScene extends Phaser.Scene {
         location.z
       );
     });
-
-    const initialLocation = this.roomManager.getCurrentLocation();
-    LocationDisplay.getInstance()?.updateLocation(
-      initialLocation.type,
-      initialLocation.x,
-      initialLocation.y,
-      initialLocation.z
-    );
   }
 
   private async initPlayer(): Promise<void> {
@@ -182,6 +174,14 @@ class MainScene extends Phaser.Scene {
     NotificationBar.initialize(gameContainer);
     TeetorTotter.initialize(gameContainer);
     LocationDisplay.initialize(gameContainer);
+
+    const initialLocation = this.roomManager.getCurrentLocation();
+    LocationDisplay.getInstance()?.updateLocation(
+      initialLocation.type,
+      initialLocation.x,
+      initialLocation.y,
+      initialLocation.z
+    );
   }
 
   update(): void {
