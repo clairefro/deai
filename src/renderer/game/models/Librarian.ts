@@ -74,11 +74,13 @@ export class Librarian {
       this.persona = data.persona;
       this.mumblings = data.mumblings;
       this.obsession = data.obsession ? data.obsession : "";
+      this.state.encountered = data.encountered || false;
     } else {
       this.id = uuidv4();
       this.scene = scene;
       this.name = name;
       this.persona = persona || name;
+      this.state.encountered = false;
     }
     // TODO: make dynamic
     this.imageKey = LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY;
@@ -109,6 +111,8 @@ export class Librarian {
 
     this.createContainer(x, y);
     this.setupInteraction();
+
+    this.revealNameText();
 
     this.startMumbling();
   }
@@ -178,6 +182,7 @@ export class Librarian {
   getActionTarget(): Phaser.GameObjects.Container {
     return this.visuals.container as Phaser.GameObjects.Container;
   }
+
   getDisplayName(): string {
     return this.state.encountered ? this.name : "?";
   }

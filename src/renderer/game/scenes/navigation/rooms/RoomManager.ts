@@ -121,7 +121,12 @@ export class RoomManager {
 
     this.currentRoomType = location.type;
 
-    this.spawnRandomLibrarian();
+    if (
+      this.currentRoomType === "gallery" ||
+      this.currentRoomType === "hallway"
+    ) {
+      this.spawnRandomLibrarian();
+    }
     this.scene.events.emit(EVENTS.ROOM_READY, location);
   }
 

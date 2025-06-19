@@ -78,23 +78,42 @@ export class WalkableMask {
     let attempts = 0;
     const maxAttempts = 100;
 
+    const safetyMargin = 10;
+    const radialChecks = 8;
+
     while (attempts < maxAttempts) {
       x = this.getRandomInRange(
-        Math.floor(this.bounds.x - this.bounds.width / 2),
-        Math.floor(this.bounds.x + this.bounds.width / 2)
+        Math.floor(this.bounds.x - this.bounds.width / 2 + safetyMargin),
+        Math.floor(this.bounds.x + this.bounds.width / 2 - safetyMargin)
       );
       y = this.getRandomInRange(
-        Math.floor(this.bounds.y - this.bounds.height / 2),
-        Math.floor(this.bounds.y + this.bounds.height / 2)
+        Math.floor(this.bounds.y - this.bounds.height / 2 + safetyMargin),
+        Math.floor(this.bounds.y + this.bounds.height / 2 - safetyMargin)
       );
 
       const checkX = x + (offset?.x || 0);
       const checkY = y + (offset?.y || 0);
 
-      attempts++;
-      if (this.isWalkable(checkX, checkY)) {
+      // TRIPLE CHECK IT'S WALKABLE DAMMIT
+      const isFullyWalkable = Array.from({ length: radialChecks }).every(
+        (_, i) => {
+          const angle = (i / radialChecks) * Math.PI * 2;
+          const dx = Math.cos(angle) * safetyMargin;
+          const dy = Math.sin(angle) * safetyMargin;
+
+          return (
+            this.isWalkable(checkX + dx, checkY + dy) && // check perimeter
+            this.isWalkable(checkX + dx / 2, checkY + dy / 2) && // check halfway
+            this.isWalkable(checkX, checkY) // check center
+          );
+        }
+      );
+
+      if (isFullyWalkable) {
         return { x, y };
       }
+
+      attempts++;
     }
 
     // ff random attempts fail, scan outward from center

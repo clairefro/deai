@@ -5,9 +5,7 @@ import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
 import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
-import { Librarian } from "../models/Librarian";
 import ghostImage from "../../assets/ghost.png";
-import { pluck } from "../../../shared/util/pluck";
 import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
@@ -53,7 +51,6 @@ class MainScene extends Phaser.Scene {
           y: this.player.getYOffset(),
         });
         this.player.setPosition(pos.x, pos.y);
-        this.roomManager.spawnRandomLibrarian();
       }
     });
   }
