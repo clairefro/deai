@@ -46,7 +46,7 @@ export class RoomManager {
   private stairs: ActionableObject[] = [];
   private actionManager: ActionManager;
   private librarians: Librarian[] = [];
-  private navigationManager: NavigationManager;
+  navigationManager: NavigationManager;
 
   private readonly roomAssets: Record<RoomType, RoomAssets> = {
     gallery: {
@@ -368,6 +368,9 @@ export class RoomManager {
     }
   }
 
+  getCurrentLocation() {
+    return this.navigationManager.currentLocation;
+  }
   private async destroyCurrentRoom(): Promise<void> {
     // destroy all exits
     this.exits.forEach((exit) => {

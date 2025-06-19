@@ -11,6 +11,7 @@ import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
 import { RoomManager } from "./navigation/RoomManager";
 import { EVENTS } from "../constants";
+import { LocationDisplay } from "../components/LocationDisplay";
 
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
@@ -92,6 +93,34 @@ class MainScene extends Phaser.Scene {
       });
       this.player.setPosition(pos.x, pos.y);
     });
+
+    this.events.on(EVENTS.EXIT_SELECTED, () => {
+      const location = this.roomManager.getCurrentLocation();
+      LocationDisplay.getInstance()?.updateLocation(
+        location.type,
+        location.x,
+        location.y,
+        location.z
+      );
+    });
+
+    this.events.on(EVENTS.STAIRS_SELECTED, () => {
+      const location = this.roomManager.getCurrentLocation();
+      LocationDisplay.getInstance()?.updateLocation(
+        location.type,
+        location.x,
+        location.y,
+        location.z
+      );
+    });
+
+    const initialLocation = this.roomManager.getCurrentLocation();
+    LocationDisplay.getInstance()?.updateLocation(
+      initialLocation.type,
+      initialLocation.x,
+      initialLocation.y,
+      initialLocation.z
+    );
   }
 
   private async initPlayer(): Promise<void> {
@@ -152,6 +181,7 @@ class MainScene extends Phaser.Scene {
 
     NotificationBar.initialize(gameContainer);
     TeetorTotter.initialize(gameContainer);
+    LocationDisplay.initialize(gameContainer);
   }
 
   update(): void {
