@@ -10,7 +10,6 @@ import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
 import { RoomManager } from "./navigation/rooms/RoomManager";
-import { Location } from "../../types";
 import { EVENTS } from "../constants";
 
 class MainScene extends Phaser.Scene {
@@ -37,116 +36,93 @@ class MainScene extends Phaser.Scene {
     super({ key: "MainScene" });
   }
 
-  setupEventListeners() {
-    this.events.on(EVENTS.WALKABLE_MASK_CHANGED, (newMask: WalkableMask) => {
-      this.walkableMask = newMask;
-      if (this.player) {
-        this.player.setWalkableMask(newMask);
-      }
-    });
-
-    this.events.on(EVENTS.ROOM_READY, () => {
-      if (this.player) {
-        console.log("PLAYER Y OFFFSET: ", this.player.getYOffset());
-        const pos = this.walkableMask.getRandomWalkablePosition({
-          y: this.player.getYOffset(),
-        });
-        this.player.setPosition(pos.x, pos.y);
-      }
-    });
-  }
-
-  initManagers() {
-    this.actionManager = new ActionManager();
-    this.roomManager = new RoomManager(this, this.actionManager);
-  }
-
   preload() {
     console.log("LIFECYCLE: MainScene preload started");
 
+    // load assets
     this.load.image("player", playerImage);
     this.load.image("ghost", ghostImage);
 
-    this.initManagers();
+    // setup managers
+    this.actionManager = new ActionManager();
+    this.roomManager = new RoomManager(this, this.actionManager);
     this.roomManager.preloadRoomAssets();
   }
 
   async create() {
     // Load configuration
     this.config = await window.electronAPI.getConfig();
-
-    this.initializeComponents();
-
-    // Add welcome text
-    this.add
-      .text(100, 50, "Welcome to the Library of Babel...", {
-        font: "24px monospace",
-        // @ts-ignore
-        fill: "#ffffff",
-      })
-      .setDepth(9999);
-
-    // IMPORTANT: SETUP AND PLAYER  LISTENERS BEFORE RENDERING ROOM
-    this.setupEventListeners();
-
-    this.player = new Player(
-      this,
-      -100, // temporary offscreen pos
-      -100, // temporary offscreen pos
-      "player",
-      this.roomManager.walkableMask!
-    );
-
-    await this.roomManager.renderRoom();
-
-    // create cursor keys for movement
-    if (this.input.keyboard) {
-      this.cursors = this.input.keyboard.createCursorKeys();
-      this.enterKey = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.ENTER
-      );
-      this.enterKey.on(
-        "down",
-        (event: any) => {
-          event.originalEvent.preventDefault(); // prevent propogation so that newlines aren't added in textarea of dialogs from action, etc
-          this.handleActionKey();
-        },
-        this
-      );
-    } else {
-      throw new Error(
-        "Error when attempting to intiialize keyboard keys. Do you have a keyboard?"
-      );
-    }
-
-    // const guest = new Librarian({
-    //   name: "Friedrich Wilhelm Nietzsche",
-    //   scene: this,
-    // });
-    // this.librarians.push(guest);
-
-    // console.log({ librarians: this.librarians });
-
-    const gameContainer = document.getElementById("game");
-    if (gameContainer) {
-      NotificationBar.initialize(gameContainer);
-      TeetorTotter.initialize(gameContainer);
-    }
-
-    // place librarians
-    // this.spawnLibrarians();
+    await this.initializeScene();
   }
-  // end create()
 
-  private initializeComponents() {
-    // Initialize components
+  private async initializeScene() {
+    this.initComponents();
+
+    this.setupEventListeners(); // IMPORTANT: do this before init play and room
+
+    await this.initPlayer();
+    await this.initRoom();
+    this.setupControls();
+    this.initUI();
+  }
+
+  /** UI components peripheral to game  */
+  private initComponents() {
     this.notebook = new Notebook(this);
     this.settingsMenu = new SettingsMenu(this, this.config, (newDir) => {
       console.log("Notes directory changed to:", newDir);
-
       // reload notebook files
       this.notebook.loadFiles();
     });
+  }
+
+  private setupEventListeners(): void {
+    console.log("LIFECYCLE: Setup event listeners");
+
+    this.events.on(EVENTS.WALKABLE_MASK_CHANGED, (newMask: WalkableMask) => {
+      this.walkableMask = newMask;
+      this.player?.setWalkableMask(newMask);
+    });
+
+    this.events.on(EVENTS.ROOM_READY, () => {
+      if (!this.player || !this.walkableMask) return;
+
+      const pos = this.walkableMask.getRandomWalkablePosition({
+        y: this.player.getYOffset(),
+      });
+      this.player.setPosition(pos.x, pos.y);
+    });
+  }
+
+  private async initPlayer(): Promise<void> {
+    console.log("LIFECYCLE: Init player");
+    // initialize offscreen
+    this.player = new Player(
+      this,
+      -100,
+      -100,
+      "player",
+      this.roomManager.walkableMask!
+    );
+  }
+
+  private async initRoom(): Promise<void> {
+    console.log("LIFECYCLE: Init room ");
+
+    await this.roomManager.renderRoom();
+  }
+
+  private setupControls(): void {
+    console.log("LIFECYCLE: Setup controls ");
+    if (!this.input.keyboard) {
+      throw new Error("Keyboard not available");
+    }
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.enterKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.ENTER
+    );
+    this.enterKey.on("down", this.handleEnterKey, this);
   }
 
   private checkProximityActions(): void {
@@ -159,7 +135,9 @@ class MainScene extends Phaser.Scene {
     this.actionManager.checkProximity(playerPos);
   }
 
-  private handleActionKey(): void {
+  /** this event is a Phaser keydown event... can't find the event type though */
+  private handleEnterKey(event: any): void {
+    event.originalEvent.preventDefault();
     const currentAction = this.actionManager.getCurrentAction();
     if (currentAction) {
       currentAction.action();
@@ -168,8 +146,16 @@ class MainScene extends Phaser.Scene {
     }
   }
 
-  update() {
-    if (!this.cursors) return;
+  private initUI(): void {
+    const gameContainer = document.getElementById("game");
+    if (!gameContainer) return;
+
+    NotificationBar.initialize(gameContainer);
+    TeetorTotter.initialize(gameContainer);
+  }
+
+  update(): void {
+    if (!this.cursors || !this.player) return;
 
     if (this.player.update(this.cursors)) {
       this.checkProximityActions();
@@ -177,7 +163,6 @@ class MainScene extends Phaser.Scene {
   }
 
   shutdown() {
-    // Clean up
     this.enterKey?.destroy();
   }
 }
