@@ -41,11 +41,11 @@ const DIRECTION_DISPLAY_NAMES: Record<HexDirection, string> = {
 
 export class RoomManager {
   private scene: Phaser.Scene;
-  private currentRoomType: RoomType | undefined;
   private currentBackground?: Phaser.GameObjects.Image;
-  private currentLocation: Location | undefined;
+  private currentLocation: Location;
   walkableMask?: WalkableMask;
   private exits: ActionableObject[] = [];
+  private stairs: ActionableObject[] = [];
   private actionManager: ActionManager;
   private librarians: Librarian[] = [];
 
@@ -68,6 +68,16 @@ export class RoomManager {
   constructor(scene: Phaser.Scene, actionManager: ActionManager) {
     this.scene = scene;
     this.actionManager = actionManager;
+
+    // TODO: RETRIEVE LAST LOCATION ON INIT?
+    const startLocation: Location = {
+      type: "gallery",
+      x: 0,
+      y: 0,
+      z: 0,
+      cameFrom: "sw",
+    };
+    this.currentLocation = startLocation;
   }
 
   preloadRoomAssets(): void {
@@ -81,16 +91,20 @@ export class RoomManager {
     // this.scene.load.image("stairs", "assets/objects/stairs.png");
   }
 
-  async renderRoom(location: Location): Promise<void> {
-    console.log("LOCATION: ", location);
-    // clear existing room, if any
+  async renderRoom(location?: Location): Promise<void> {
     await this.destroyCurrentRoom();
+
+    if (location) this.currentLocation = location;
+    console.log("LOCATION: ", this.currentLocation);
+    // clear existing room, if any
 
     this.scene.cameras.main.fadeIn(500);
 
-    const assets = this.roomAssets[location.type];
+    const assets = this.roomAssets[this.currentLocation.type];
     if (!assets) {
-      throw new Error(`No assets found for room type: ${location.type}`);
+      throw new Error(
+        `No assets found for room type: ${this.currentLocation.type}`
+      );
     }
 
     // Create room background
@@ -112,18 +126,16 @@ export class RoomManager {
 
     this.scene.events.emit(EVENTS.WALKABLE_MASK_CHANGED, this.walkableMask);
 
-    this.createExits(location);
+    this.createExits(this.currentLocation);
 
     // Add stairs if it's a vestibule
-    if (location.type === "vestibule") {
+    if (this.currentLocation.type === "vestibule") {
       this.createStairs();
     }
 
-    this.currentRoomType = location.type;
-
     if (
-      this.currentRoomType === "gallery" ||
-      this.currentRoomType === "vestibule"
+      this.currentLocation.type === "gallery" ||
+      this.currentLocation.type === "vestibule"
     ) {
       this.spawnRandomLibrarian();
     }
@@ -190,21 +202,72 @@ export class RoomManager {
   }
 
   private createStairs(): void {
-    const stairs = new ActionableObject(
+    const positions = this.calculateStairsPositions();
+    // clear existing stairs
+    this.stairs.forEach((stair) => stair.destroy());
+    this.stairs = [];
+
+    // Create up and down stairs
+    ["up", "dn"].forEach((direction) => {
+      const stair = this.createStairAction(
+        direction as "up" | "dn",
+        positions[direction as keyof typeof positions]
+      );
+      this.stairs.push(stair);
+    });
+  }
+
+  private createStairAction(
+    direction: "up" | "dn",
+    position: { x: number; y: number }
+  ): ActionableObject {
+    console.log("STAIR ACTION CUR LOC", this.currentLocation);
+    const displayText = direction === "up" ? "upstairs" : "downstairs";
+
+    return new ActionableObject(
       this.scene,
-      this.scene.cameras.main.width / 2,
-      this.scene.cameras.main.height / 2,
+      position.x,
+      position.y,
       "stairs",
       this.actionManager,
       {
-        key: "stairs",
-        label: "<Enter> to use stairs",
-        action: () => {
-          this.scene.events.emit(EVENTS.STAIRS_SELECTED);
+        key: `${ACTIONS.PREFIX_STAIRS}${direction}`,
+        label: `<Enter> to go ${displayText}`,
+        range: ACTIONS.STAIRS_RANGE,
+        action: async () => {
+          // Disable both stairs
+          this.stairs.forEach((stair) => stair.disable?.());
+          this.scene.cameras.main.fadeOut(500);
+
+          const nextLocation: Location = {
+            type: "vestibule",
+            x: this.currentLocation!.x,
+            y: this.currentLocation!.y,
+            z: this.currentLocation!.z + (direction === "up" ? 1 : -1),
+            cameFrom: direction,
+          };
+
+          this.currentLocation = nextLocation;
+          await this.renderRoom(nextLocation);
+          this.scene.events.emit(
+            EVENTS.STAIRS_SELECTED,
+            direction,
+            this.currentLocation
+          );
         },
       }
     );
-    this.exits.push(stairs);
+  }
+
+  private calculateStairsPositions() {
+    const centerX = this.scene.cameras.main.width / 2;
+    const centerY = this.scene.cameras.main.height / 2;
+    const separation = 40;
+
+    return {
+      up: { x: centerX, y: centerY - separation / 2 },
+      down: { x: centerX, y: centerY + separation / 2 },
+    };
   }
 
   private calculateVestibuleExitPositions(): ExitPositions {
@@ -357,13 +420,20 @@ export class RoomManager {
   }
 
   private async destroyCurrentRoom(): Promise<void> {
-    // disable and destroy all exits first
+    // destroy all exits
     this.exits.forEach((exit) => {
       exit.disable?.();
       this.actionManager.removeAction(exit.getAction().key);
       exit.destroy();
     });
     this.exits = [];
+
+    // destroy all stairs
+    this.stairs.forEach((stair) => {
+      stair.disable?.();
+      this.actionManager.removeAction(stair.getAction().key);
+      stair.destroy();
+    });
 
     // destroy librarians
     this.librarians.forEach((librarian) => {
@@ -386,6 +456,5 @@ export class RoomManager {
       this.currentBackground.destroy(true);
       this.currentBackground = undefined;
     }
-    this.currentRoomType = undefined;
   }
 }

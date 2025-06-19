@@ -74,47 +74,40 @@ export class WalkableMask {
     x: number;
     y: number;
   } {
+    console.log({ offset });
     let x, y;
     let attempts = 0;
-    const maxAttempts = 100;
+    const maxAttempts = 200;
 
     const safetyMargin = 10;
-    const radialChecks = 8;
+
+    const isValidPosition = (x: number, y: number): boolean => {
+      const feetX = x + (offset?.x || 0);
+      const feetY = y + (offset?.y || 0);
+
+      // check feet position and small radius around feet
+      return this.isWalkableWithMargin(feetX, feetY, safetyMargin);
+    };
 
     while (attempts < maxAttempts) {
       x = this.getRandomInRange(
-        Math.floor(this.bounds.x - this.bounds.width / 2 + safetyMargin),
-        Math.floor(this.bounds.x + this.bounds.width / 2 - safetyMargin)
+        Math.floor(this.bounds.x - this.bounds.width / 2),
+        Math.floor(this.bounds.x + this.bounds.width / 2)
       );
       y = this.getRandomInRange(
-        Math.floor(this.bounds.y - this.bounds.height / 2 + safetyMargin),
-        Math.floor(this.bounds.y + this.bounds.height / 2 - safetyMargin)
+        Math.floor(this.bounds.y - this.bounds.height / 2),
+        Math.floor(this.bounds.y + this.bounds.height / 2)
       );
 
-      const checkX = x + (offset?.x || 0);
-      const checkY = y + (offset?.y || 0);
-
-      // TRIPLE CHECK IT'S WALKABLE DAMMIT
-      const isFullyWalkable = Array.from({ length: radialChecks }).every(
-        (_, i) => {
-          const angle = (i / radialChecks) * Math.PI * 2;
-          const dx = Math.cos(angle) * safetyMargin;
-          const dy = Math.sin(angle) * safetyMargin;
-
-          return (
-            this.isWalkable(checkX + dx, checkY + dy) && // check perimeter
-            this.isWalkable(checkX + dx / 2, checkY + dy / 2) && // check halfway
-            this.isWalkable(checkX, checkY) // check center
-          );
-        }
-      );
-
-      if (isFullyWalkable) {
+      if (isValidPosition(x, y)) {
         return { x, y };
       }
-
       attempts++;
     }
+
+    console.warn(
+      "Failed to find valid random foot position, starting scanning"
+    );
 
     // ff random attempts fail, scan outward from center
     const centerX = this.bounds.x;
@@ -126,20 +119,37 @@ export class WalkableMask {
         const x = centerX + r * Math.cos(angle);
         const y = centerY + r * Math.sin(angle);
 
-        const checkX = x + (offset?.x || 0);
-        const checkY = y + (offset?.y || 0);
-
-        if (this.isWalkable(checkX, checkY)) {
+        if (isValidPosition(x, y)) {
           return { x, y };
         }
       }
     }
-    // default: center
+
+    // default: center to appease type script - in reality we will never hit this...
     console.warn("No walkable position found, using center position");
     return {
       x: this.bounds.x + (offset?.x || 0),
       y: this.bounds.y + (offset?.y || 0),
     };
+  }
+
+  private isWalkableWithMargin(x: number, y: number, margin: number): boolean {
+    // Check center first
+    if (!this.isWalkable(x, y)) return false;
+
+    // Check cardinal points
+    const points = [
+      [margin, 0], // right
+      [-margin, 0], // left
+      [0, margin], // down
+      [0, -margin], // up
+      [margin, margin], // bottom right
+      [-margin, margin], // bottom left
+      [margin, -margin], // top right
+      [-margin, -margin], // top left
+    ];
+
+    return points.every(([dx, dy]) => this.isWalkable(x + dx, y + dy));
   }
 
   setBounds(bounds: Phaser.Geom.Rectangle): void {

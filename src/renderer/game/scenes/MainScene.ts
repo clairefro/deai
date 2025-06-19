@@ -47,6 +47,7 @@ class MainScene extends Phaser.Scene {
 
     this.events.on(EVENTS.ROOM_READY, () => {
       if (this.player) {
+        console.log("PLAYER Y OFFFSET: ", this.player.getYOffset());
         const pos = this.walkableMask.getRandomWalkablePosition({
           y: this.player.getYOffset(),
         });
@@ -85,28 +86,18 @@ class MainScene extends Phaser.Scene {
       })
       .setDepth(9999);
 
-    const startLocation: Location = {
-      type: "gallery",
-      x: 0,
-      y: 0,
-      z: 0,
-      cameFrom: "sw",
-    };
-
-    await this.roomManager.renderRoom(startLocation);
-
-    const playerYOffset =
-      this.textures.get("player").getSourceImage().height / 2;
-
-    const startPos = this.roomManager.walkableMask!.getRandomWalkablePosition();
+    // IMPORTANT: SETUP AND PLAYER  LISTENERS BEFORE RENDERING ROOM
+    this.setupEventListeners();
 
     this.player = new Player(
       this,
-      startPos.x,
-      startPos.y,
+      -100, // temporary offscreen pos
+      -100, // temporary offscreen pos
       "player",
       this.roomManager.walkableMask!
     );
+
+    await this.roomManager.renderRoom();
 
     // create cursor keys for movement
     if (this.input.keyboard) {
@@ -128,15 +119,6 @@ class MainScene extends Phaser.Scene {
       );
     }
 
-    // TODO: MOVE TO ROOM MANAGER
-    // const librarianIds = await window.electronAPI.getLibrarianIds();
-    // const randomLibrarian = pluck(librarianIds); // select one at random for now
-    // this.librarians = (
-    //   await Promise.all(
-    //     [randomLibrarian].map((id) => Librarian.loadLibrarianById(this, id))
-    //   )
-    // ).filter((l) => !!l) as Librarian[];
-
     // const guest = new Librarian({
     //   name: "Friedrich Wilhelm Nietzsche",
     //   scene: this,
@@ -153,9 +135,8 @@ class MainScene extends Phaser.Scene {
 
     // place librarians
     // this.spawnLibrarians();
-
-    this.setupEventListeners();
-  } // end create()
+  }
+  // end create()
 
   private initializeComponents() {
     // Initialize components
