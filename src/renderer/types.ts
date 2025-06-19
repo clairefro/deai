@@ -33,7 +33,7 @@ export interface ProximityAction {
 
 /** ROOM  */
 
-export type RoomType = "gallery" | "hallway";
+export type RoomType = "gallery" | "vestibule";
 
 export interface RoomAssets {
   backgroundImg: string;

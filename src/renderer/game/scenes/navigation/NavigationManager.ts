@@ -88,7 +88,7 @@ export class NavigationManager extends EventEmitter {
   }
 
   private determineNextLocationType(currentType: RoomType): RoomType {
-    return currentType === "gallery" ? "hallway" : "gallery";
+    return currentType === "gallery" ? "vestibule" : "gallery";
   }
 
   getCurrentCoordinates(): Coordinates {

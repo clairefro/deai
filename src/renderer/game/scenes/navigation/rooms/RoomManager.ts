@@ -23,8 +23,8 @@ import { pluck } from "../../../../../shared/util/pluck";
 import galleryRoomMap from "../../../../assets/world/rooms/gallery.png";
 import galleryRoomMapMask from "../../../../assets/world/rooms/gallery-room-walkable-mask.png";
 
-import hallwayRoomMap from "../../../../assets/world/rooms/vestibule.png";
-import hallwayRoomMapMask from "../../../../assets/world/rooms/vestibule-walkable-mask.png";
+import vestibuleRoomMap from "../../../../assets/world/rooms/vestibule.png";
+import vestibuleRoomMapMask from "../../../../assets/world/rooms/vestibule-walkable-mask.png";
 
 import doorImg from "../../../../assets/world/objects/door.png";
 
@@ -56,10 +56,10 @@ export class RoomManager {
       walkableMaskImg: galleryRoomMapMask,
       walkableMaskKey: "gallery-room-mask",
     },
-    hallway: {
-      backgroundImg: hallwayRoomMap,
+    vestibule: {
+      backgroundImg: vestibuleRoomMap,
       backgroundKey: "vestibule-room",
-      walkableMaskImg: hallwayRoomMapMask,
+      walkableMaskImg: vestibuleRoomMapMask,
       walkableMaskKey: "vestibule-room-mask",
     },
     // bathroom: { background: "TODO", WalkableMask: "TODO" },
@@ -114,8 +114,8 @@ export class RoomManager {
 
     this.createExits(location);
 
-    // Add stairs if it's a hallway
-    if (location.type === "hallway") {
+    // Add stairs if it's a vestibule
+    if (location.type === "vestibule") {
       this.createStairs();
     }
 
@@ -123,7 +123,7 @@ export class RoomManager {
 
     if (
       this.currentRoomType === "gallery" ||
-      this.currentRoomType === "hallway"
+      this.currentRoomType === "vestibule"
     ) {
       this.spawnRandomLibrarian();
     }
@@ -134,7 +134,7 @@ export class RoomManager {
     const exitPositions =
       location.type === "gallery"
         ? this.calculateGalleryExitPositions()
-        : this.calculateHallwayExitPositions();
+        : this.calculateVestibuleExitPositions();
 
     const exits =
       location.type === "gallery"
@@ -146,7 +146,7 @@ export class RoomManager {
       if (!position) return;
 
       const nextLocationType =
-        location.type === "gallery" ? "hallway" : "gallery";
+        location.type === "gallery" ? "vestibule" : "gallery";
 
       const exit = new ActionableObject(
         this.scene,
@@ -207,7 +207,7 @@ export class RoomManager {
     this.exits.push(stairs);
   }
 
-  private calculateHallwayExitPositions(): ExitPositions {
+  private calculateVestibuleExitPositions(): ExitPositions {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
 
@@ -288,9 +288,9 @@ export class RoomManager {
       };
     }
 
-    // if in hallway, calculate movement based on entry direction
-    if (current.type === "hallway") {
-      // if moving through hallway (ee/ww), maintain same coordinates
+    // if in vestibule, calculate movement based on entry direction
+    if (current.type === "vestibule") {
+      // if moving through vestibule (ee/ww), maintain same coordinates
       if (direction === "ee" || direction === "ww") {
         return { x: current.x, y: current.y, z: current.z };
       }
@@ -304,7 +304,7 @@ export class RoomManager {
         };
       }
 
-      // if exiting hallway to gallery, calculate opposite movement from entry
+      // if exiting vestibule to gallery, calculate opposite movement from entry
       const exitOffset = OPPOSITE_DIRECTIONS[current.cameFrom || "ww"];
 
       const [dx, dy] = DIRECTION_OFFSETS[exitOffset];
