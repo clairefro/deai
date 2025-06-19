@@ -1,3 +1,5 @@
+import { HexDirection } from "../types";
+
 export const DEPTHS = {
   BACKGROUND: 0,
   PLAYER: 20,
@@ -80,4 +82,42 @@ export const EVENTS = {
   EXIT_SELECTED: "exitSelected",
   STAIRS_SELECTED: "stairsSelected",
   ROOM_READY: "roomReady",
+};
+
+/** NAVIGATION */
+
+export const HEX_DIRECTIONS: HexDirection[] = [
+  "ne",
+  "nw",
+  "ee",
+  "ww",
+  "se",
+  "sw",
+];
+
+export const HEX_DIRECTIONS_PLANAR = HEX_DIRECTIONS.filter(
+  (d) => d !== "up" && d !== "dn"
+);
+
+export const OPPOSITE_DIRECTIONS: Record<HexDirection, HexDirection> = {
+  ne: "sw",
+  nw: "se",
+  ee: "ww",
+  ww: "ee",
+  se: "nw",
+  sw: "ne",
+  up: "dn",
+  dn: "up",
+};
+
+// pointy-top hex grid vectors
+export const DIRECTION_OFFSETS: Record<HexDirection, [number, number]> = {
+  ee: [1, 0],
+  ww: [-1, 0],
+  ne: [1, -1],
+  nw: [-1, 1],
+  se: [1, -1],
+  sw: [-1, -1],
+  up: [0, 0],
+  dn: [0, 0],
 };
