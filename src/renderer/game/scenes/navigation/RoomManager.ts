@@ -1,42 +1,38 @@
 import * as Phaser from "phaser";
-import { WalkableMask } from "../../../components/WalkableMask";
-import { ActionableObject } from "../../../actions/ActionableObject";
-import { ActionManager } from "../../../actions/ActionManager";
+import { WalkableMask } from "../../components/WalkableMask";
+import { ActionableObject } from "../../actions/ActionableObject";
+import { ActionManager } from "../../actions/ActionManager";
 import {
   ExitPositions,
   Location,
   HexDirection,
   RoomAssets,
   RoomType,
-} from "../../../../types";
-import {
-  ACTIONS,
-  EVENTS,
-  HEX_DIRECTIONS_PLANAR,
-  OPPOSITE_DIRECTIONS,
-  DIRECTION_OFFSETS,
-} from "../../../constants";
-import { Librarian } from "../../../models/Librarian";
+} from "../../../types";
 
-import { pluck } from "../../../../../shared/util/pluck";
+import { ACTIONS, EVENTS, HEX_DIRECTIONS_PLANAR } from "../../constants";
+import { Librarian } from "../../models/Librarian";
 
-import galleryRoomMap from "../../../../assets/world/rooms/gallery.png";
-import galleryRoomMapMask from "../../../../assets/world/rooms/gallery-room-walkable-mask.png";
+import { pluck } from "../../../../shared/util/pluck";
 
-import vestibuleRoomMap from "../../../../assets/world/rooms/vestibule.png";
-import vestibuleRoomMapMask from "../../../../assets/world/rooms/vestibule-walkable-mask.png";
+import galleryRoomMap from "../../../assets/world/rooms/gallery.png";
+import galleryRoomMapMask from "../../../assets/world/rooms/gallery-room-walkable-mask.png";
 
-import doorImg from "../../../../assets/world/objects/door.png";
+import vestibuleRoomMap from "../../../assets/world/rooms/vestibule.png";
+import vestibuleRoomMapMask from "../../../assets/world/rooms/vestibule-walkable-mask.png";
+
+import doorImg from "../../../assets/world/objects/door.png";
+import { NavigationManager } from "./NavigationManager";
 
 const DIRECTION_DISPLAY_NAMES: Record<HexDirection, string> = {
-  ww: "W",
-  ee: "E",
-  ne: "NE",
-  nw: "NW",
-  se: "SE",
-  sw: "SW",
-  up: "up",
-  dn: "down",
+  ww: "West",
+  ee: "East",
+  ne: "North-east",
+  nw: "North-west",
+  se: "South-east",
+  sw: "South-west",
+  up: "upstairs",
+  dn: "downstairs",
 };
 
 export class RoomManager {
@@ -48,6 +44,7 @@ export class RoomManager {
   private stairs: ActionableObject[] = [];
   private actionManager: ActionManager;
   private librarians: Librarian[] = [];
+  private navigationManager: NavigationManager;
 
   private readonly roomAssets: Record<RoomType, RoomAssets> = {
     gallery: {
@@ -69,7 +66,7 @@ export class RoomManager {
     this.scene = scene;
     this.actionManager = actionManager;
 
-    // TODO: RETRIEVE LAST LOCATION ON INIT?
+    // TODO: RETRIEVE LAST LOCATION ON INIT? MOVE TO NAV MANAGER?
     const startLocation: Location = {
       type: "gallery",
       x: 0,
@@ -78,6 +75,8 @@ export class RoomManager {
       cameFrom: "sw",
     };
     this.currentLocation = startLocation;
+
+    this.navigationManager = new NavigationManager();
   }
 
   preloadRoomAssets(): void {
@@ -88,7 +87,7 @@ export class RoomManager {
 
     // Load door and stairs sprites
     this.scene.load.image("door", doorImg);
-    // this.scene.load.image("stairs", "assets/objects/stairs.png");
+    this.scene.load.image("arrow", "assets/objects/arrow.png");
   }
 
   async renderRoom(location?: Location): Promise<void> {
@@ -175,18 +174,11 @@ export class RoomManager {
             this.exits.forEach((exit) => exit.disable?.());
             this.scene.cameras.main.fadeOut(500);
 
-            const nextCoords = this.calculateNextCoordinates(
+            const nextLocation = this.navigationManager.getNextLocation(
               location,
               direction
             );
 
-            const nextLocation: Location = {
-              type: nextLocationType,
-              x: nextCoords.x,
-              y: nextCoords.y,
-              z: nextCoords.z,
-              cameFrom: direction,
-            };
             this.currentLocation = nextLocation;
             await this.renderRoom(nextLocation);
             this.scene.events.emit(EVENTS.EXIT_SELECTED, direction, location);
@@ -221,8 +213,7 @@ export class RoomManager {
     direction: "up" | "dn",
     position: { x: number; y: number }
   ): ActionableObject {
-    console.log("STAIR ACTION CUR LOC", this.currentLocation);
-    const displayText = direction === "up" ? "upstairs" : "downstairs";
+    const displayText = DIRECTION_DISPLAY_NAMES[direction];
 
     return new ActionableObject(
       this.scene,
@@ -235,17 +226,14 @@ export class RoomManager {
         label: `<Enter> to go ${displayText}`,
         range: ACTIONS.STAIRS_RANGE,
         action: async () => {
-          // Disable both stairs
+          // disable both stairs
           this.stairs.forEach((stair) => stair.disable?.());
           this.scene.cameras.main.fadeOut(500);
 
-          const nextLocation: Location = {
-            type: "vestibule",
-            x: this.currentLocation!.x,
-            y: this.currentLocation!.y,
-            z: this.currentLocation!.z + (direction === "up" ? 1 : -1),
-            cameFrom: direction,
-          };
+          const nextLocation = this.navigationManager.getNextLocation(
+            this.currentLocation,
+            direction
+          );
 
           this.currentLocation = nextLocation;
           await this.renderRoom(nextLocation);
@@ -266,7 +254,7 @@ export class RoomManager {
 
     return {
       up: { x: centerX, y: centerY - separation / 2 },
-      down: { x: centerX, y: centerY + separation / 2 },
+      dn: { x: centerX, y: centerY + separation / 2 },
     };
   }
 
@@ -335,50 +323,6 @@ export class RoomManager {
         rotation: -Math.PI / 2 - (5 * Math.PI) / 3 + Math.PI,
       },
     };
-  }
-
-  private calculateNextCoordinates(
-    current: Location,
-    direction: HexDirection
-  ): { x: number; y: number; z: number } {
-    // if in gallery, calculate hex grid movement
-    if (current.type === "gallery") {
-      const [dx, dy] = DIRECTION_OFFSETS[direction];
-      return {
-        x: current.x + dx,
-        y: current.y + dy,
-        z: current.z,
-      };
-    }
-
-    // if in vestibule, calculate movement based on entry direction
-    if (current.type === "vestibule") {
-      // if moving through vestibule (ee/ww), maintain same coordinates
-      if (direction === "ee" || direction === "ww") {
-        return { x: current.x, y: current.y, z: current.z };
-      }
-
-      // if using stairs, change z level
-      if (direction === "up" || direction === "dn") {
-        return {
-          x: current.x,
-          y: current.y,
-          z: current.z + (direction === "up" ? 1 : -1),
-        };
-      }
-
-      // if exiting vestibule to gallery, calculate opposite movement from entry
-      const exitOffset = OPPOSITE_DIRECTIONS[current.cameFrom || "ww"];
-
-      const [dx, dy] = DIRECTION_OFFSETS[exitOffset];
-      return {
-        x: current.x + dx,
-        y: current.y + dy,
-        z: current.z,
-      };
-    }
-
-    return { x: current.x, y: current.y, z: current.z };
   }
 
   getWalkableMask(): WalkableMask | undefined {

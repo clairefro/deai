@@ -9,7 +9,7 @@ import ghostImage from "../../assets/ghost.png";
 import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
-import { RoomManager } from "./navigation/rooms/RoomManager";
+import { RoomManager } from "./navigation/RoomManager";
 import { EVENTS } from "../constants";
 
 class MainScene extends Phaser.Scene {

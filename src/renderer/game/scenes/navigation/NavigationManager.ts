@@ -1,4 +1,3 @@
-import { EventEmitter } from "events";
 import {
   HexDirection,
   Coordinates,
@@ -7,9 +6,13 @@ import {
   RoomType,
 } from "../../../types";
 
-import { EVENTS } from "../../constants";
+import {
+  EVENTS,
+  DIRECTION_OFFSETS,
+  OPPOSITE_DIRECTIONS,
+} from "../../constants";
 
-export class NavigationManager extends EventEmitter {
+export class NavigationManager {
   private currentCoordinates: Coordinates;
   private prevCoordinates: Coordinates | null;
   private currentLocation: Location;
@@ -17,7 +20,6 @@ export class NavigationManager extends EventEmitter {
   private traversalHistory: TraversalRecord[] = [];
 
   constructor() {
-    super();
     // TODO: LOAD CURRENT/PREV POSITION FROM TRAVERSAL HISTORY
     this.currentCoordinates = { x: 0, y: 0, z: 0 };
     this.currentLocation = { type: "gallery", ...this.currentCoordinates };
@@ -26,69 +28,112 @@ export class NavigationManager extends EventEmitter {
   }
 
   /** TODO: STORE TRAVERSAL HISTORY IN FILE */
-  traverse(direction: HexDirection): {
-    position: Coordinates;
-    location: Location;
-  } {
-    const nextCoordinates = this.calculateNextCoordinates(
-      this.currentCoordinates,
-      direction
-    );
+  // traverse(direction: HexDirection): {
+  //   position: Coordinates;
+  //   location: Location;
+  // } {
+  //   const nextCoordinates = this.calculateNextCoordinates(
+  //     this.currentCoordinates,
+  //     direction
+  //   );
 
-    // Record movement
-    this.traversalHistory.push({
-      from: { ...this.currentCoordinates },
-      to: { ...nextCoordinates },
-      direction,
-      timestamp: Date.now(),
-    });
+  //   // Record movement
+  //   this.traversalHistory.push({
+  //     from: { ...this.currentCoordinates },
+  //     to: { ...nextCoordinates },
+  //     direction,
+  //     timestamp: Date.now(),
+  //   });
 
-    // Update positions
-    this.prevCoordinates = { ...this.currentCoordinates };
-    this.currentCoordinates = nextCoordinates;
+  //   // Update positions
+  //   this.prevCoordinates = { ...this.currentCoordinates };
+  //   this.currentCoordinates = nextCoordinates;
 
-    // Update locations
-    this.prevLocation = { ...this.currentLocation };
-    this.currentLocation = {
-      ...nextCoordinates,
-      type: this.determineNextLocationType(this.currentLocation.type),
-    };
+  //   // Update locations
+  //   this.prevLocation = { ...this.currentLocation };
+  //   this.currentLocation = {
+  //     ...nextCoordinates,
+  //     type: this.determineNextLocationType(this.currentLocation.type),
+  //   };
 
-    this.emit(EVENTS.LOCATION_CHANGED, {
-      position: nextCoordinates,
-      location: this.currentLocation,
-    });
-    return {
-      position: { ...nextCoordinates },
-      location: { ...this.currentLocation },
-    };
-  }
+  //   this.emit(EVENTS.LOCATION_CHANGED, {
+  //     position: nextCoordinates,
+  //     location: this.currentLocation,
+  //   });
+  //   return {
+  //     position: { ...nextCoordinates },
+  //     location: { ...this.currentLocation },
+  //   };
+  // }
 
-  private calculateNextCoordinates(
-    current: Coordinates,
+  calculateNextCoordinates(
+    current: Location,
     direction: HexDirection
-  ): Coordinates {
-    const hexDirectionVectors = {
-      ne: { x: 1, y: -1, z: 0 },
-      ee: { x: 1, y: 0, z: -1 },
-      se: { x: 0, y: 1, z: -1 },
-      sw: { x: -1, y: 1, z: 0 },
-      ww: { x: -1, y: 0, z: 1 },
-      nw: { x: 0, y: -1, z: 1 },
-      up: { x: 0, y: 0, z: 1 },
-      dn: { x: 0, y: 0, z: -1 },
-    };
+  ): { x: number; y: number; z: number } {
+    if (current.type === "gallery") {
+      const [dx, dy] = DIRECTION_OFFSETS[direction];
+      return {
+        x: current.x + dx,
+        y: current.y + dy,
+        z: current.z,
+      };
+    }
 
-    const vector = hexDirectionVectors[direction];
+    if (current.type === "vestibule") {
+      if (direction === "ee" || direction === "ww") {
+        return { x: current.x, y: current.y, z: current.z };
+      }
+
+      if (direction === "up" || direction === "dn") {
+        return {
+          x: current.x,
+          y: current.y,
+          z: current.z + (direction === "up" ? 1 : -1),
+        };
+      }
+
+      const exitOffset = OPPOSITE_DIRECTIONS[current.cameFrom || "ww"];
+      const [dx, dy] = DIRECTION_OFFSETS[exitOffset];
+      return {
+        x: current.x + dx,
+        y: current.y + dy,
+        z: current.z,
+      };
+    }
+
+    return { x: current.x, y: current.y, z: current.z };
+  }
+
+  getNextLocation(current: Location, direction: HexDirection): Location {
+    const nextCoords = this.calculateNextCoordinates(current, direction);
+    let nextType = this.determineNextLocationType(current.type, direction);
+
     return {
-      x: current.x + vector.x,
-      y: current.y + vector.y,
-      z: current.z + vector.z,
+      type: nextType,
+      x: nextCoords.x,
+      y: nextCoords.y,
+      z: nextCoords.z,
+      cameFrom: direction,
     };
   }
 
-  private determineNextLocationType(currentType: RoomType): RoomType {
-    return currentType === "gallery" ? "vestibule" : "gallery";
+  private determineNextLocationType(
+    currentType: RoomType,
+    direction: HexDirection
+  ): RoomType {
+    if (
+      currentType === "vestibule" &&
+      (direction === "up" || direction === "dn")
+    ) {
+      // Moving between floors in vestibule - maintain vestibule type
+      return "vestibule";
+    } else if (currentType === "vestibule") {
+      // Moving horizontally from vestibule - go to gallery
+      return "gallery";
+    } else {
+      // Moving from gallery - always go to vestibule
+      return "vestibule";
+    }
   }
 
   getCurrentCoordinates(): Coordinates {
