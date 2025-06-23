@@ -258,6 +258,9 @@ export class Librarian {
       if (this.state.lastMumble) {
         this.chatDialog.addLastMumble(this.state.lastMumble);
       }
+      if (this.state.encountered) {
+        this.chatDialog.updateTitle(this.name);
+      }
     }
 
     this.chatDialog.show();
