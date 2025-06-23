@@ -118,7 +118,9 @@ export class Librarian {
   }
 
   private createSprite(): void {
-    this.visuals.sprite = this.scene.add.sprite(0, 0, this.imageKey);
+    this.visuals.sprite = this.scene.add
+      .sprite(0, 0, this.imageKey)
+      .play("ghost-idle");
     this.visuals.sprite.setInteractive({
       useHandCursor: true,
       pixelPerfect: true,

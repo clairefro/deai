@@ -10,8 +10,9 @@ import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
 import { RoomManager } from "./navigation/RoomManager";
-import { EVENTS } from "../constants";
+import { EVENTS, LIBRARIAN_CONFIG } from "../constants";
 import { LocationDisplay } from "../components/LocationDisplay";
+import ghostSpriteSheet from "../../assets/ghostSpritesheet.png";
 
 class MainScene extends Phaser.Scene {
   private config!: AppConfig;
@@ -42,12 +43,32 @@ class MainScene extends Phaser.Scene {
 
     // load assets
     this.load.image("player", playerImage);
-    this.load.image("ghost", ghostImage);
+    // this.load.image("ghost", ghostImage);
+
+    // load ghost (Librarian) spritesheet
+    this.load.spritesheet(
+      LIBRARIAN_CONFIG.DEFAULTS.IMAGE_KEY,
+      ghostSpriteSheet,
+      {
+        frameWidth: 50,
+        frameHeight: 50,
+      }
+    );
 
     // setup managers
     this.actionManager = new ActionManager();
     this.roomManager = new RoomManager(this, this.actionManager);
     this.roomManager.preloadRoomAssets();
+
+    // create animations once everything else complete
+    this.load.on("complete", () => {
+      this.anims.create({
+        key: "ghost-idle",
+        frames: this.anims.generateFrameNumbers("ghost", { start: 0, end: 2 }),
+        frameRate: 5,
+        repeat: -1,
+      });
+    });
   }
 
   async create() {
