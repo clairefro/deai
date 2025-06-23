@@ -57,10 +57,23 @@ export class ChatDialogUiManager {
     titleElement.textContent = DEFAULT_TITLE;
     sendButton.textContent = "Send";
     closeButton.textContent = "×";
-    closeButton.onclick = () => {
+    closeButton.setAttribute("tabindex", "0");
+    closeButton.setAttribute("role", "button");
+    closeButton.setAttribute("aria-label", "Close dialog");
+
+    const handleClose = () => {
       this.hide();
       this.onClose?.();
     };
+
+    closeButton.onclick = handleClose;
+    // keyboard accessibility
+    closeButton.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleClose();
+      }
+    });
 
     // Build hierarchy
     titleContainer.appendChild(titleElement);
