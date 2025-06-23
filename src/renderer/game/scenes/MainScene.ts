@@ -9,6 +9,7 @@ import ghostImage from "../../assets/ghost.png";
 import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
+import { NavigationManager } from "./navigation/NavigationManager";
 import { RoomManager } from "./navigation/RoomManager";
 import { EVENTS, LIBRARIAN_CONFIG } from "../constants";
 import { LocationDisplay } from "../components/LocationDisplay";
@@ -28,6 +29,8 @@ class MainScene extends Phaser.Scene {
   private actionManager!: ActionManager;
   private enterKey!: Phaser.Input.Keyboard.Key;
 
+  // Navigation
+  private navigationManager!: NavigationManager;
   // Rooms
   private roomManager!: RoomManager;
 
@@ -57,7 +60,12 @@ class MainScene extends Phaser.Scene {
 
     // setup managers
     this.actionManager = new ActionManager();
-    this.roomManager = new RoomManager(this, this.actionManager);
+    this.navigationManager = new NavigationManager();
+    this.roomManager = new RoomManager(
+      this,
+      this.actionManager,
+      this.navigationManager
+    );
     this.roomManager.preloadRoomAssets();
 
     // create animations once everything else complete
@@ -150,8 +158,11 @@ class MainScene extends Phaser.Scene {
 
   private async initRoom(): Promise<void> {
     console.log("LIFECYCLE: Init room ");
+    await this.navigationManager.loadLastLocation();
 
-    await this.roomManager.renderRoom();
+    await this.roomManager.renderRoom(
+      this.navigationManager.getCurrentLocation()
+    );
   }
 
   private setupControls(): void {

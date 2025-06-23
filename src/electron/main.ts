@@ -4,7 +4,10 @@ import * as fs from "node:fs/promises";
 
 import { Config, ConfigSettingsUpdate } from "../shared/Config";
 import { LibrariansStore } from "../shared/LibrarianStore";
-import { LibrarianData } from "../shared/types/LibrarianData";
+import { TraversalStore } from "../shared/TraversalStore";
+import { TraversalRecord } from "../renderer/types";
+
+import { LibrarianData } from "../shared/types";
 
 import { BACKGROUND_COLOR } from "./constants";
 
@@ -60,6 +63,7 @@ app.whenReady().then(async () => {
   await config.loadConfig();
 
   const librariansStore = await LibrariansStore.create(app.getPath("userData"));
+  const traversalStore = await TraversalStore.create(app.getPath("userData"));
 
   /** Config handlers */
   ipcMain.handle("get-config", async (event: any) => {
@@ -132,6 +136,23 @@ app.whenReady().then(async () => {
     const librarians = await librariansStore.getEncountered();
     console.log("Main process: Found librarians:", librarians);
     return librarians;
+  });
+
+  /** Traversal handlers */
+  ipcMain.handle("add-traversal", async (_event, record: TraversalRecord) => {
+    await traversalStore.addTraversal(record);
+  });
+
+  ipcMain.handle("get-recent-traversals", async (_event, limit?: number) => {
+    return await traversalStore.getRecentHistory(limit);
+  });
+
+  ipcMain.handle("get-unique-galleries-count", async () => {
+    return await traversalStore.getUniqueGalleriesCount();
+  });
+
+  ipcMain.handle("get-last-location", async () => {
+    return await traversalStore.getLastLocation();
   });
 
   createWindow();
