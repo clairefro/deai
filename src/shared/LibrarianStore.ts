@@ -2,7 +2,7 @@ import { Low } from "lowdb";
 import { JSONFile } from "lowdb/node";
 import path from "node:path";
 import fs from "fs/promises";
-import { LibrarianData } from "./types/LibrarianData";
+import { LibrarianData } from "./types";
 
 import defaultLibrarians from "../electron/defaultGameFiles/librarians.json";
 

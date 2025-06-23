@@ -74,7 +74,6 @@ export class WalkableMask {
     x: number;
     y: number;
   } {
-    console.log({ offset });
     let x, y;
     let attempts = 0;
     const maxAttempts = 200;

@@ -15,10 +15,10 @@ export class NavigationManager {
   currentLocation: Location;
   prevLocation: Location | null;
   traversalHistory: TraversalRecord[] = [];
+  private ready: boolean = false;
 
   constructor() {
-    // TODO: Load from saved history
-    // Initialize with starting location
+    // Start with default location
     this.currentLocation = {
       type: "gallery",
       x: 0,
@@ -26,10 +26,67 @@ export class NavigationManager {
       z: 0,
       cameFrom: "ww",
     };
-    this.prevLocation = null;
+
+    // Wait for DOM and electronAPI to be ready
+    this.init();
   }
 
-  traverse(direction: HexDirection): Location {
+  private async init() {
+    await new Promise<void>((resolve) => {
+      const check = () => {
+        if (window.electronAPI) {
+          resolve();
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+      check();
+    });
+
+    await this.initFromSavedState();
+    this.ready = true;
+  }
+
+  private async initFromSavedState() {
+    try {
+      const lastLocation = await window.electronAPI.getLastLocation();
+      if (lastLocation) {
+        this.currentLocation = lastLocation;
+      }
+    } catch (err) {
+      console.error("Failed to load last location:", err);
+    }
+  }
+
+  async loadLastLocation(): Promise<void> {
+    try {
+      const lastLocation = await window.electronAPI.getLastLocation();
+      if (lastLocation) {
+        this.currentLocation = lastLocation;
+      }
+    } catch (err) {
+      console.error("Failed to load last location:", err);
+    }
+  }
+
+  getCurrentLocation(): Location {
+    return { ...this.currentLocation };
+  }
+
+  async traverse(direction: HexDirection): Location {
+    if (!this.ready) {
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if (this.ready) {
+            resolve();
+          } else {
+            setTimeout(check, 100);
+          }
+        };
+        check();
+      });
+    }
+
     this.prevLocation = { ...this.currentLocation };
 
     this.currentLocation = this.getNextLocation(
@@ -37,11 +94,19 @@ export class NavigationManager {
       direction
     );
 
-    this.traversalHistory.push({
+    const traversalRecord: TraversalRecord = {
       from: { ...this.prevLocation },
       to: { ...this.currentLocation },
       direction,
-    });
+    };
+
+    this.traversalHistory.push(traversalRecord);
+
+    try {
+      await window.electronAPI.addTraversal(traversalRecord);
+    } catch (err) {
+      console.error("Failed to save traversal:", err);
+    }
 
     return { ...this.currentLocation };
   }

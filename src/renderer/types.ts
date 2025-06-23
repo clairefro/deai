@@ -1,5 +1,6 @@
 import { AppConfig } from "../shared/Config";
 import { DotNotation } from "../shared/util/DotNotation";
+import * as Phaser from "phaser";
 
 /** ACTIONS */
 export interface ProximityAction {

@@ -3,7 +3,8 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { AppConfig, ConfigSettingsUpdate } from "../shared/Config";
 import chokidar from "chokidar";
-import { LibrarianData } from "../shared/types/LibrarianData";
+import { LibrarianData } from "../shared/types";
+import { TraversalRecord } from "../renderer/types";
 
 interface FileObj {
   name: string;
@@ -115,6 +116,23 @@ const electronAPI = {
       console.error("Failed to get encountered librarians:", err);
       return [];
     }
+  },
+
+  /** Traversal */
+  async addTraversal(record: TraversalRecord): Promise<void> {
+    await ipcRenderer.invoke("add-traversal", record);
+  },
+
+  async getRecentTraversals(limit?: number): Promise<TraversalRecord[]> {
+    return await ipcRenderer.invoke("get-recent-traversals", limit);
+  },
+
+  async getUniqueGalleriesCount(): Promise<number> {
+    return await ipcRenderer.invoke("get-unique-galleries-count");
+  },
+
+  async getLastLocation(): Promise<Location | null> {
+    return await ipcRenderer.invoke("get-last-location");
   },
 };
 

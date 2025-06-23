@@ -64,7 +64,11 @@ export class RoomManager {
     // bathroom: { background: "TODO", WalkableMask: "TODO" },
   };
 
-  constructor(scene: Phaser.Scene, actionManager: ActionManager) {
+  constructor(
+    scene: Phaser.Scene,
+    actionManager: ActionManager,
+    navigationManager: NavigationManager
+  ) {
     this.scene = scene;
     this.actionManager = actionManager;
 
@@ -78,7 +82,7 @@ export class RoomManager {
     };
     this.currentLocation = startLocation;
 
-    this.navigationManager = new NavigationManager();
+    this.navigationManager = navigationManager;
   }
 
   preloadRoomAssets(): void {
@@ -175,7 +179,9 @@ export class RoomManager {
             this.exits.forEach((exit) => exit.disable?.());
             this.scene.cameras.main.fadeOut(500);
 
-            const nextLocation = this.navigationManager.traverse(direction);
+            const nextLocation = await this.navigationManager.traverse(
+              direction
+            );
 
             await this.renderRoom(nextLocation);
             this.scene.events.emit(
@@ -233,7 +239,7 @@ export class RoomManager {
           this.stairs.forEach((stair) => stair.disable?.());
           this.scene.cameras.main.fadeOut(500);
 
-          const nextLocation = this.navigationManager.traverse(direction);
+          const nextLocation = await this.navigationManager.traverse(direction);
 
           await this.renderRoom(nextLocation);
           this.scene.events.emit(
