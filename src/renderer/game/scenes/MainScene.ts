@@ -5,7 +5,6 @@ import { SettingsMenu } from "../components/settings/SettingsMenu";
 import { NotificationBar } from "../components/NotificationBar";
 import { TeetorTotter } from "../components/TeetorTotter";
 import playerImage from "../../assets/sprite.png";
-import ghostImage from "../../assets/ghost.png";
 import { WalkableMask } from "../components/WalkableMask";
 import { Player } from "../models/Player";
 import { ActionManager } from "../actions/ActionManager";
@@ -32,7 +31,7 @@ class MainScene extends Phaser.Scene {
   // Navigation
   private navigationManager!: NavigationManager;
   // Rooms
-  private roomManager!: RoomManager;
+  roomManager!: RoomManager;
 
   // Other state
   private hasMovedSinceAction: boolean = false;
@@ -123,7 +122,7 @@ class MainScene extends Phaser.Scene {
       this.player.setPosition(pos.x, pos.y);
     });
 
-    this.events.on(EVENTS.EXIT_SELECTED, () => {
+    this.events.on(EVENTS.LOCATION_CHANGED, () => {
       const location = this.roomManager.getCurrentLocation();
       LocationDisplay.getInstance()?.updateLocation(
         location.type,

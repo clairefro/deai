@@ -1,4 +1,4 @@
-import { HexDirection } from "../types";
+import { AllDirection, HexDirection } from "../types";
 
 export const DEPTHS = {
   BACKGROUND: 0,
@@ -82,7 +82,6 @@ export const CHAT_STYLES = {
 export const EVENTS = {
   WALKABLE_MASK_CHANGED: "walkableMaskChanged",
   LOCATION_CHANGED: "locationChanged",
-  EXIT_SELECTED: "exitSelected",
   STAIRS_SELECTED: "stairsSelected",
   ROOM_READY: "roomReady",
 };
@@ -98,11 +97,7 @@ export const HEX_DIRECTIONS: HexDirection[] = [
   "sw",
 ];
 
-export const HEX_DIRECTIONS_PLANAR = HEX_DIRECTIONS.filter(
-  (d) => d !== "up" && d !== "dn"
-);
-
-export const OPPOSITE_DIRECTIONS: Record<HexDirection, HexDirection> = {
+export const OPPOSITE_DIRECTIONS: Record<AllDirection, AllDirection> = {
   ne: "sw",
   nw: "se",
   ee: "ww",
@@ -113,8 +108,19 @@ export const OPPOSITE_DIRECTIONS: Record<HexDirection, HexDirection> = {
   dn: "up",
 };
 
+export const DIRECTION_DISPLAY_NAMES: Record<AllDirection, string> = {
+  ne: "north east",
+  nw: "north west",
+  ee: "east",
+  ww: "west",
+  se: "south east",
+  sw: "south west",
+  up: "upstairs",
+  dn: "downstairs",
+};
+
 // pointy-top hex grid vectors
-export const DIRECTION_OFFSETS: Record<HexDirection, [number, number]> = {
+export const DIRECTION_OFFSETS: Record<AllDirection, [number, number]> = {
   ee: [1, 0],
   ww: [-1, 0],
   ne: [1, 1],

@@ -40,22 +40,26 @@ export type HexDirection =
   | "ee" // east
   | "ww" // west
   | "se" // southeast
-  | "sw" // southwest
-  | "up"
-  | "dn";
+  | "sw"; // southwest
+
+// Vertical directions
+export type VerticalDirection = "up" | "dn";
+
+// All possible directions
+export type AllDirection = HexDirection | VerticalDirection;
 
 export interface Location {
   type: RoomType;
   x: number;
   y: number;
   z: number;
-  cameFrom?: HexDirection;
+  cameFrom?: AllDirection;
 }
 
 export interface TraversalRecord {
   from: Location;
   to: Location;
-  direction: HexDirection;
+  direction: AllDirection;
 }
 
 /** CHAT */

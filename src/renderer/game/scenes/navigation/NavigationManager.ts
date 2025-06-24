@@ -3,6 +3,7 @@ import {
   TraversalRecord,
   Location,
   RoomType,
+  AllDirection,
 } from "../../../types";
 
 import {
@@ -13,7 +14,7 @@ import {
 
 export class NavigationManager {
   currentLocation: Location;
-  prevLocation: Location | null;
+  prevLocation: Location | null = null;
   traversalHistory: TraversalRecord[] = [];
   private ready: boolean = false;
 
@@ -27,7 +28,7 @@ export class NavigationManager {
       cameFrom: "ww",
     };
 
-    // Wait for DOM and electronAPI to be ready
+    // wait for DOM and electronAPI to be ready
     this.init();
   }
 
@@ -51,7 +52,14 @@ export class NavigationManager {
     try {
       const lastLocation = await window.electronAPI.getLastLocation();
       if (lastLocation) {
-        this.currentLocation = lastLocation;
+        // default
+        this.currentLocation = {
+          type: lastLocation.type ?? "gallery",
+          x: lastLocation.x ?? 0,
+          y: lastLocation.y ?? 0,
+          z: lastLocation.z ?? 0,
+          cameFrom: lastLocation.cameFrom ?? "ww",
+        };
       }
     } catch (err) {
       console.error("Failed to load last location:", err);
@@ -69,11 +77,7 @@ export class NavigationManager {
     }
   }
 
-  getCurrentLocation(): Location {
-    return { ...this.currentLocation };
-  }
-
-  async traverse(direction: HexDirection): Location {
+  async traverse(direction: AllDirection): Promise<Location> {
     if (!this.ready) {
       await new Promise<void>((resolve) => {
         const check = () => {
@@ -87,15 +91,15 @@ export class NavigationManager {
       });
     }
 
-    this.prevLocation = { ...this.currentLocation };
-
     this.currentLocation = this.getNextLocation(
       this.currentLocation,
       direction
     );
 
     const traversalRecord: TraversalRecord = {
-      from: { ...this.prevLocation },
+      from: this.prevLocation
+        ? { ...this.prevLocation }
+        : { ...this.currentLocation },
       to: { ...this.currentLocation },
       direction,
     };
@@ -111,7 +115,7 @@ export class NavigationManager {
     return { ...this.currentLocation };
   }
 
-  getNextLocation(current: Location, direction: HexDirection): Location {
+  getNextLocation(current: Location, direction: AllDirection): Location {
     const nextCoords = this.calculateNextCoordinates(current, direction);
     let nextType = this.determineNextLocationType(current.type, direction);
 
@@ -126,7 +130,7 @@ export class NavigationManager {
 
   calculateNextCoordinates(
     current: Location,
-    direction: HexDirection
+    direction: AllDirection
   ): { x: number; y: number; z: number } {
     if (current.type === "gallery") {
       const [dx, dy] = DIRECTION_OFFSETS[direction];
@@ -164,19 +168,19 @@ export class NavigationManager {
 
   private determineNextLocationType(
     currentType: RoomType,
-    direction: HexDirection
+    direction: AllDirection
   ): RoomType {
     if (
       currentType === "vestibule" &&
       (direction === "up" || direction === "dn")
     ) {
-      // Moving between floors in vestibule - maintain vestibule type
+      // moving between floors in vestibule - maintain vestibule type
       return "vestibule";
     } else if (currentType === "vestibule") {
-      // Moving horizontally from vestibule - go to gallery
+      // moving horizontally from vestibule - go to gallery
       return "gallery";
     } else {
-      // Moving from gallery - always go to vestibule
+      // moving from gallery - always go to vestibule
       return "vestibule";
     }
   }

@@ -5,6 +5,7 @@ import { AppConfig, ConfigSettingsUpdate } from "../shared/Config";
 import chokidar from "chokidar";
 import { LibrarianData } from "../shared/types";
 import { TraversalRecord } from "../renderer/types";
+import { Location } from "../renderer/types";
 
 interface FileObj {
   name: string;
