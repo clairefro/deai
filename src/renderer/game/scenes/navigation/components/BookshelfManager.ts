@@ -2,6 +2,7 @@ import { ActionableObject } from "../../../actions/ActionableObject";
 import { ActionManager } from "../../../actions/ActionManager";
 import { ACTIONS } from "../../../constants";
 import { HexDirection } from "../../../../types";
+import { BookshelfMenu } from "../../../components/BookshelfMenu";
 
 export class BookshelfManager {
   private bookshelves: ActionableObject[] = [];
@@ -9,7 +10,9 @@ export class BookshelfManager {
   constructor(
     private scene: Phaser.Scene,
     private actionManager: ActionManager
-  ) {}
+  ) {
+    BookshelfMenu.initialize();
+  }
 
   createBookshelves(galleryExits: HexDirection[]): void {
     this.clearExisting();
@@ -36,6 +39,7 @@ export class BookshelfManager {
           range: ACTIONS.DOOR_RANGE,
           action: () => {
             console.log(`Browsing bookshelf on ${direction} wall`);
+            BookshelfMenu.getInstance()?.show(direction.toUpperCase());
           },
         }
       );

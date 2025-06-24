@@ -19,7 +19,7 @@ export class SettingsMenu extends Menu {
     config: AppConfig,
     onDirectoryChange: (newDir: string) => void
   ) {
-    super("settings-menu", "settings-fields");
+    super("settings-menu");
     this.scene = scene;
     this.config = config;
     this.onDirectoryChange = onDirectoryChange;
@@ -29,22 +29,27 @@ export class SettingsMenu extends Menu {
   }
 
   private async populate(): Promise<void> {
-    if (!this.fields) return;
-    this.fields.innerHTML = "";
+    const content = document.createElement("div");
+    content.className = "settings-content";
 
-    // Create settings in parallel
+    const header = document.createElement("h2");
+    header.textContent = "Settings";
+    header.className = "settings-header";
+    content.appendChild(header);
+
+    // create settings in parallel
     await Promise.all(
       SETTINGS_SCHEMA.map(async (definition) => {
         const setting = await this.createSetting(definition);
         if (setting) {
           const field = this.createField(definition.label, setting.render());
-          this.fields?.appendChild(field);
+          content.appendChild(field);
           this.settings.set(definition.key, setting);
         }
       })
     );
 
-    this.addCloseButton(() => this.toggle());
+    this.setContent(content);
   }
 
   private async createSetting(
