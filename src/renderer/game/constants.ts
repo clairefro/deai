@@ -37,6 +37,7 @@ export const ACTIONS = {
   PREFIX_LIBRIAN_CHAT: "chat-",
   PREFIX_EXIT: "exit-",
   PREFIX_STAIRS: "stairs-",
+  PREFIX_BOOKSHELF: "bookshelf-wall-",
 };
 
 export const LIBRARIAN_CONFIG = {

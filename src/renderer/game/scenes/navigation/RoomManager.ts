@@ -23,6 +23,7 @@ import vestibuleRoomMapMask from "../../../assets/world/rooms/vestibule-walkable
 
 import doorImg from "../../../assets/world/objects/door.png";
 import arrowImg from "../../../assets/world/objects/arrow.png";
+import bookshelfWallImg from "../../../assets/world/objects/bookshelf-wall.png";
 
 import { NavigationManager } from "./NavigationManager";
 
@@ -44,6 +45,7 @@ export class RoomManager {
   walkableMask?: WalkableMask;
   private exits: ActionableObject[] = [];
   private stairs: ActionableObject[] = [];
+  private bookshelves: ActionableObject[] = [];
   private actionManager: ActionManager;
   private librarians: Librarian[] = [];
   navigationManager: NavigationManager;
@@ -94,6 +96,7 @@ export class RoomManager {
     // Load door and stairs sprites
     this.scene.load.image("door", doorImg);
     this.scene.load.image("arrow", arrowImg);
+    this.scene.load.image("bookshelf-wall", bookshelfWallImg);
   }
 
   async renderRoom(location?: Location): Promise<void> {
@@ -131,7 +134,12 @@ export class RoomManager {
 
     this.scene.events.emit(EVENTS.WALKABLE_MASK_CHANGED, this.walkableMask);
 
-    this.createExits(this.currentLocation);
+    const exits = this.createExits(this.currentLocation);
+
+    // Add bookshelfs if gallery
+    if (this.currentLocation.type === "gallery") {
+      this.createGalleryBookshelves(exits);
+    }
 
     // Add stairs if it's a vestibule
     if (this.currentLocation.type === "vestibule") {
@@ -142,7 +150,10 @@ export class RoomManager {
       this.currentLocation.type === "gallery" ||
       this.currentLocation.type === "vestibule"
     ) {
-      this.spawnRandomLibrarian();
+      // 20% chance
+      if (Math.random() < 0.2) {
+        await this.spawnRandomLibrarian();
+      }
     }
     this.scene.events.emit(EVENTS.ROOM_READY, location);
 
@@ -195,10 +206,55 @@ export class RoomManager {
       );
       this.exits.push(exit);
     });
+    return exits;
   }
 
   private generateRandomGalleryExits(): HexDirection[] {
     return HEX_DIRECTIONS_PLANAR.sort(() => Math.random() - 0.5).slice(0, 2);
+  }
+
+  private createGalleryBookshelves(usedExits: HexDirection[]): void {
+    // clear existing bookshelves
+    this.bookshelves.forEach((shelf) => {
+      shelf.disable?.();
+      this.actionManager.removeAction(shelf.getAction().key);
+      shelf.destroy();
+    });
+    this.bookshelves = [];
+
+    // get all possible positions
+    const positions = this.calculateGalleryExitPositions(11);
+
+    // filter out positions that have exits
+    const availableDirections = Object.keys(positions).filter(
+      (dir) => !usedExits.includes(dir as HexDirection)
+    ) as HexDirection[];
+
+    // Create bookshelves for available walls
+    availableDirections.forEach((direction) => {
+      const position = positions[direction];
+      if (!position) return;
+
+      const bookshelf = new ActionableObject(
+        this.scene,
+        position.x,
+        position.y,
+        "bookshelf-wall",
+        this.actionManager,
+        {
+          key: `${ACTIONS.PREFIX_BOOKSHELF}${direction}`,
+          label: `<Enter> to browse books on ${direction.toUpperCase()} wall`,
+          rotation: position.rotation,
+          range: ACTIONS.DOOR_RANGE,
+          action: async () => {
+            // TODO: Implement bookshelf interaction
+            console.log(`Browsing bookshelf on ${direction} wall`);
+          },
+        }
+      );
+
+      this.bookshelves.push(bookshelf);
+    });
   }
 
   private createStairs(): void {
@@ -292,14 +348,17 @@ export class RoomManager {
     };
   }
 
-  private calculateGalleryExitPositions(): ExitPositions {
+  private calculateGalleryExitPositions(
+    radiusOffset: number = 0
+  ): ExitPositions {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
 
     const centerX = width / 2;
     const centerY = height / 2;
 
-    const radius = Math.min(width, height) * 0.25;
+    const baseRadius = Math.min(width, height) * 0.25;
+    const radius = baseRadius + radiusOffset;
 
     return {
       // rotations are in radians
@@ -414,5 +473,13 @@ export class RoomManager {
       this.currentBackground.destroy(true);
       this.currentBackground = undefined;
     }
+
+    // destroy bookshelves
+    this.bookshelves.forEach((shelf) => {
+      shelf.disable?.();
+      this.actionManager.removeAction(shelf.getAction().key);
+      shelf.destroy();
+    });
+    this.bookshelves = [];
   }
 }
