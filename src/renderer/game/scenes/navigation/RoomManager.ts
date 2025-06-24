@@ -91,8 +91,8 @@ export class RoomManager {
   private async createGalleryFeatures(exits: HexDirection[]): Promise<void> {
     this.bookshelfManager.createBookshelves(exits);
 
-    // 70% chance
-    if (Math.random() < 0.7) {
+    // chance
+    if (Math.random() < 0.85) {
       await this.librarianManager.spawnRandom();
     }
   }
@@ -100,8 +100,8 @@ export class RoomManager {
   private async createVesitubleFeatures(): Promise<void> {
     this.exitsManager.createStairs();
 
-    // 20% chance
-    if (Math.random() < 0.2) {
+    //  chance
+    if (Math.random() < 0.25) {
       await this.librarianManager.spawnRandom();
     }
   }
