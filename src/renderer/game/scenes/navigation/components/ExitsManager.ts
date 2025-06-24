@@ -147,8 +147,8 @@ export class ExitsManager {
     const centerY = height / 2;
 
     return {
-      up: { x: centerX, y: centerY - 20 }, // Above center
-      dn: { x: centerX, y: centerY + 20 }, // Below center
+      up: { x: centerX, y: centerY - 20 },
+      dn: { x: centerX, y: centerY + 20 },
     };
   }
 
