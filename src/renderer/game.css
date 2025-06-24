@@ -109,6 +109,52 @@
   text-align: center;
   font-size: 1.2em;
 }
+/* bookshelf*/
+.bookshelf-view {
+  padding: 20px;
+  min-width: 300px;
+}
+
+.shelf-grid,
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.shelf-button,
+.book-button {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.back-button {
+  display: block;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.page-view {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.page-content {
+  flex: 1;
+  text-align: center;
+}
 
 /* Settings */
 

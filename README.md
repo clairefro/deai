@@ -22,3 +22,8 @@ or in open terminal tab:
 `ollama serve`
 
 TODO: automate ollama connection with wizard + scripts
+
+## TODO
+
+- remove traversal history
+- remove image key for librarians

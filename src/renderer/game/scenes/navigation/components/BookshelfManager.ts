@@ -39,7 +39,7 @@ export class BookshelfManager {
           range: ACTIONS.DOOR_RANGE,
           action: () => {
             console.log(`Browsing bookshelf on ${direction} wall`);
-            BookshelfMenu.getInstance()?.show(direction.toUpperCase());
+            BookshelfMenu.getInstance()?.show(direction);
           },
         }
       );
