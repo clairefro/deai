@@ -14,7 +14,7 @@ export class LocationDisplay {
     this.element.style.padding = "8px";
     this.element.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
     this.element.style.borderRadius = "4px";
-    this.element.style.zIndex = "200";
+    this.element.style.zIndex = "0";
 
     container.appendChild(this.element);
   }

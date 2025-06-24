@@ -37,6 +37,11 @@ export class Notebook {
         <span class="tab-label">Notes</span>
       </div>
       <div class="notebook-content">
+         <button 
+            class="notebook-close"  
+            tabindex="0" 
+            aria-label="Close notebook"
+            role="button">&times;</button>
         <div class="notebook-files"></div>
         <textarea id="notebook-editor"
           autocomplete="off"
@@ -53,12 +58,27 @@ export class Notebook {
     const tab = this.element.querySelector(".notebook-tab");
 
     tab?.addEventListener("click", () => {
-      this.toggleNotebook(true);
+      const isOpen = this.element.classList.contains("open");
+      this.toggleNotebook(!isOpen);
     });
 
     // Close notebook when clicking overlay
     this.overlay.addEventListener("click", () => {
       this.toggleNotebook(false);
+    });
+
+    const closeButton = this.element.querySelector(".notebook-close");
+    closeButton?.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent event bubbling
+      this.toggleNotebook(false);
+    });
+    // for key event
+    closeButton?.addEventListener("keydown", (e: any) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleNotebook(false);
+      }
     });
 
     // Handle editor focus/blur
@@ -74,31 +94,37 @@ export class Notebook {
       }
     });
 
-    // Prevent game controls while typing
+    let previousLength = 0;
+    let backspacePressed = false;
+
+    // prevent game controls while typing
     this.editor.addEventListener("keydown", (e) => {
       e.stopPropagation();
+      backspacePressed = e.key === "Backspace" || e.key === "Delete";
     });
 
-    let previousLength = 0;
+    this.editor.addEventListener("keyup", (e) => {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        backspacePressed = false;
+      }
+    });
 
-    // Auto-save on typing
+    // auto-save on typing
     this.editor.addEventListener("input", () => {
       const currentLength = this.editor.value.length;
-      console.log({ currentLength, previousLength });
       const diff = currentLength - previousLength;
 
-      // Only count added characters, not deletions
-      if (diff > 0) {
+      // only count added characters, not deletions
+      if (diff > 0 && !backspacePressed) {
         TeetorTotter.getInstance()?.addOutputTokens(diff);
       }
 
       previousLength = currentLength;
 
-      // Debounce the save operation
       this.debouncedSave && this.debouncedSave();
     });
 
-    // Move auto-save to separate debounced function
+    // move auto-save to separate debounced function
     this.debouncedSave = debounce(() => {
       if (this.currentFilePath) {
         this.saveFileContent(this.currentFilePath, this.editor.value);
@@ -137,7 +163,7 @@ export class Notebook {
         entry.textContent = file.name;
         entry.addEventListener("click", () => {
           this.loadFileContent(file.path);
-          // Highlight selected file
+          // highlight selected file
           this.fileList
             .querySelectorAll(".notebook-file")
             .forEach((el) => el.classList.remove("selected"));

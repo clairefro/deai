@@ -16,7 +16,7 @@ export const DEPTHS = {
   },
   UI: {
     BASE: 90,
-    DIALOG: 100,
+    DIALOG: 500,
     SETTINGS: {
       BASE: 95,
       MENU: 96,

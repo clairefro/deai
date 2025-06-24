@@ -12,23 +12,23 @@ export class TeetorTotter {
     this.element = document.createElement("div");
     this.element.className = "teetor-totter";
 
-    // Create balance beam
+    // create balance beam
     this.beam = document.createElement("div");
     this.beam.className = "teetor-totter-beam";
 
-    // Beam fill
+    // beam fill
     const beamFill = document.createElement("div");
     beamFill.className = "teetor-totter-beam-fill";
 
-    // Create balance marker
+    // create balance marker
     const balanceMarker = document.createElement("div");
     balanceMarker.className = "teetor-totter-balance-marker";
 
-    // Create fulcrum
+    // create fulcrum
     this.fulcrum = document.createElement("div");
     this.fulcrum.className = "teetor-totter-fulcrum";
 
-    // Build hierarchy
+    // build (hierarchy)
     this.beam.appendChild(beamFill);
     this.beam.appendChild(balanceMarker);
     this.element.appendChild(this.fulcrum);
@@ -54,21 +54,26 @@ export class TeetorTotter {
 
   addIngestedTokens(charCount: number): void {
     this.balance = Math.min(this.balance + charCount / 10, this.maxTilt);
-    // this.checkGameOver();
     this.updateDisplay();
   }
 
   addOutputTokens(charCount: number): void {
-    console.log({ charCount });
     this.balance = Math.max(this.balance - charCount / 10, -this.maxTilt);
-    console.log(this.balance);
-    // this.checkGameOver();
     this.updateDisplay();
   }
 
   private updateGlitchEffects(): void {
-    // Remove existing glitch classes
+    // remove existing glitch classes
+    const gameElement = document.getElementById("game");
+    if (!gameElement) return;
+
+    // Remove all glitch classes from both elements
     this.element.classList.remove(
+      "glitch-mild",
+      "glitch-medium",
+      "glitch-severe"
+    );
+    gameElement.classList.remove(
       "glitch-mild",
       "glitch-medium",
       "glitch-severe"
@@ -78,12 +83,12 @@ export class TeetorTotter {
     const imbalance = Math.abs(this.balance / this.maxTilt);
 
     // Add appropriate glitch class
-    if (imbalance > 0.75) {
+    if (imbalance > 0.85) {
       document.getElementById("game")?.classList.add("glitch-severe");
-    } else if (imbalance > 0.5) {
+    } else if (imbalance > 0.66) {
       document.getElementById("game")?.classList.add("glitch-medium");
       this.createMatrixRain();
-    } else if (imbalance > 0.25) {
+    } else if (imbalance > 0.5) {
       document.getElementById("game")?.classList.add("glitch-mild");
     } else {
       document
