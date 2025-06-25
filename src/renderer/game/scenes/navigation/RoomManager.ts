@@ -91,7 +91,14 @@ export class RoomManager {
   private async createGalleryFeatures(exits: HexDirection[]): Promise<void> {
     this.bookshelfManager.createBookshelves(exits);
 
-    // chance
+    // --- DEV ONLY ---
+    // const NEW_LIBRARIRANS = [
+    //   "Zarathustra",
+    //   // "Ludwig Wittgenstein",
+    //   // "Édouard Glissant",
+    // ];
+    // await this.librarianManager._dev_generateLibrarians(NEW_LIBRARIRANS);
+
     if (Math.random() < 0.85) {
       await this.librarianManager.spawnRandom();
     }
@@ -100,7 +107,7 @@ export class RoomManager {
   private async createVesitubleFeatures(): Promise<void> {
     this.exitsManager.createStairs();
 
-    //  chance
+    // chance
     if (Math.random() < 0.25) {
       await this.librarianManager.spawnRandom();
     }

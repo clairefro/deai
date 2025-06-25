@@ -73,4 +73,33 @@ export class LibrarianManager {
   hasLibrarians(): boolean {
     return this.librarians.length > 0;
   }
+
+  async _dev_generateLibrarians(names: string[]): Promise<void> {
+    console.log("GENERATING LIBRARIANS...");
+    console.log("// Generated Librarians for librarians.json:");
+    console.log("[");
+    for (const name of names) {
+      try {
+        const librarian = new Librarian({
+          name,
+          scene: this.scene,
+        });
+        await librarian.spawn(
+          this.scene.cameras.main.width / 2,
+          this.scene.cameras.main.height / 2
+        );
+
+        const data = librarian.serialize();
+        console.log({ data });
+        console.log(JSON.stringify(data, null, 2) + ",");
+
+        // clean up after generation
+        // librarian.destroy();
+      } catch (e: any) {
+        console.error(`Error while generating ${name}:`, e.message);
+      }
+    }
+
+    console.log("// done");
+  }
 }

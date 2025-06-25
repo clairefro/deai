@@ -10,7 +10,7 @@ export function generateChatSystemPrompt(persona: string, obsession: string) {
     - The user is another wandering in this space: perhaps a companion, perhaps a question.`;
 }
 export function generateMumblingsSystemPrompt(persona: string) {
-  return `RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO QUOTATION MARKS AROUND QUOTES. NO CODE FENCES. Create an array of 5 short quotes by ${persona}`;
+  return `RESPOND WITH RAW JSON ARRAY OF STRINGS ONLY. NO QUOTATION MARKS INSIDE PERSON'S QUOTES. NO CODE FENCES. Create an array of 5 short quotes by ${persona}`;
 }
 
 export function generateObsessionSystemPrompt(persona: string) {

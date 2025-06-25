@@ -1,8 +1,11 @@
 {
   "name": "deai",
-  "author": "Claire Froelich",
+  "author": {
+    "name": "Claire Froelich",
+    "email": "claire.froelich@gmail.com"
+  },
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "explore the pysche",
   "main": "dist/electron/main.js",
   "scripts": {
@@ -21,6 +24,7 @@
     "dev:renderer": "vite --host --force",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
+    "dist:all": "npm run build && electron-builder -mwl",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
     "dist:linux": "npm run build && electron-builder --linux",
@@ -58,7 +62,9 @@
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "maintainer": "Claire Froelich <claire.froelich@gmail.com>",
+      "vendor": "Claire Froelich"
     }
   },
   "dependencies": {
@@ -75,6 +81,7 @@
     "electron": "^36.0.0",
     "electron-builder": "^26.0.12",
     "terser": "^5.39.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "vite": "^6.3.4",
     "vite-plugin-clean": "^2.0.1",

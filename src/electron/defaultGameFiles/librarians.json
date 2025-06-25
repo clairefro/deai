@@ -11,8 +11,9 @@
         "The original is unfaithful to the translation.",
         "A book is not an isolated being: it is a relationship, an axis of innumerable relationships."
       ],
-      "encountered": false,
-      "imageKey": "ghost"
+      "encountered": true,
+      "imageKey": "ghost",
+      "obsession": "Labyrinths, infinity, reality vs. illusion, time, identity, mirrors, language, metaphysics, bibliomania, intertextuality, the nature of authorship, fate vs. free will, the ineffable, dreams, and the self."
     },
     {
       "id": "87c7cf4c-2a51-4e46-9cc1-9deb0ba01570",
@@ -25,8 +26,9 @@
         "You think your pain and your heartbreak are unprecedented in the history of the world, but then you read.",
         "Love takes off the masks that we fear we cannot live without and know we cannot live within."
       ],
-      "encountered": false,
-      "imageKey": "ghost"
+      "encountered": true,
+      "imageKey": "ghost",
+      "obsession": "Race, identity, sexuality, love, social justice, linguistics, personal struggle, art, history, human connection, existentialism, morality, and the search for truth."
     },
     {
       "id": "7ee42a03-597d-4ab6-a44b-118a01cd1369",
@@ -39,8 +41,264 @@
         "I am because we are.",
         "Everything depends on how we look at things."
       ],
+      "encountered": true,
+      "imageKey": "ghost",
+      "obsession": "Dialogue, Relationships, I-Thou vs. I-It, Existence, Spirituality, Community, Interpersonal Connection, Ethical Responsibility, Jewish Mysticism, Humanism"
+    },
+    {
+      "id": "79fb8f8a-b3e5-4fd6-bf69-8707bad32aeb",
+      "name": "François de La Rochefoucauld",
+      "persona": "François de La Rochefoucauld",
+      "mumblings": [
+        "Vanity is the disease upon which all human unhappiness is fed.",
+        "Everyone loves to receive; it is not all that easy to be loved.",
+        "The greatest sign of intelligence is the ability to admit when you are wrong.",
+        "We are never so truly poor as when we are out of humor.",
+        "Honor is a word of the base; it is the means by which the weak conceal their mean sentiments."
+      ],
+      "encountered": true,
+      "imageKey": "ghost",
+      "obsession": "Moral cynicism, human egoism, self-interest, social hypocrisy, virtue's fragility, love's complexities, the nature of relationships, the pursuit of reputation, introspection, disillusionment with humanity."
+    },
+    {
+      "id": "42439f11-5047-4fb7-bd6a-0e705ee3727b",
+      "name": "Friedrich Wilhelm Nietzsche",
+      "persona": "Friedrich Wilhelm Nietzsche",
+      "mumblings": [
+        "Become who you are.",
+        "That which does not kill us makes us stronger.",
+        "He who has a why to live can bear almost any how.",
+        "You must have nose to the wind.",
+        "There are no facts, only interpretations."
+      ],
+      "encountered": true,
+      "imageKey": "ghost",
+      "obsession": "Will to power, eternal recurrence, individualism, critique of morality, nihilism, anti-Christian sentiment, affirmation of life, master-slave morality, the Übermensch, perspectivism."
+    },
+    {
+      "id": "eafa647c-7437-4ec7-9f3a-fed06b9bbd8f",
+      "name": "Lao Zi",
+      "persona": "Lao Zi",
+      "mumblings": [
+        "Nature does not hurry, yet everything is accomplished.",
+        "A journey of a thousand miles begins with a single step.",
+        "Knowing others is intelligence; knowing yourself is true wisdom.",
+        "When you are content to be simply yourself and don’t compare or compete, everyone will respect you.",
+        "He who knows that enough is enough will always have enough."
+      ],
       "encountered": false,
-      "imageKey": "ghost"
+      "imageKey": "ghost",
+      "obsession": "Dao (Tao), Wu Wei, Simplicity, Harmony with Nature, Relativity of concepts, Yin and Yang, Natural order, Humility, Compassion, Reflection on the self."
+    },
+    {
+      "id": "dc471360-81ca-4df4-b06c-8c8ba70fa470",
+      "name": "Jesus",
+      "persona": "Jesus",
+      "mumblings": [
+        "Love your neighbor as yourself.",
+        "Blessed are the peacemakers.",
+        "I am the way, the truth, and the life.",
+        "Do unto others as you would have them do unto you.",
+        "For where your treasure is, there your heart will be also."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Love, compassion, forgiveness, justice, humility, service to others, faith in God, community, reconciliation, spiritual truth, humility, eternal life, radical inclusivity, prayer, trust in God's providence."
+    },
+    {
+      "id": "a1f7a243-6de6-4b6c-b4eb-b563f3b21981",
+      "name": "Hannah Arendt",
+      "persona": "Hannah Arendt",
+      "mumblings": [
+        "The sad truth is that most evil is done by people who never make up their minds to be good or evil.",
+        "The political is the space of appearance.",
+        "Freedom is the sight of the world as it is.",
+        "Action without a name, a source that is not an author, is a deed without a doer.",
+        "Forgiveness is the only way to reverse the irreversible flow of history."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Totalitarianism, authority, political action, the nature of evil, human condition, public vs. private realms, responsibility, pluralism, the importance of dialogue, the banality of evil."
+    },
+    {
+      "id": "aee13a3e-0f25-4b41-a498-dd7b508e6d49",
+      "name": "Zhuangzi",
+      "persona": "Zhuangzi",
+      "mumblings": [
+        "Life is a series of encounters, nothing more.",
+        "The perfect man has no self; the holy man has no ego.",
+        "Happiness is the absence of striving for happiness.",
+        "To forget everything is to be free.",
+        "The journey of a thousand miles begins beneath one's feet."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Naturalism, spontaneity, relativism, skepticism, transformation, harmony with the Tao, non-attachment, freedom from rigid judgments, the unity of opposites, playful engagement with life."
+    },
+    {
+      "id": "74c95de9-1992-4460-be88-03e22bab4a7a",
+      "name": "Carl Jung",
+      "persona": "Carl Jung",
+      "mumblings": [
+        "Your vision will become clear only when you can look into your own heart",
+        "We cannot change anything unless we accept it",
+        "The privilege of a lifetime is to become who you truly are",
+        "I am not what happened to me, I am what I choose to become",
+        "Everything that irritates us about others can lead us to an understanding of ourselves"
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Archetypes, Collective unconscious, Individuation, Anima/Animus, Shadow, Synchronicity, Dreams, Symbols, Personality types, Psychological integration, Spirituality, Mythology, Personal and collective trauma, Balance of opposites, Transcendent function."
+    },
+    {
+      "id": "c7bdd8a0-81dd-41ca-8331-fe8139310100",
+      "name": "AK Ramanujan",
+      "persona": "AK Ramanujan",
+      "mumblings": [
+        "Words are all we have",
+        "The best way to talk to someone is to be silent",
+        "We are all prisoners of our own words",
+        "Silence is a source of strength",
+        "Poetry is the most honest form of communication"
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Language, folklore, mythology, memory, tradition, cultural identity, modernity, fragmentation, duality, personal experience, nature, spirituality, narrative, historical consciousness."
+    },
+    {
+      "id": "a8f837a4-5cf8-466a-9be5-aefba25a7e84",
+      "name": "Octavia Butler",
+      "persona": "Octavia Butler",
+      "mumblings": [
+        "There is nothing new under the sun, but there are new suns.",
+        "All that you touch you change. All that you change changes you.",
+        "The only lasting truth is change.",
+        "You don’t start out writing good stuff. You start out writing crap and thinking it’s good stuff, and then you gradually clean it up.",
+        "The future is always beginning now."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Social justice, racial identity, gender dynamics, power dynamics, dystopian futures, empathy, survival, human potential, complexity of humanity, interspecies relationships, transformative experiences, environmental concerns."
+    },
+    {
+      "id": "774db522-4a2e-4e38-b870-381d3b6ef0e1",
+      "name": "Alan Watts",
+      "persona": "Alan Watts",
+      "mumblings": [
+        "You are the universe experiencing itself.",
+        "The menu is not the meal.",
+        "Life is not a problem to be solved, but an experience to be had.",
+        "We do not see things as they are, we see them as we are.",
+        "Trying to define yourself is like trying to bite your own teeth."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Eastern philosophy, Zen Buddhism, mindfulness, interconnectedness, impermanence, the nature of reality, non-duality, spontaneity, the self as illusion, the art of living, transcendence of ego, harmony with nature, the importance of play."
+    },
+    {
+      "id": "5d3cba7a-31e1-47b2-89b5-d4acd37c193c",
+      "name": "Dante",
+      "persona": "Dante",
+      "mumblings": [
+        "The darkest places in hell are reserved for those who maintain their neutrality in times of moral crisis",
+        "Abandon all hope, ye who enter here",
+        "In His will is our peace",
+        "The hottest places in hell are reserved for those who in times of great moral crisis maintain their neutrality",
+        "The greatest gift of God is the gift of understanding"
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Divine justice, human sinfulness, redemption, moral order, the afterlife, love and desire, the nature of evil, the quest for knowledge, faith and reason, the importance of choice, the role of suffering, the influence of classical wisdom."
+    },
+    {
+      "id": "49ceaa6b-b391-4e9e-b4f2-fba2482f87da",
+      "name": "Frantz Fanon",
+      "persona": "Frantz Fanon",
+      "mumblings": [
+        "For a man who struggles for the liberation of his country, every victory is a victory over himself.",
+        "The colonized can see right away if decolonization is taking place and can tell just as easily if it’s a sham.",
+        "Each generation must discover its mission, fulfill it or betray it, in relative opacity.",
+        "The aim of the decolonization struggle is to make the oppressed realize that they have become subjects.",
+        "Freedom is not a gift from heaven; it is taken by the people."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Colonialism, race, decolonization, violence, liberation, identity, cultural hybridity, national consciousness, psychological effects of oppression, class struggle, existentialism, anti-imperialism, alienation, black consciousness, humanism."
+    },
+    {
+      "id": "ac024c00-92c5-43e3-9a3b-6b0c59e5209f",
+      "name": "Édouard Glissant",
+      "persona": "Édouard Glissant",
+      "mumblings": [
+        "There is no world without a history of the world",
+        "The interesting thing is to see how people invent their own identity",
+        "All identities are fragile",
+        "Language is the ultimate tool of our connection",
+        "Real freedom is to create one's own space"
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Relation, Creolization, Opacity, Antillanité, Diversity, Cultural hybridity, Globality, Poetics of the earth, Multiplicity, Identity as process"
+    },
+    {
+      "id": "7db20c4f-ab74-4823-afa3-dc61c27fef8f",
+      "name": "Ludwig Wittgenstein",
+      "persona": "Ludwig Wittgenstein",
+      "mumblings": [
+        "Whereof one cannot speak, thereof one must be silent.",
+        "The limits of my language mean the limits of my world.",
+        "Philosophy is a battle against the bewitchment of our intelligence by means of language.",
+        "A picture can represent any reality whose presence it can represent.",
+        "If a lion could talk, we could not understand him."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Language, meaning, logic, ethics, the limits of language, the nature of reality, rule-following, ordinary language philosophy, forms of life, the nature of understanding, family resemblance, context-dependency of meaning, critique of metaphysics."
+    },
+    {
+      "id": "1de56db9-662f-4993-ae94-5148c158ee26",
+      "name": "Socrates",
+      "persona": "Socrates",
+      "mumblings": [
+        "The unexamined life is not worth living",
+        "I know that I am intelligent because I know that I know nothing",
+        "Wisdom begins in wonder",
+        "To find yourself, think for yourself",
+        "Strong minds discuss ideas, weak minds discuss people"
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Truth, virtue, wisdom, self-examination, the examined life, ignorance, moral integrity, the pursuit of knowledge, dialectical method, questioning authority, harmony of the soul, the nature of justice, the value of self-awareness."
+    },
+    {
+      "id": "77e09327-38d5-4348-90b4-a6721649bdef",
+      "name": "Nāgārjuna",
+      "persona": "Nāgārjuna",
+      "mumblings": [
+        "There is no difference between existence and non-existence.",
+        "Everything depends on something else.",
+        "Wisdom is the path to freedom from suffering.",
+        "The ultimate truth is beyond words and descriptions.",
+        "Form is emptiness, emptiness is form."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Emptiness, Interdependence, Non-duality, Impermanence, Designation, Conventional truth, Ultimate truth, Middle Way, Compassion, Wisdom."
+    },
+    {
+      "id": "5f295538-ce02-4d2c-b1c0-9795238a872c",
+      "name": "Fyodor Dostoevsky",
+      "persona": "Fyodor Dostoevsky",
+      "mumblings": [
+        "The mystery of human existence lies not in just staying alive, but in finding something to live for.",
+        "Man is what he believes.",
+        "The second half of a man's life is made up of nothing but the habits he has acquired during the first half.",
+        "To live without hope is to cease to live.",
+        "The soul is healed by being with children."
+      ],
+      "encountered": false,
+      "imageKey": "ghost",
+      "obsession": "Existentialism, morality, suffering, faith, redemption, free will, duality of human nature, socio-political critique, the absurd, spirituality, the influence of suffering on character, search for meaning, critique of rationalism, struggle between good and evil."
     }
   ]
 }

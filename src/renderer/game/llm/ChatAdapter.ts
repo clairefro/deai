@@ -69,6 +69,7 @@ export class ChatAdapter {
       const messages: Message[] = [{ role: "user", content: prompt }];
 
       const response = await this.sendMessage(messages);
+      console.log(response.content);
       if (validationCb) {
         const isValid = validationCb(response.content);
         if (!isValid) {

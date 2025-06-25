@@ -25,7 +25,6 @@ export class BookshelfMenu extends Menu {
   }
 
   show(direction: string): void {
-    console.log({ direction });
     const content = document.createElement("div");
     content.innerHTML = `
       <h2>Bookshelf - ${
